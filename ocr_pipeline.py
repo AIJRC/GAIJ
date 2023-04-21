@@ -43,16 +43,15 @@ if __name__ == "__main__":
         tesserocr_queue.put(api)
 
     # Find all .tif files
-    images = list(filter(lambda x: x.endswith(".tif"), os.listdir("./")))
+    images = list(filter(lambda x: x.endswith(".tif"), os.listdir("./tifs/")))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
-
-        def procedure(image_path):
-            tsv = ocr_image(image_path, tesserocr_queue)
+        def procedure(image_name):
             try:
-                df = pd.read_table(StringIO(tsv), sep="\t", quoting=3)
-                df.to_csv(os.path.splitext(image_path)[0] + ".csv", index=False)
+                tsv = ocr_image("./tifs/" + image_name, tesserocr_queue)
+                df = pd.read_table(StringIO(tsv), sep='\t', quoting=3)
+                df.to_csv("./csvs/" + os.path.splitext(image_name)[0]+".csv", index=False)
             except Exception as e:
-                logging.warning("Failed writting {}".format(image_path), e)
+                logging.warning("Failed writting {}".format(image_name), e)
 
         out = executor.map(procedure, images)
