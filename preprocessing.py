@@ -55,14 +55,47 @@ def extract_raw_text(df):
     return full_text
 
 
-def process_text(text):
+def preprocess_text(text, tab_width=8):
     # Replaces "O" by "0" if they are the beginning, middle or end of digits
     text = re.sub(r"(?<=\d)O(?=\d)|(?<=\d)O|O(?=\d)", "0", text)
 
     # Removes single or double whitespaces between numbers "1 000" becomes "1000"
     text = re.sub("(?<=\d) {1,2}(?=\d)", "", text)
 
+    # Replace consecutive whitespaces with tabs
+    text = re.sub(r" {2,}", lambda m: "\t" * (len(m.group()) // tab_width) + " " * (len(m.group()) % tab_width), text)
+
+    # Remove left trailing whitespace (either ' ' or '\t')
+    text = re.sub(r"^[ \t]+", "", text, flags=re.MULTILINE)
+
     return text
+
+
+def extract_multi_column_text(text):
+    blocks = []
+    tables = []
+    matches = re.finditer(r"(?s)(^|\n)(\s*.*?)(?=\n|\Z)", text)
+    for match in matches:
+        block = match.group(2)
+        lines = block.split("\n")
+        num_columns = 0
+        for line in lines:
+            num_columns_in_line = len(line.split("\t"))
+            if num_columns_in_line > num_columns:
+                num_columns = num_columns_in_line
+        if num_columns <= 1:
+            blocks.append(block.strip())
+        else:
+            data = []
+            for line in lines:
+                if line.strip() == "":
+                    continue
+                row = line.split("\t")
+                if len(row) == num_columns:
+                    data.append(row)
+            df = pd.DataFrame(data[1:], columns=data[0])
+            tables.append(df)
+    return blocks, tables
 
 
 if __name__ == "__main__":
@@ -77,7 +110,8 @@ if __name__ == "__main__":
             try:
                 df = pd.read_csv("./csvs/" + csv_name, keep_default_na=False)
                 text = extract_raw_text(df)
-                text = process_text(text)
+                text = preprocess_text(text)
+                text = extract_multi_column_text(text)
 
             except Exception as e:
                 logging.warning("Failed with {}".format(csv_name), e)
