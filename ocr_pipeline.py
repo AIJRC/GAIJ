@@ -31,6 +31,7 @@ def ocr_image(image_path, queue, preprocess=True):
 
 if __name__ == "__main__":
     NUM_THREADS = 8
+    os.environ['OMP_THREAD_LIMIT'] = '1'
 
     tesserocr_queue = queue.Queue(maxsize=NUM_THREADS)
     for _ in range(NUM_THREADS):
@@ -42,16 +43,21 @@ if __name__ == "__main__":
         )  # optimal for extracting table-like data
         tesserocr_queue.put(api)
 
-    # Find all .tif files
-    images = list(filter(lambda x: x.endswith(".tif"), os.listdir("./tifs/")))
+    tifs_dir = "./tifs/"
+    csvs_dir = "./csvs/"
+
+    # Find all files to be OCR'ed
+    images = list(filter(lambda x: x.endswith(".tif"), os.listdir(tifs_dir)))
+    ocred = list(filter(lambda x: x.endswith(".csv"), os.listdir(csvs_dir)))
+    missing_images = set(images).difference(set(map(lambda x: os.path.splitext(x)[0] + ".tif", ocred)))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
         def procedure(image_name):
+            tsv = ocr_image(tifs_dir + image_name, tesserocr_queue)
             try:
-                tsv = ocr_image("./tifs/" + image_name, tesserocr_queue)
-                df = pd.read_table(StringIO(tsv), sep='\t', quoting=3)
-                df.to_csv("./csvs/" + os.path.splitext(image_name)[0]+".csv", index=False)
+                df = pd.read_table(StringIO(tsv), sep="\t", quoting=3)
+                df.to_csv(csvs_dir + os.path.splitext(image_name)[0] + ".csv", index=False)
             except Exception as e:
                 logging.warning("Failed writting {}".format(image_name), e)
 
-        out = executor.map(procedure, images)
+        executor.map(procedure, missing_images)
