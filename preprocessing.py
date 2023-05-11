@@ -74,27 +74,29 @@ def preprocess_text(text, tab_width=8):
 def extract_multi_column_text(text):
     blocks = []
     tables = []
-    matches = re.finditer(r"(?s)(^|\n)(\s*.*?)(?=\n|\Z)", text)
+    matches = re.finditer(r"(^|\n)(\s*.*?)(?=\n|\Z)", text, flags=re.DOTALL)
     for match in matches:
         block = match.group(2)
-        lines = block.split("\n")
-        num_columns = 0
-        for line in lines:
-            num_columns_in_line = len(line.split("\t"))
-            if num_columns_in_line > num_columns:
-                num_columns = num_columns_in_line
+        cells = [line.split("\t") for line in block.split("\n")]
+        num_columns = max(len(row) for row in cells)
         if num_columns <= 1:
-            blocks.append(block.strip())
+            blocks.append(block)
         else:
-            data = []
-            for line in lines:
-                if line.strip() == "":
-                    continue
-                row = line.split("\t")
-                if len(row) == num_columns:
-                    data.append(row)
-            df = pd.DataFrame(data[1:], columns=data[0])
-            tables.append(df)
+            data = [row for row in cells if len(row) == num_columns][0]
+            tables.append(data)
+
+    tables = pd.DataFrame(tables)
+
+    # Remove trailing whitespaces and colons on all elements
+    tables = tables.applymap(lambda x: re.sub(r"\s*[:\s]*\s*$", "", str(x)))
+
+    # Remove trailing whitespaces on cells with digits
+    #     df = df.applymap(lambda x: re.sub(r"^\s+|\s+$"", "", x) if re.search(r'\d', x) else x)
+    tables = tables.applymap(lambda x: re.sub(r"^\s+|\s+$", "", x))
+
+    # Changes empty strings to None
+    tables = tables.replace(r"^\s*$", None, regex=True)
+
     return blocks, tables
 
 
