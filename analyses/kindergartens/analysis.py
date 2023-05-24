@@ -1,4 +1,11 @@
-import networkx
+import pandas as pd
+
+import itertools
+
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from preprocessing import extract_raw_text, preprocess_text, extract_multi_column_text, find_substring_occurrences
 
 redflags = [
     "Aksjonærlån",
@@ -35,27 +42,26 @@ redflags = [
 # Red-flagged organisations
 organisations = pd.read_csv("./orgnums.csv", dtype="Int64")
 
-csvs_dir = "/Users/meirinhos/Downloads/norsk/csvs/"
-txts_dir = "/Users/meirinhos/Downloads/norsk/txts/"
+csvs_dir = "/home/francisco/files/csvs/"
+txts_dir = "/home/francisco/files/txts/"
 
 csvs = list(filter(lambda x: x.endswith(".csv"), os.listdir(csvs_dir)))
-
 
 lst = []
 
 for i, csv in enumerate(csvs):
     if i % 100 == 0:
-        print(i)
-
-    df = pd.read_csv(csvs_dir + csv, keep_default_na=False)
-    text = preprocess_text(extract_raw_text(df))
-
-    with open(txts_dir + csv + ".txt", "w+") as f:
-        f.writelines(text)
-
-    table = extract_multi_column_text(text)[1]
-
+        companies = pd.DataFrame(lst, columns=["number", "name", "orgnums", "redflags"])
+        companies.to_csv("companies3.csv", index=False)
     try:
+        df = pd.read_csv(csvs_dir + csv, keep_default_na=False)
+        text = preprocess_text(extract_raw_text(df))
+
+        with open(txts_dir + csv + ".txt", "w+") as f:
+            f.writelines(text)
+
+        table = extract_multi_column_text(text)[1]
+
         number = (
             table[table.iloc[:, 0] == "Organisasjonsnummer"]
             .dropna(axis=1)
@@ -68,12 +74,12 @@ for i, csv in enumerate(csvs):
             .iloc[:, 1]
             .values[0]
         )
-        org_flag = any(map(text.__contains__, organisations.astype("str").stack()))
-        red_flag = any(map(text.__contains__, redflags))
+        org_flag = itertools.chain.from_iterable(map(lambda x: find_substring_occurrences(text, x), organisations.astype('str').stack()))
+        red_flag = itertools.chain.from_iterable(map(lambda x: find_substring_occurrences(text, x), redflags))
+        lst.append({'number': number, 'name': name, 'orgnums': list(org_flag), 'redflags': list(red_flag)})
+        # org_flag = any(map(text.__contains__, organisations.astype("str").stack()))
+        # red_flag = any(map(text.__contains__, redflags))
 
-        lst.append(
-            {"number": number, "name": name, "orgnums": org_flag, "redflags": red_flag}
-        )
     except:
         pass
 

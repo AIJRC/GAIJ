@@ -100,6 +100,12 @@ def extract_multi_column_text(text):
     return blocks, tables
 
 
+def find_substring_occurrences(string, substring, context_length=20):
+    pattern = re.compile(f"{re.escape(substring)}")
+    occurrences = [(substring, match.start(), string[max(0, match.start() - context_length) : match.end() + context_length]) for match in pattern.finditer(string)]
+    return occurrences
+
+
 if __name__ == "__main__":
     NUM_THREADS = 6
 
