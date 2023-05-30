@@ -1,10 +1,6 @@
 import pandas as pd
 import re
 
-import concurrent.futures
-
-import os
-
 
 def extract_raw_text(df):
     # split into pages
@@ -100,28 +96,24 @@ def extract_multi_column_text(text):
     return blocks, tables
 
 
-def find_substring_occurrences(string, substring, context_length=20):
-    pattern = re.compile(f"{re.escape(substring)}")
-    occurrences = [(substring, match.start(), string[max(0, match.start() - context_length) : match.end() + context_length]) for match in pattern.finditer(string)]
-    return occurrences
+def find_substring_occurrences(substring, string, context_length=20):    
+    return [(substring, m.start(), string[max(0, m.start() - context_length) : m.end() + context_length]) for m in re.finditer(substring, string)]
 
 
-if __name__ == "__main__":
-    NUM_THREADS = 6
+def find_substring_occurrences_ocr(substring, string, context_length=20):
+    # Hopefully this is faster than a fuzzy search, having covered most OCR "mistakes"
+    pattern = substring.replace("Ø", "[ØO0@]").replace("Æ", "[AE]").replace("Å", "[ÅA]").replace(" ", r"\s*")
+    
+    return find_substring_occurrences(pattern, string, context_length = context_length)
 
-    # Find all .csv files
-    csvs = list(filter(lambda x: x.endswith(".csv"), os.listdir("./csvs/")))
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
-
-        def procedure(csv_name):
-            try:
-                df = pd.read_csv("./csvs/" + csv_name, keep_default_na=False)
-                text = extract_raw_text(df)
-                text = preprocess_text(text)
-                text = extract_multi_column_text(text)
-
-            except Exception as e:
-                logging.warning("Failed with {}".format(csv_name), e)
-
-        out = executor.map(procedure, csvs)
+def remove_AS(orgname_list):
+    modified_list = []
+    pattern = re.compile(r"(.*?)\s*AS\s*$")
+    for string in orgname_list:
+        match = pattern.match(string)
+        if match:
+            modified_list.append(match.group(1))
+        else:
+            modified_list.append(string)
+    return modified_list
