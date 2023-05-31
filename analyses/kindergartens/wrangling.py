@@ -49,7 +49,7 @@ df = pd.DataFrame(lst, columns=["number", "name"])
 df.to_csv("companies.csv", index=False)
 
 # Open alternative file with names (navn) and numbers (organisasjonsnummer)
-with open("../../data/enheter_alle.json") as file:
+with open("../../downloads/enheter_alle.json") as file:
     data = json.load(file)
     data = {x["organisasjonsnummer"]: x for x in data}
 
@@ -73,16 +73,11 @@ for i, row in missing_name.iterrows():
 df = df[(df["name"] != 0) & (df["number"] != 0)]
 
 # Get "alternative" (most likely the correct name) name for
-for i, r in df.iterrows():
-    number = str(r["number"])
+for i, row in df.iterrows():
+    number = str(row["number"])
     if number in data:
         name = data[number]["navn"]
-        df.loc[i, "name-alt"] = name if r["name"] != name else ""
-
-# Re-order columns
-cols = list(df)
-cols[2], cols[4] = cols[4], cols[2]
-df = df.loc[:, cols]
+        df.loc[i, "name-alt"] = name if row["name"] != name else None
 
 # Replace all whitespaces by a single whitespace
 df["name"] = df["name"].apply(lambda x: re.sub(r"\s+", " ", x))

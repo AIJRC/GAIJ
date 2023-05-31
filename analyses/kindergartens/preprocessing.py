@@ -33,8 +33,8 @@ while len(current_suspects) > 0:
     new_suspects = set(df[mask]["number"].values)
 
     # Update suspects
-    all_suspects = all_suspects | new_suspects
     current_suspects = new_suspects - all_suspects
+    all_suspects = all_suspects | new_suspects
 
 # Red-flagged words
 redflags = pd.read_csv("./redflags.csv").astype("str")
