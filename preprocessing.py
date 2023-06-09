@@ -96,24 +96,40 @@ def extract_multi_column_text(text):
     return blocks, tables
 
 
-def find_substring_occurrences(substring, string, context_length=20):    
-    return [(substring, m.start(), string[max(0, m.start() - context_length) : m.end() + context_length]) for m in re.finditer(substring, string)]
+
+def find_9_digit_words(string):
+    pattern = re.compile(r"\b\d{9}\b")
+    return pattern.findall(string)
 
 
-def find_substring_occurrences_ocr(substring, string, context_length=20):
-    # Hopefully this is faster than a fuzzy search, having covered most OCR "mistakes"
-    pattern = substring.replace("Ø", "[ØO0@]").replace("Æ", "[AE]").replace("Å", "[ÅA]").replace(" ", r"\s*")
+def find_substring_matches(substring, string, remove_AS = True):
+    # Define a mapping of OCR decoding issues for Norwegian characters
+    ocr_decoding_issues = {
+        "O": ["Ø", "@", "0"],
+        "Ø": ["O", "@", "0"],
+        "@": ["Ø", "O", "0"],
+        "0": ["Ø", "O", "@"],
+        "A": ["Å", "Æ"],
+        "Å": ["A"],
+        "E": ["Æ"],
+        "Æ": ["E", "A"],
+    }
     
-    return find_substring_occurrences(pattern, string, context_length = context_length)
-
-
-def remove_AS(orgname_list):
-    modified_list = []
-    pattern = re.compile(r"(.*?)\s*AS\s*$")
-    for string in orgname_list:
-        match = pattern.match(string)
-        if match:
-            modified_list.append(match.group(1))
-        else:
-            modified_list.append(string)
-    return modified_list
+    # Remove 'AS' and any amount of whitespace to the right and left of it at the end of the substring
+    if remove_AS:
+        substring = re.sub(r"\s*(?:AS)?\s*$", "", substring, flags=re.IGNORECASE)
+    
+    # Generate a list of possible variations of the substring
+    variations = [substring]
+    for char, replacements in ocr_decoding_issues.items():
+        if char in substring:
+            for replacement in replacements:
+                variations.append(substring.replace(char, replacement))
+    
+    # Create a regular expression pattern from the variations
+    pattern = "|".join(r"\b" + re.escape(var) + r"\b" for var in variations)
+    
+    # Find all matches using the regular expression pattern
+    matches = re.findall(pattern, string, flags=re.IGNORECASE)
+    
+    return matches
