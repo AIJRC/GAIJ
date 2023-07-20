@@ -1,40 +1,60 @@
 import pandas as pd
 import re
+import json
 
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from preprocessing import find_substring_occurrences
+from preprocessing import find_9_digit_words
 
+df = pd.read_csv("../../data/companies.csv").astype({"number": int})
 
-df = pd.read_csv("companies.csv").astype({"number": int})
+# Load data from JSON file
+with open("../../data/enheter_alle.json", "r") as f:
+    df_json = pd.json_normalize(json.load(f))
 
-# Red-flagged organisations
-redflagged_numbers = set(pd.read_csv("./orgnums.csv", dtype="Int64").stack().values)
+# Prepare industry mapping
+identifier = "naeringskode1"
+industry_mapping = df_json.set_index(f"{identifier}.kode")[f"{identifier}.beskrivelse"].to_dict()
 
-df["flagged_number"] = [[]] * len(df)
+# Add industry name to the companies' dataframe
+df = pd.read_json("../../data/companies-names.json", orient='records', lines=True)
+df['industry_name'] = df['number'].astype(str).map(df_json.set_index('organisasjonsnummer')['naeringskode1.kode'].map(industry_mapping))
 
-all_suspects = redflagged_numbers
-current_suspects = all_suspects
+# Finds all possible connections with other companies, by number
+# It is much cheaper to simply match 9-number words
+df['flagged_numbers'] = None
+for i, row in df.iterrows():
 
-while len(current_suspects) > 0:
+    with open(f"../../data/txts/{str(row['number'])}_arso_2020.csv.txt", "r") as f:
+        text = f.read()
 
-    for i, row in df.iterrows():
+    df.at[i, "flagged_numbers"] = [int(m) for m in find_9_digit_words(text) if len(str(int(m))) == 9]
 
-        with open(f"../../downloads/txts/{str(row['number'])}_arso_2020.csv.txt", "r") as f:
-            text = f.read()
+# Find all suspects having connections to `suspects.csv` by number
+all_suspects = set(pd.read_csv("./suspects.csv", dtype="Int64").stack())
 
-        matches = [m for s in current_suspects for m in find_substring_occurrences(str(s), text)]
+# False-positive suspects
+no_suspects = {123456789, 999999999} 
 
-        df.at[i, "flagged_number"] = df.at[i, "flagged_number"] + matches
+current_suspects = all_suspects - no_suspects
 
-    # Find all companies with connections to the current suspects
-    mask = df["flagged_number"].apply(lambda x: x != [])
-    new_suspects = set(df[mask]["number"].values)
+# Identify suspects by number
+while current_suspects:
+    
+    # Find all companies with references to the current suspects
+    mask = df["flagged_numbers"].apply(lambda x: bool(set(x) & current_suspects))
+
+    # Said companies are also now possible suspects
+    new_suspects = set(df[mask]["number"])
 
     # Update suspects
-    current_suspects = new_suspects - all_suspects
-    all_suspects = all_suspects | new_suspects
+    current_suspects = new_suspects - all_suspects - no_suspects
+    all_suspects |= new_suspects
 
-# Red-flagged words
-redflags = pd.read_csv("./redflags.csv").astype("str")
+# Cleanup operation
+df.loc[df["flagged_numbers"].notna(), "flagged_numbers"] = df.loc[df["flagged_numbers"].notna()].apply(lambda x: (set(x["flagged_numbers"]) & all_suspects) - no_suspects - {x["number"]}, axis = 1)
+# df.loc[df["flagged_names"].notna(), "flagged_names"] = df.loc[df["flagged_names"].notna(), "flagged_names"].apply(set)
+# df.loc[df["flagged_names"].notna(), "flagged_names"] = df.loc[df["flagged_names"].notna()].apply(lambda x: set(x["flagged_names"]) - {x["name"]}, axis = 1)
+
+df.to_json("../../data/database.json", orient = 'records', lines = True)

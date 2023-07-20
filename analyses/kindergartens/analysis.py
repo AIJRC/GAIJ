@@ -1,78 +1,63 @@
 import pandas as pd
-import ast
-
-from functools import reduce
 import json
 
-import networkx as nx
-import matplotlib.pyplot as plt
+from itertools import chain
 
-df = pd.read_csv("companies-orgs.csv")
-df["flagged_number"] = df["flagged_number"].apply(ast.literal_eval)
-df["flagged_number"] = df["flagged_number"].apply(lambda x: x if len(x) > 0 else None)
+df = pd.read_json("../../data/companies-new.json", orient='records', lines=True)
 
-mask = ~df["flagged_number"].isna()
-df.loc[mask, "flags"] = df[mask].apply(lambda x: {int(y[0]) for y in x["flagged_number"]} - {x["number"]}, axis=1)
-df.loc[mask, "flags"] = df.loc[mask, "flags"].apply(lambda x: set() if len(x) < 1 else x)
-df.loc[~mask, "flags"] = df.loc[~mask, "flags"].apply(lambda x: set())
+def to_json(df):
+    number_to_name = df.set_index('number')['name'].to_dict()
+    
+    # Filter for relevant rows
+    flagged_df = df[df["flagged_names"].astype(bool) | df["flagged_numbers"].astype(bool)]
+    
+    # Extract node IDs
+    name_nodes = flagged_df['name'].tolist()
+    flagged_name_nodes = [node for sublist in flagged_df["flagged_names"].dropna() for node in sublist]
+    flagged_number_nodes = [number_to_name.get(num, num) for sublist in flagged_df["flagged_numbers"].dropna() for num in sublist]
+    unique_nodes = set(name_nodes + flagged_name_nodes + flagged_number_nodes)
 
-filtered_df = df[df["flags"].apply(len) > 0]
-d = filtered_df.set_index("number")["flags"].to_dict()
+    # Filter dataframe for unique nodes
+    df_filtered = df[df["name"].isin(unique_nodes)]
+    
+    nodes = []
+    for _, row in df_filtered.iterrows():
+        node_data = {
+            "id": row["name"],
+            "industry_name": row["industry_name"],
+            "number": row["number"]
+        }
+        nodes.append(node_data)
 
-graph = nx.Graph(d)
+    # Add nodes that are not in df
+    missing_nodes = unique_nodes - set(df_filtered["name"].values)
+    for node in missing_nodes:
+        nodes.append({"id": node})
 
-fig = plt.figure(figsize=(40, 40))
-nx.draw(graph)
-plt.show()
-
-with open("../../downloads/enheter_alle.json") as file:
-    data = json.load(file)
-    data = {x["organisasjonsnummer"]: x for x in data}
-
-
-def to_json():
-    def find_name(key):
-        if key in data.keys():
-            return data[key]["navn"]
-        else:
-            return key
-
-    def flatten_dict(d):
-        flattened_list = []
-        for key, value in d.items():
-            if isinstance(value, set):
-                for v in value:
-                    flattened_list.append(
-                        {
-                            "source": find_name(str(key)),
-                            "target": find_name(str(v)),
-                            "value": 1,
-                        }
-                    )
-            else:
-                flattened_list.append(
-                    {
-                        "source": find_name(str(key)),
-                        "target": find_name(str(value)),
-                        "value": 1,
-                    }
-                )
-        return flattened_list
-
-    # Get all numbers that have connections to flagged companies
-    numbers = set(df[df["flags"].apply(lambda x: x != set())]["number"].values)
-
-    # Get all flagged companies
-    flags = reduce(lambda x, y: x | y, df["flags"].values, set())
-
-    # Get all nodes with names
-    nodes = [{"id": find_name(str(x))} for x in numbers | flags]
-
-    # Get all links
-    links = flatten_dict(d)
-
-    return {"nodes": nodes, "links": links}
+    
+    # Generate links without relying on unique indexing
+    links = []
+    for _, row in flagged_df.iterrows():
+        name = row['name']
+        links.extend(create_links(name, row.get("flagged_names", {}), False, number_to_name))
+        links.extend(create_links(name, row.get("flagged_numbers", {}), True, number_to_name))
+    
+    # Remove duplicate links
+    unique_links = list({(link['source'], link['target']): link for link in links}.values())
+    
+    return {"nodes": nodes, "links": unique_links}
 
 
-with open("orgs.json", "w") as f:
-    json.dump(to_json(), f, indent=4, sort_keys=True)
+def create_links(source, targets, is_number, num_to_name_mapping):
+    if isinstance(targets, (list, set)):
+        targets = set(targets)
+    else:
+        targets = {targets}
+
+    return [{"source": source, 
+             "target": (num_to_name_mapping.get(target, target) if is_number else target),
+             "value": 1} for target in targets]
+
+
+with open("../../data/orgs.json", "w") as f:
+    json.dump(to_json(df), f, indent=4, sort_keys=True)

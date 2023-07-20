@@ -102,22 +102,21 @@ def find_9_digit_words(string):
     return pattern.findall(string)
 
 
-def find_substring_matches(substring, string, remove_AS = True):
+def find_substring_matches(substring, string):
     # Define a mapping of OCR decoding issues for Norwegian characters
     ocr_decoding_issues = {
-        "O": ["Ø", "@", "0"],
-        "Ø": ["O", "@", "0"],
-        "@": ["Ø", "O", "0"],
-        "0": ["Ø", "O", "@"],
-        "A": ["Å", "Æ"],
-        "Å": ["A"],
-        "E": ["Æ"],
-        "Æ": ["E", "A"],
+        'O': ['Ø', '@', '0'],
+        'Ø': ['O', '@', '0'],
+        '@': ['Ø', 'O', '0'],
+        '0': ['Ø', 'O', '@'],
+        'A': ['Å', 'Æ'],
+        'Å': ['A'],
+        'E': ['Æ'],
+        'Æ': ['E', 'A'],
     }
     
     # Remove 'AS' and any amount of whitespace to the right and left of it at the end of the substring
-    if remove_AS:
-        substring = re.sub(r"\s*(?:AS)?\s*$", "", substring, flags=re.IGNORECASE)
+    substring = re.sub(r'\s*(?:AS)?\s*$', '', substring, flags=re.IGNORECASE)
     
     # Generate a list of possible variations of the substring
     variations = [substring]
@@ -127,7 +126,7 @@ def find_substring_matches(substring, string, remove_AS = True):
                 variations.append(substring.replace(char, replacement))
     
     # Create a regular expression pattern from the variations
-    pattern = "|".join(r"\b" + re.escape(var) + r"\b" for var in variations)
+    pattern = '|'.join(re.escape(var) for var in variations)
     
     # Find all matches using the regular expression pattern
     matches = re.findall(pattern, string, flags=re.IGNORECASE)
