@@ -3,6 +3,15 @@
   <link rel='stylesheet' type='text/css' href='css.css'>
 </head>
 <body>
+
+<div id="sidebar" class="sidebar">
+    <h3>Node Details</h3>
+    <p><strong>Company name:</strong> <span id="sidebar-name"></span></p>
+    <p><strong>Industry:</strong> <span id="sidebar-industry"></span></p>
+    <p><strong>Address:</strong> <span id="sidebar-address"></span> (<a href="#" id="sidebar-opencorporates-link" target="_blank">OpenCorporates</a>)</p>
+    <button onclick="closeSidebar()">Close</button>
+</div>
+
 <div class="controls">
   <div class="force alpha">
     <p><label>alpha</label> Simulation activity</p>

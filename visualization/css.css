@@ -26,6 +26,27 @@ body{
 .controls .alpha .alpha_bar #alpha_value { background-color: #555; border-radius: 1px; flex-basis: 100% }
 .controls .alpha .alpha_bar:hover { border-width: 2px; margin:-1px; }
 .controls .alpha .alpha_bar:active #alpha_value { background-color: #3f7236 }
+.sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 300px;
+  background-color: #f4f4f4;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
+  display: none;
+}
+
+button {
+  padding: 8px 12px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+}
 
 /* SVG styles */
 svg {

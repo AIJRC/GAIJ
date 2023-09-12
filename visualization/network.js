@@ -287,6 +287,12 @@ function click(event, d) {
     d3.select(this).select("text").style("visibility", "hidden") 
     d3.select(this).transition().duration(800).attr("r", forceProperties.collide.radius);
     simulation.alpha(1).restart()
+
+    document.getElementById('sidebar-name').textContent = d.id;
+    document.getElementById('sidebar-industry').textContent = d.industry_name;
+    document.getElementById('sidebar-address').textContent = d.address;
+    document.getElementById('sidebar-opencorporates-link').href = "https://opencorporates.com/companies/no/" + d.number;
+    document.getElementById('sidebar').style.display = 'block';
   }
 
 
@@ -302,3 +308,7 @@ function updateAll() {
     updateForces();
     updateDisplay();
 };
+
+function closeSidebar() {
+    document.getElementById('sidebar').style.display = 'none';
+}
