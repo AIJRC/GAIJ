@@ -1,3 +1,39 @@
+const DATA_DIR = "../data/";
+
+// Load subgraphs_list.json and populate the dropdown
+d3.json(DATA_DIR + "subgraphs_list.json").then(function(subgraphs) {
+    var dropdown = d3.select("#graphDropdown");
+    subgraphs.forEach(function(graph) {
+        dropdown.append("option")
+            .attr("value", graph.path)
+            .text(graph.industry + " (" + graph.num_nodes + " nodes)");
+    });
+
+    // Load the first graph by default
+    loadGraphData(subgraphs[1].path);
+});
+
+// Event listener for the dropdown
+d3.select("#graphDropdown").on("change", function() {
+    var selectedPath = d3.select(this).property("value");
+    loadGraphData(DATA_DIR + selectedPath);
+});
+
+function loadGraphData(path) {
+    if (simulation) {
+        simulation.stop();
+    }
+    
+    // remove existing links and nodes
+    svg.selectAll("*").remove();
+    
+    // load new graph data
+    d3.json(path).then(function(_graph) {
+        graph = _graph;
+        initializeDisplay();
+        initializeSimulation();
+    });
+}
 
 var svg = d3.select("svg");
     // .call(d3.zoom().on("zoom", function (event) {
@@ -7,28 +43,19 @@ var svg = d3.select("svg");
 var width = +svg.node().getBoundingClientRect().width,
     height = +svg.node().getBoundingClientRect().height;
 
-
 // svg objects
 var link, node;
 // the data - an object with nodes and links
 var graph;
 
-// load the data
-d3.json("../data/orgs.json").then(function(_graph) {
-  graph = _graph;
-  initializeDisplay();
-  initializeSimulation();
-});
-
-
-
 //////////// FORCE SIMULATION ////////////
 
 // force simulator
-var simulation = d3.forceSimulation();
+var simulation;
 
 // set up the simulation and event to update locations after each tick
 function initializeSimulation() {
+  simulation = d3.forceSimulation();
   simulation.nodes(graph.nodes);
   initializeForces();
   simulation.on("tick", ticked);
@@ -85,6 +112,8 @@ function initializeForces() {
 
 // apply new force properties
 function updateForces() {
+    if (!simulation) return;  // Check if simulation is defined.
+
     // get each force by name and update the properties
     simulation.force("center")
         .x(width * forceProperties.center.x)
