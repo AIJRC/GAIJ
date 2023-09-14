@@ -9,6 +9,8 @@ from itertools import chain
 
 DATA_DIR = "../../data/"
 
+initial_suspects = set(pd.read_csv("./suspects.csv", dtype="Int64").stack())
+
 df = pd.read_json("../../data/companies-new.json", orient='records', lines=True)
 
 def get_data(df):
@@ -31,14 +33,15 @@ def get_data(df):
         node_data = {
             "id": row["name"],
             "industry_name": row["industry_name"],
-            "number": row["number"]
+            "number": row["number"],
+            "suspect": int(row["number"]) in initial_suspects
         }
         nodes.append(node_data)
 
     # Add nodes that are not in df
     missing_nodes = unique_nodes - set(df_filtered["name"].values)
     for node in missing_nodes:
-        nodes.append({"id": node})
+        nodes.append({"id": node, "number": node, "industry_name": "Unknown", "suspect": int(node) in initial_suspects})
 
     
     # Generate links without relying on unique indexing
@@ -86,6 +89,9 @@ def find_subgraphs(data, output_directory="."):
 
     # Extract connected components (subgraphs)
     subgraphs = [G.subgraph(c) for c in nx.weakly_connected_components(G)]
+
+    # Only care about subgraphs which are connected to the initial suspects
+    subgraphs = filter(lambda g: any(node in initial_suspects for node in g.nodes()), subgraphs)
 
     # Convert each subgraph back to the JSON format
     subgraph_data = []
