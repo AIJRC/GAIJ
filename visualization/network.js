@@ -211,7 +211,7 @@ function initializeDisplay() {
 
     circle = node.append("circle")
         .attr("r", forceProperties.collide.radius)
-        .attr("class", "circle")
+        .attr("class", function(d) { return d.suspect ? "circle suspect" : "circle"; })
         .on("mouseenter", mouseEnter)
         .on("mouseleave", mouseLeave)
         .on("click", click)
@@ -309,7 +309,7 @@ d3.select(window).on("resize", function(){
 
 function mouseEnter(event, d) {
     d3.select(this).classed("hovered", true)
-    d3.select(this).transition().duration(100).attr("r", forceProperties.collide.radius * 2.5);
+    d3.select(this).transition().duration(100).attr("r", forceProperties.collide.radius * 1.5);
     var tooltip = document.getElementById("tooltip")
     tooltip.style.top = `${(8)}px`; //event.clientY - 150 + "px"
     tooltip.style.left = `${(180)}px`; //event.clientX - 95 + "px"
@@ -322,7 +322,7 @@ function mouseLeave(d) {
     if (d3.select(this).classed("fixed") == false) {
         d3.select(this).classed("hovered", false);
     }
-    d3.select(this).transition().duration(800).attr("r", forceProperties.collide.radius);
+    d3.select(this).transition().duration(100).attr("r", forceProperties.collide.radius);
 
     document.getElementById("tooltip").classList.remove("active")
 }
@@ -341,7 +341,6 @@ function click(event, d) {
 
     document.getElementById('sidebar-name').textContent = d.id;
     document.getElementById('sidebar-industry').textContent = d.industry_name;
-    document.getElementById('sidebar-address').textContent = d.address;
     document.getElementById('sidebar-opencorporates-link').href = "https://opencorporates.com/companies/no/" + d.number;
     document.getElementById('sidebar').style.display = 'block';
   }

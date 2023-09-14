@@ -55,8 +55,12 @@ circle.hovered {
 }
 
 circle.fixed {
-  fill: #f00;
+  fill: #ADD8E6;
   stroke: #000;
+}
+
+circle.suspect {
+  fill: red;
 }
 
 #tooltip {
