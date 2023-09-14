@@ -4,6 +4,7 @@ import json
 from collections import Counter
 
 import networkx as nx
+from networkx.algorithms import community
 
 from itertools import chain
 
@@ -12,6 +13,20 @@ DATA_DIR = "../../data/"
 initial_suspects = set(pd.read_csv("./suspects.csv", dtype="Int64").stack())
 
 df = pd.read_json("../../data/companies-new.json", orient='records', lines=True)
+
+def get_unique_graphs(graph_list):
+    unique_graphs = []
+
+    for graph in graph_list:
+        is_unique = True
+        for unique_graph in unique_graphs:
+            if nx.is_isomorphic(graph, unique_graph):
+                is_unique = False
+                break
+        if is_unique:
+            unique_graphs.append(graph)
+
+    return unique_graphs
 
 def get_data(df):
     number_to_name = df.set_index('number')['name'].to_dict()
@@ -90,8 +105,36 @@ def find_subgraphs(data, output_directory="."):
     # Extract connected components (subgraphs)
     subgraphs = [G.subgraph(c) for c in nx.weakly_connected_components(G)]
 
+    k = 3
+
+    all_k_communities = []
+
+    for g in subgraphs:
+        if g.number_of_nodes() > 20:
+            g = g.to_undirected()
+
+            communities = list(community.label_propagation_communities(g))
+            all_k_communities.extend(communities)
+            communities = list(community.k_clique_communities(g, k + 1))
+            all_k_communities.extend(communities)
+            communities = list(community.k_clique_communities(g, k))
+            all_k_communities.extend(communities)
+            communities = list(community.asyn_fluidc(g, k + 2))
+            all_k_communities.extend(communities)
+            communities = list(community.asyn_fluidc(g, k + 1))
+            all_k_communities.extend(communities)
+            communities = list(community.asyn_fluidc(g, k))
+            all_k_communities.extend(communities)
+
+
+    for community_set in all_k_communities:
+        subgraph = G.subgraph(community_set)
+        subgraphs.append(subgraph)
+
     # Only care about subgraphs which are connected to the initial suspects
     subgraphs = filter(lambda g: any(node in initial_suspects for node in g.nodes()), subgraphs)
+
+    subgraphs = get_unique_graphs(subgraphs)
 
     # Convert each subgraph back to the JSON format
     subgraph_data = []
