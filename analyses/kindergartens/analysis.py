@@ -1,18 +1,16 @@
 import pandas as pd
 import json
 
-from collections import Counter
-
 import networkx as nx
 from networkx.algorithms import community
 
 from itertools import chain
 
-DATA_DIR = "../../data/"
+DATA_DIR = "../../data"
 
 initial_suspects = set(pd.read_csv("./suspects.csv", dtype="Int64").stack())
 
-df = pd.read_json("../../data/companies-new.json", orient='records', lines=True)
+df = pd.read_json(f"{DATA_DIR}/companies-new.json", orient='records', lines=True)
 
 def get_unique_graphs(graph_list):
     unique_graphs = []
@@ -142,57 +140,37 @@ def find_subgraphs(data, output_directory="."):
         nodes = [{"id": node, **subgraph.nodes[node]} for node in subgraph.nodes]
         links = [{"source": edge[0], "target": edge[1], **subgraph.edges[edge]} for edge in subgraph.edges]
         
-        # Calculate number of nodes in the subgraph
-        num_nodes = len(nodes)
-        
-        # Determine industry of the subgraph
-        industries = [node["industry_name"] for node in nodes if "industry_name" in node and node["industry_name"] is not None]
-        if len(industries) == 0:
-            industry = "Unknown"
-        else:
-            # Check top 3 industries
-            industry_counts = Counter(industries)
-            top_3_industries = [industry[0] for industry in industry_counts.most_common(3)]
-            industry = ", ".join(top_3_industries)
-        
+        # Determine top suspects of the subgraph
+        suspects_in_subgraph = [node for node in initial_suspects if node in subgraph.nodes()]
+        sorted_suspects = sorted(suspects_in_subgraph, key=lambda n: subgraph.degree(n), reverse=True)
+        top_suspects = [subgraph.nodes[suspect]['id'] for suspect in sorted_suspects[:3]]
+
         subgraph_data.append({
-            "nodes": nodes, 
+            "nodes": nodes,
             "links": links,
-            "num_nodes": num_nodes,
-            "industry": industry
+            "num_nodes": len(nodes),
+            "top_suspects": ", ".join(str(suspect) for suspect in top_suspects)
         })
 
     return sorted(subgraph_data, key=lambda x: x['num_nodes'], reverse=True)
 
-def generate_subgraph_list_json(subgraphs, output_directory="."):
-    """
-    Generates a list of subgraphs with their paths, industries, and number of nodes.
-    This list is saved as a JSON file.
-    """
-    subgraph_list = []
-    for idx, subgraph in enumerate(subgraphs, 1):
-        subgraph_data = {
-            "path": f"subgraphs/graph_{idx}.json",
-            "industry": subgraph["industry"],
-            "num_nodes": subgraph["num_nodes"]
-        }
-        subgraph_list.append(subgraph_data)
-
-    list_filename = output_directory + "subgraphs_list.json"
-    with open(list_filename, "w") as f:
-        json.dump(subgraph_list, f, indent=4, sort_keys=True)
-
-    return list_filename
-
 data = get_data(df)
 
-with open(DATA_DIR + "orgs.json", "w") as f:
+with open(f"{DATA_DIR}/orgs.json", "w") as f:
     json.dump(data, f, indent=4, sort_keys=True)
 
 subgraph_data = find_subgraphs(data)
-
+subgraph_list = []
 for idx, subgraph in enumerate(subgraph_data, 1):
-    with open(DATA_DIR + f"/subgraphs/graph_{idx}.json", "w") as f:
-        json.dump(subgraph, f, indent=4, sort_keys=True)
+    subgraph_data = {
+        "path": f"{DATA_DIR}/subgraphs/graph_{idx}.json",
+        "top_suspects": subgraph["top_suspects"],
+        "num_nodes": subgraph["num_nodes"]
+    }
+    subgraph_list.append(subgraph_data)
 
-generate_subgraph_list_json(subgraph_data, DATA_DIR)
+    with open(f"{DATA_DIR}/subgraphs/graph_{idx}.json", "w") as f:
+        json.dump(subgraph, f, indent=4, sort_keys=True)
+    
+with open(f"{DATA_DIR}/subgraphs_list.json", "w") as f:
+    json.dump(subgraph_list, f, indent=4, sort_keys=True)
