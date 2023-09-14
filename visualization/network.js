@@ -153,7 +153,7 @@ function initializeDisplay() {
     
     const defs = svg.append("defs");
     defs.append("marker")
-      //.attr("id", "arrowhead") 
+      .attr("id", "arrowhead") 
       .attr("viewBox", "-0 -5 10 10")
       .attr("refX", 15)
       .attr("refY", 0)
@@ -173,6 +173,28 @@ function initializeDisplay() {
     .append("line")
     .style("stroke", "black")
     .attr("marker-end", "url(#arrowhead)");
+    link = svg.append("g")
+        .attr("class", "links")
+    .selectAll("path")
+    .data(graph.links)
+    .enter()
+    .append("path")
+    .attr('d', function(d) {
+        var dx = d.target.x - d.source.x,
+            dy = d.target.y - d.source.y,
+            dr = Math.sqrt(dx * dx + dy * dy);
+        return "M" + 
+            d.source.x + "," + 
+            d.source.y + "Q" + 
+            (d.source.x + d.target.x)/2 + "," + 
+            (d.source.y + d.target.y)/2 + " " + 
+            d.target.x + "," + 
+            d.target.y;
+    })
+    .style("stroke", "black")
+    .attr("fill", "none")
+    .attr("marker-end", "url(#arrowhead)");
+
 
 
     // set the data and properties of node circles
