@@ -27,31 +27,17 @@ body{
 .controls .alpha .alpha_bar:hover { border-width: 2px; margin:-1px; }
 .controls .alpha .alpha_bar:active #alpha_value { background-color: #3f7236 }
 .sidebar {
-  position: fixed;
-  right: 0;
-  top: 0;
-  height: 100%;
-  width: 300px;
-  background-color: #f4f4f4;
-  padding: 20px;
-  overflow-y: auto;
-  box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
-  display: none;
-}
-
-button {
-  padding: 8px 12px;
-  background-color: #333;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  margin-top: 10px;
+  flex-basis: 200px;
+  background-color:#eee;
+  padding: 5px;
+  margin: 5px 0;
 }
 
 /* SVG styles */
 svg {
   flex-basis: 100%;
   min-width: 200px;
+  border: 1px solid black; /* This line adds the black border */
 }
 .links line {
   stroke: #6f6f6f;
@@ -103,14 +89,44 @@ circle.fixed {
 }
 
 #graphDropdown {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
-  margin-top: 10px;
+  width: 50%;         /* Makes it take up 50% of its parent's width */
+  margin-left: auto;  /* Centers it horizontally */
+  margin-right: auto; /* Centers it horizontally */
+  z-index: 1;         /* Keeps it on top */
+  margin-top: 10px;   /* Adds space at the top */
+  margin-bottom: 10px;/* Adds space at the bottom */
 }
 
+#contentContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 
+#layoutContainer {
+  display: flex;
+  flex: 1; /* Makes sure it occupies the remaining space after the dropdown */
+  width: 100%; /* for example, or any value you'd like */
+  height: 100%; /* adjust as necessary */
+  position: relative; /* this allows absolute positioning inside it */
+  /* overflow: hidden; to hide overflowing content, if any */
+}
 
+#controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center items horizontally */
+  gap: 10px; /* Adjust as necessary, provides spacing between controls */
+  margin-right: 20px; /* Adjust as necessary */
+}
 
+#sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+svg {
+  flex: 1; /* Makes the SVG take the remaining space in the layoutContainer */
+  width: 100%; /* makes SVG take full width of its container */
+  height: 100%; /* makes SVG take full height of its container */
+}

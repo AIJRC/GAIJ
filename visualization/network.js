@@ -337,7 +337,3 @@ function updateAll() {
     updateForces();
     updateDisplay();
 };
-
-function closeSidebar() {
-    document.getElementById('sidebar').style.display = 'none';
-}
