@@ -10,7 +10,6 @@ d3.json("../data/subgraphs_list.json").then(subgraphs => {
         .enter().append("option")
         .attr("value", d => d.path)
         .text(d => `${d.top_suspects} (${d.num_nodes} nodes)`);
-    loadGraphData(subgraphs[1].path);
 });
 
 d3.select("#graphDropdown").on("change", function() {
@@ -229,6 +228,8 @@ function dragged(event, d) {
 	d.fx = clamp(event.x, 0, width);
 	d.fy = clamp(event.y, 0, height);
 	simulation.alpha(.5).restart();
+
+	updateSidebar(d);
 }
 
 d3.select(window).on("resize", function() {
@@ -261,6 +262,19 @@ function clamp(x, lo, hi) {
 	return Math.max(lo, Math.min(x, hi));
 }
 
+function updateSidebar(d) {
+    document.getElementById('sidebar-name').textContent = d.id;
+    document.getElementById('sidebar-industry').textContent = d.industry_name;
+    document.getElementById('sidebar-opencorporates-link').href = "https://opencorporates.com/companies/no/" + d.number;
+
+	const sourceButton = document.getElementById('sidebar-source-btn');
+    sourceButton.onclick = function() {
+        fetchTextForID(d.number);
+    };
+
+    document.getElementById('sidebar').style.display = 'block';
+}
+
 function click(event, d) {
 	delete d.fx;
 	delete d.fy;
@@ -269,10 +283,7 @@ function click(event, d) {
 	d3.select(this).transition().duration(800).attr("r", forceProperties.collide.radius);
 	simulation.alpha(1).restart()
 
-	document.getElementById('sidebar-name').textContent = d.id;
-	document.getElementById('sidebar-industry').textContent = d.industry_name;
-	document.getElementById('sidebar-opencorporates-link').href = "https://opencorporates.com/companies/no/" + d.number;
-	document.getElementById('sidebar').style.display = 'block';
+	updateSidebar(d);
 }
 
 function linkArc(d) {
@@ -287,3 +298,33 @@ function updateAll() {
     updateForces();
     updateDisplay();
 };
+
+function fetchTextForID(id) {
+    fetch(`../data/txts/${id}_arso_2020.csv.txt`)
+        .then(response => response.text())
+        .then(data => {
+            // Use a regular expression to replace instances of the ID with a highlighted version
+            const highlightedText = data.replace(new RegExp(id, 'g'), `<span class="highlight">${id}</span>`);
+            
+            const modal = document.getElementById('myModal');
+            const modalText = document.getElementById('modal-text-content');
+            
+            modalText.innerHTML = highlightedText;  // Use innerHTML since we're adding HTML tags for highlighting
+            modal.style.display = "block";
+        })
+        .catch(error => {
+            console.error('There was an error fetching the text:', error);
+        });
+}
+
+// When the user clicks on <span> (x), close the modal
+document.getElementsByClassName("close")[0].onclick = function() {
+  document.getElementById('myModal').style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target == document.getElementById('myModal')) {
+    document.getElementById('myModal').style.display = "none";
+  }
+}

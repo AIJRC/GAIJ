@@ -116,10 +116,24 @@
       <h3>Node Details</h3>
       <p><strong>Company name:</strong> <a href="#" id="sidebar-opencorporates-link" target="_blank"><span id="sidebar-name"></span></a></p>
       <p><strong>Industry:</strong> <span id="sidebar-industry"></span></p>
+      <button id="sidebar-source-btn">Source</button>
+      <div id="sidebar-source-content" style="display:none;">
+          <!-- Text from the file will be loaded here -->
+      </div>
   </div>  
   
   </div>
 </div>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p id="modal-text-content"></p>
+  </div>
+</div>
+
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <!-- import multiselection framework -->
