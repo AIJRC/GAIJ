@@ -6,6 +6,11 @@ from networkx.algorithms import community
 
 from itertools import chain
 
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from utils import find_substring_matches
+
 DATA_DIR = "../../data"
 
 initial_suspects = set(pd.read_csv("./suspects.csv", dtype="Int64").stack())
@@ -26,20 +31,42 @@ def get_unique_graphs(graph_list):
 
     return unique_graphs
 
+def create_name_to_number_mapping(number_to_name):
+    name_to_number = {}
+    for number, name in number_to_name.items():
+        # Get the potential variations of the name due to OCR issues
+        name_variations = find_substring_matches(name, name, remove_AS=False)
+        
+        # Map each variation to the corresponding number
+        for variation in name_variations:
+            name_to_number[variation] = number
+            
+    return name_to_number
+
+
 def get_data(df):
     number_to_name = df.set_index('number')['name'].to_dict()
-    
-    # Filter for relevant rows
+    name_to_number = create_name_to_number_mapping(number_to_name)
+
+
+    # Extract flagged nodes
     flagged_df = df[df["flagged_names"].astype(bool) | df["flagged_numbers"].astype(bool)]
     
-    # Extract node IDs
-    name_nodes = flagged_df['name'].tolist()
-    flagged_name_nodes = [node for sublist in flagged_df["flagged_names"].dropna() for node in sublist]
-    flagged_number_nodes = [number_to_name.get(num, num) for sublist in flagged_df["flagged_numbers"].dropna() for num in sublist]
-    unique_nodes = set(name_nodes + flagged_name_nodes + flagged_number_nodes)
+    number_nodes = flagged_df['number'].tolist()
+    flagged_name_nodes = [name_to_number.get(name_variation, None) for sublist in flagged_df["flagged_names"].dropna() for name in sublist for name_variation in find_substring_matches(name, name)]
+    flagged_name_nodes = list(filter(None, flagged_name_nodes))  # Filter out None values
+    flagged_number_nodes = [num for sublist in flagged_df["flagged_numbers"].dropna() for num in sublist]
+    
+    unique_nodes = set(number_nodes + flagged_name_nodes + flagged_number_nodes)
 
-    # Filter dataframe for unique nodes
-    df_filtered = df[df["name"].isin(unique_nodes)]
+    df_filtered = df[df["number"].isin(unique_nodes)]
+
+    # # Extract node IDs
+    # name_nodes = flagged_df['name'].tolist()
+    # flagged_name_nodes = [node for sublist in flagged_df["flagged_names"].dropna() for node in sublist]
+    # flagged_number_nodes = [number_to_name.get(num, num) for sublist in flagged_df["flagged_numbers"].dropna() for num in sublist]
+    # unique_nodes = set(name_nodes + flagged_name_nodes + flagged_number_nodes)
+    # df_filtered = df[df["name"].isin(unique_nodes)]
     
     nodes = []
     for _, row in df_filtered.iterrows():
@@ -134,6 +161,8 @@ def find_subgraphs(data, output_directory="."):
 
     subgraphs = get_unique_graphs(subgraphs)
 
+    number_to_name = df.set_index('number')['name'].to_dict()
+
     # Convert each subgraph back to the JSON format
     subgraph_data = []
     for subgraph in subgraphs:
@@ -143,7 +172,8 @@ def find_subgraphs(data, output_directory="."):
         # Determine top suspects of the subgraph
         suspects_in_subgraph = [node for node in initial_suspects if node in subgraph.nodes()]
         sorted_suspects = sorted(suspects_in_subgraph, key=lambda n: subgraph.degree(n), reverse=True)
-        top_suspects = [subgraph.nodes[suspect]['id'] for suspect in sorted_suspects[:3]]
+        print(sorted_suspects)
+        top_suspects = [number_to_name.get(suspect, suspect) for suspect in sorted_suspects]
 
         subgraph_data.append({
             "nodes": nodes,
@@ -154,23 +184,22 @@ def find_subgraphs(data, output_directory="."):
 
     return sorted(subgraph_data, key=lambda x: x['num_nodes'], reverse=True)
 
-data = get_data(df)
+subgraph_data = find_subgraphs(get_data(df))
 
-with open(f"{DATA_DIR}/orgs.json", "w") as f:
-    json.dump(data, f, indent=4, sort_keys=True)
-
-subgraph_data = find_subgraphs(data)
-subgraph_list = []
 for idx, subgraph in enumerate(subgraph_data, 1):
-    subgraph_data = {
-        "path": f"{DATA_DIR}/subgraphs/graph_{idx}.json",
-        "top_suspects": subgraph["top_suspects"],
-        "num_nodes": subgraph["num_nodes"]
-    }
-    subgraph_list.append(subgraph_data)
-
     with open(f"{DATA_DIR}/subgraphs/graph_{idx}.json", "w") as f:
         json.dump(subgraph, f, indent=4, sort_keys=True)
-    
+
 with open(f"{DATA_DIR}/subgraphs_list.json", "w") as f:
+    subgraph_list = []
+    
+    for idx, subgraph in enumerate(subgraph_data, 1):
+        subgraph_dict = {
+            "path": f"{DATA_DIR}/subgraphs/graph_{idx}.json",
+            "top_suspects": subgraph["top_suspects"],
+            "num_nodes": subgraph["num_nodes"]
+        }
+        
+        subgraph_list.append(subgraph_dict)
+        
     json.dump(subgraph_list, f, indent=4, sort_keys=True)

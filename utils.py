@@ -102,7 +102,7 @@ def find_9_digit_words(string):
     return pattern.findall(string)
 
 
-def find_substring_matches(substring, string):
+def find_substring_matches(substring, string, remove_AS=True):
     # Define a mapping of OCR decoding issues for Norwegian characters
     ocr_decoding_issues = {
         'O': ['Ø', '@', '0'],
@@ -116,7 +116,8 @@ def find_substring_matches(substring, string):
     }
     
     # Remove 'AS' and any amount of whitespace to the right and left of it at the end of the substring
-    substring = re.sub(r'\s*(?:AS)?\s*$', '', substring, flags=re.IGNORECASE)
+    if remove_AS:
+        substring = re.sub(r'\s*(?:AS)?\s*$', '', substring, flags=re.IGNORECASE)
     
     # Generate a list of possible variations of the substring
     variations = [substring]
