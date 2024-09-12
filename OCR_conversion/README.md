@@ -28,13 +28,13 @@ Key features:
 
 Run the extract_text.py script to perform OCR on image files:
 
-uv run OCR_conversion/extract_text.py --tifs_dir <input_directory> --md_dir <output_directory>
+`uv run OCR_conversion/extract_text.py --tifs_dir <input_directory> --md_dir <output_directory>`
 
 ### Detect Companies
 
 Use the look_for_companies.sh script to search for company names:
 
-./OCR_conversion/look_for_companies.sh <folder_with_md_files> <path_to_companies_details.csv> <output_folder> [num_processes]
+`./OCR_conversion/look_for_companies.sh <folder_with_md_files> <path_to_companies_details.csv> <output_folder> [num_processes]`
 
 
 ## UV Tool
@@ -45,7 +45,7 @@ The uv tool is used in conjunction with this pipeline. To run the uv tool:
 2. Navigate to the directory containing the uv tool.
 3. Execute the uv tool with the appropriate command-line arguments:
 
-./uv [options] <input_files>
+`./uv [options] <input_files>`
 
 Refer to the uv tool documentation for specific options and usage instructions.
 
