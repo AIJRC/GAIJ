@@ -1,0 +1,11 @@
+[project]
+name = "gaij"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2.2",
+    "pillow>=10.4.0",
+    "tqdm>=4.66.5",
+]
