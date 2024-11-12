@@ -128,3 +128,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+converted/*
+extracted/*
+sandbox/converted/*
+sandbox/extracted/*
+sandbox/models/** 
+
+**.zip
