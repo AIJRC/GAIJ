@@ -6,7 +6,7 @@ import queue
 import concurrent.futures
 import argparse
 
-
+os.environ['TESSDATA_PREFIX'] = '/usr/bin/tesseract-ocr/5/'
 
 def ocr_image(image_path, queue, output_folder):
     api = None
