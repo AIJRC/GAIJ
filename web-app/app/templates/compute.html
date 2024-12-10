@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Compute New Properties</h2>
+
+    <!-- Compute Form -->
+    <div class="mt-4">
+        <form id="compute-form" method="post" action="/compute" enctype="multipart/form-data" class="row g-3">
+            <!-- Task Name Input -->
+            <div class="col-md-4">
+                <label for="task_name" class="form-label">Name of Task (Optional):</label>
+                <input type="text" id="task_name" name="task_name" class="form-control" placeholder="Enter a descriptive name for this task">
+            </div>
+            
+            <!-- Properties Input -->
+            <div class="col-md-12">
+                <label for="properties" class="form-label">New Properties (semicolon-separated):</label>
+                <input type="text" id="properties" name="properties" class="form-control" placeholder="property1: description of property1;property2: description of property 2">
+            </div>
+
+            <!-- Company IDs Input -->
+            <div class="col-md-6">
+                <label for="company_ids" class="form-label">Company IDs (comma-separated):</label>
+                <input type="text" id="company_ids" name="company_ids" class="form-control" placeholder="Optional">
+            </div>
+
+            <!-- File Upload for CSV -->
+            <div class="col-md-6">
+                <label for="csv_file" class="form-label">Upload Company IDs CSV:</label>
+                <input type="file" id="csv_file" name="csv_file" class="form-control" accept=".csv">
+            </div>
+
+            <div class="col-12">
+                <button id="compute-button" type="submit" class="btn btn-primary">Compute</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- In-Progress Jobs Table -->
+    <div class="mt-5">
+        <h3>In-Progress Jobs</h3>
+        <table class="table table-striped" id="jobs-table">
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Elapsed Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be dynamically added by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('compute-form');
+    const jobsTableBody = document.querySelector('#jobs-table tbody');
+
+    // Handle form submission
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent form from redirecting the page
+
+        // Prepare form data
+        const formData = new FormData(form);
+
+        // Send the form data to the server via fetch
+        const response = await fetch('/compute', {
+            method: 'POST',
+            body: formData
+        });
+
+        // Parse the response JSON
+        const result = await response.json();
+
+        // Optionally, add the new job to the jobs table immediately
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${result.task_name || result.job_id}</td>
+            <td>0s</td>
+            <td>in progress</td>
+        `;
+        jobsTableBody.appendChild(newRow);
+    });
+
+    // Function to update jobs table periodically
+    const updateJobsTable = async () => {
+        const response = await fetch('/compute/jobs');
+        const jobs = await response.json();
+        jobsTableBody.innerHTML = ''; // Clear existing rows
+        jobs.forEach(job => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${job.name || job.id}</td>
+                <td>${job.elapsed_time}s</td>
+                <td>${job.status}</td>
+            `;
+            jobsTableBody.appendChild(row);
+        });
+    };
+
+    // Poll the server every 2 seconds to update the jobs table
+    setInterval(updateJobsTable, 2000);
+</script>
+{% endblock %}
