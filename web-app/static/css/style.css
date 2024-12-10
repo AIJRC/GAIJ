@@ -1,21 +1,12 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+    background-color: #f4f4f9; /* Light background for better contrast */
 }
 
-header {
-    background: #333;
-    color: white;
-    padding: 10px 20px;
+header .navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
 }
 
-header nav a {
-    color: white;
-    margin: 0 10px;
-    text-decoration: none;
-}
-
-main {
-    padding: 20px;
+footer {
+    margin-top: 50px;
 }
