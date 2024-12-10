@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Compute Properties</h2>
+<form method="post" action="/compute">
+    <label for="companies">Companies (comma-separated):</label>
+    <input type="text" id="companies" name="companies">
+    
+    <label for="properties">Properties (comma-separated):</label>
+    <input type="text" id="properties" name="properties">
+    
+    <button type="submit">Submit</button>
+</form>
+{% endblock %}

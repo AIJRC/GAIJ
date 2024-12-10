@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Visualize Graph</h2>
+<form method="get" action="/visualize">
+    <label for="company_id">Company ID:</label>
+    <input type="text" id="company_id" name="company_id">
+    
+    <label for="property_key">Property Key:</label>
+    <input type="text" id="property_key" name="property_key">
+    
+    <label for="property_value">Property Value:</label>
+    <input type="text" id="property_value" name="property_value">
+    
+    <button type="submit">Visualize</button>
+</form>
+<div id="graph"></div>
+{% endblock %}
