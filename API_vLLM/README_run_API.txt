@@ -34,3 +34,8 @@ To end the session:
 screen -r api_server
 keys: Ctrl + C 
 	- Stop the SSH bridge connection: exit
+
+
+Requirements: 
+Pandas 
+openpyxl

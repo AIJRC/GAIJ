@@ -115,9 +115,8 @@ def readfile(input_dir,input_file):
 
     return contextText
 
-def make_prompt(contextText):
-    # function to create the prompt including the info from the file 
 
+def old_promopt():
     # ====== Prompt question 
     prompt_question = """
     <|system|> You are a helpful assistant. You process tax records of Norwegian companies and extract specific information from them, then present it in a structured JSON format. 
@@ -175,6 +174,124 @@ def make_prompt(contextText):
     Only return the JSON response; do not add explanations, comments, or repeated entries.
     <|assistant|>
     """
+    return(prompt_question)
+
+def new_prompt_EN():
+    
+    # ====== Prompt question 
+    prompt_question = """
+    <|system|> You are a helpful assistant. You process tax records of Norwegian companies and extract specific information from them, then present it in a structured JSON format. 
+    This is the tax record you will base your answers on: {content}
+
+    Please return only the response in the following JSON format. Do not include any explanation, comments, or extra information.
+
+    The JSON structure should strictly follow this format:
+
+    {
+        "company_name": "string",          
+        "company_id": "string",    
+        "company_address": "string",  
+        "company_type": "string"       
+        "leadership": {
+            "CEO": "string or null",       
+            "board_members": [
+                "string" or null           
+            ],
+             "share_holders": [
+                "string" or null           
+            ],
+            "chairman_of_the_board": "string or null" 
+        },
+        "subsidiaries": [
+            "string" or null               
+        ],  
+        "parent_company": "string or null", 
+
+    }
+
+    <|user|> Please extract the following information from the tax record:
+        
+        - "company_name": The name of the company.
+        - "company_id": The company tax number.
+        - "company_address": The company's address.
+        - "company_type": The type of the company as specified on the first page of the tax record.
+        - "leadership": This is a nested dictionary with the following information:
+            - "CEO": Name of the CEO.
+            - "board_members": List of board members (if available).
+            - "share_holders": List of share holders (if available).
+            - "chairman_of_the_board": Name of the chairman of the board of the company.
+        - "subsidiaries": List of the subsidiaries of the company (empty list if none).
+        - "parent_company": Name of the parent company (null if not available).
+    
+    Please ensure that all fields are included, even if they are empty or null.
+    Only return the JSON response; do not add explanations, comments, or repeated entries.
+    <|assistant|>
+    """
+    
+    return(prompt_question)
+
+def new_prompt_NOR():
+    
+    # ====== Prompt question 
+    prompt_question = """
+    <|system|> Du er en hjelpsom assistent. Du behandler norske selskapers skattelister og trekker ut spesifikk informasjon fra dem, og presenterer den i et strukturert JSON-format. 
+    Dette er skatteoppføringen du vil basere svarene dine på: {context}
+
+    Vennligst returner kun svaret i følgende JSON-format. Ikke ta med forklaringer, kommentarer eller ekstra informasjon.
+
+    JSON-strukturen skal strengt følge dette formatet:
+
+    {
+        "Foretaksnavn": «string»,          
+        "Organisasjonsnummer": «string»,    
+        "Forretningsadresse": «string»,  
+        "Organisasjonsform": «string»       
+        "Lederskap": {
+            "Representant_for_selskapet": «string eller null»,       
+            "Styremedlemmer": [
+                «string» eller null           
+            ],
+             "Aksjeeiere": [
+                «string» eller null           
+            ],
+            "Styreleder": «string eller null» 
+        },
+        "Datterselskaper": [
+            «string» eller null               
+        ],  
+        "Morselskap": «string eller null», 
+
+    }
+
+    <|user|> Vennligst hent ut følgende informasjon fra skatteoppføringen:
+        
+        - Foretaksnavn: Navnet på selskapet.
+        - Organisasjonsnummer: Selskapets skattenummer.
+        - Forretningsadresse: Selskapets adresse.
+        - Organisasjonsform: Selskapstypen som er spesifisert på første side i skatteregistreringen.
+        - Lederskap: Dette er en nøstet ordbok med følgende informasjon:
+            - "Representant_for_selskapet": Navnet på administrerende direktør.
+            - Styremedlemmer: Liste over styremedlemmer (hvis tilgjengelig).
+            - Aksjeeiere: Liste over aksjeeiere: Liste over aksjeeiere (hvis tilgjengelig).
+            - Styreleder: Navnet på selskapets styreleder.
+        - Datterselskaper: Liste over datterselskaper: Liste over selskapets datterselskaper (tom liste hvis ingen).
+        - Morselskap: Navn på morselskapet (null hvis ikke tilgjengelig).
+    
+    Sørg for at alle feltene er inkludert, selv om de er tomme eller null.
+    Returner kun JSON-svaret; ikke legg til forklaringer, kommentarer eller gjentatte oppføringer.
+    <|assistant|>
+
+    """
+    
+    return(prompt_question)
+    
+    
+
+def make_prompt(contextText):
+    # function to create the prompt including the info from the file 
+
+    # ====== Prompt question 
+    prompt_question=old_promopt()
     # ====== Complete the prompt 
     prompt_text = contextText + prompt_question
 
