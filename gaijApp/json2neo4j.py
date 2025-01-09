@@ -48,8 +48,8 @@ def flatten_property_data(property_data):
     return []
 
 
-def populate_graph_from_directory(directory_path, graph):
-    companies_data = load_json_files(directory_path)
+# def populate_graph_from_directory(directory_path, graph):
+#     companies_data = load_json_files(directory_path)
 
 def populate_graph_from_directory(directory_path, graph):
     companies_data = load_json_files(directory_path)
@@ -57,88 +57,105 @@ def populate_graph_from_directory(directory_path, graph):
     company_nodes = {}
     for data in tqdm(companies_data, desc="Creating company nodes"):
         # Check if company already exists in database
-        company_id = data.get("company_id")
-        if not company_id:
+        company_id = data.get("ID")
+        company_name = data.get("name")
+
+         # Handle case where name is a list
+        if isinstance(company_name, list):
+            company_name = company_name[0] if company_name else None
+            
+        if not company_id or not company_name:
             continue
             
         existing = graph.nodes.match("Company", id=company_id).first()
         if existing:
-            company_nodes[data.get("company_name")] = existing
+            company_nodes[company_name] = existing
             continue
-
-        # Create node with safe data access
+        # Create node with new structure
         company_node = Node(
             "Company",
-            name=data.get("company_name", "Unknown"),
+            name=data.get("name", "Unknown"),
             id=company_id,
-            address=data.get("company_address", ""),
-            profit_status=data.get("profit_status", ""),
-            number_of_employees=data.get("number_of_employees", "")
+            address=data.get("address", ""),
+            type=data.get("type", "")
         )
         graph.merge(company_node, "Company", "id")
-        company_nodes[data.get("company_name")] = company_node
+        company_nodes[data.get("name")[0]] = company_node
 
-        # Only create address node if address exists
-        if data.get("company_address"):
-            address_node = Node("Address", full_address=data["company_address"])
+        # Create address node if address exists
+        if data.get("address"):
+            address_node = Node("Address", full_address=data["address"])
             graph.merge(address_node, "Address", "full_address")
             graph.merge(Relationship(company_node, "LOCATED_AT", address_node))
 
     for data in tqdm(companies_data, desc="Creating relationships"):
-        company_name = data.get("company_name")
+        company_name = data.get("name")[0]
         if not company_name or company_name not in company_nodes:
             continue
             
         main_company = company_nodes[company_name]
         
-        # Safe access to subsidiaries
-        for subsidiary in data.get("subsidiaries", []):
-            if subsidiary in company_nodes:
-                graph.merge(Relationship(main_company, "PARENT_OF", company_nodes[subsidiary]))
+        subsidiaries = data.get("subsidiaries", [])
+        if type(subsidiaries) == list:
+            for subsidiary in subsidiaries:
+                if subsidiary in company_nodes:
+                    graph.merge(Relationship(main_company, "PARENT_OF", company_nodes[subsidiary]))
+                else:
+                    subsidiary_node = Node("Company", name=subsidiary)
+                    graph.merge(subsidiary_node, "Company", "name")
+                    graph.merge(Relationship(main_company, "PARENT_OF", subsidiary_node))
+        elif type(subsidiaries) == str:
+            if subsidiaries in company_nodes:
+                graph.merge(Relationship(main_company, "PARENT_OF", company_nodes[subsidiaries]))
             else:
-                subsidiary_node = Node("Company", name=subsidiary)
+                subsidiary_node = Node("Company", name=subsidiaries)
                 graph.merge(subsidiary_node, "Company", "name")
                 graph.merge(Relationship(main_company, "PARENT_OF", subsidiary_node))
 
-        # Safe access to parent company
-        parent = data.get("parent_company")
-        if parent and parent in company_nodes:
-            graph.merge(Relationship(company_nodes[parent], "PARENT_OF", main_company))
+        # Handle parent company
+        parents = data.get("parent",[])
+        if type(parents) == list:
+            for parent in parents:
+                if parent and parent in company_nodes:
+                    graph.merge(Relationship(company_nodes[parent], "PARENT_OF", main_company))
+                else:
+                    parent_node = Node("Company", name=parent)
+                    graph.merge(parent_node, "Company", "name")
+                    graph.merge(Relationship(parent_node, "PARENT_OF", main_company))
+        elif type(parents) == str:
+                if parents and parents in company_nodes:
+                    graph.merge(Relationship(company_nodes[parents], "PARENT_OF", main_company))
+                else:
+                    parent_node = Node("Company", name=parents)
+                    graph.merge(parent_node, "Company", "name")
+                    graph.merge(Relationship(parent_node, "PARENT_OF", main_company))
+            
 
-        # Safe access to leadership data
-        leadership = data.get("leadership", {})
-        for role, person in [
-            ("CEO", leadership.get("CEO")),
-            ("Chairman", leadership.get("chairman_of_the_board"))
-        ]:
-            if person:
-                person_node = Node("Person", name=person, role=role)
-                graph.merge(person_node, "Person", "name")
-                graph.merge(Relationship(person_node, "LEADS", main_company))
+        leaders = data.get("leadership", [])
+        if type(leaders) == list:
+            for leader in leaders:
+                if leader:
+                    # Check if person already exists
+                    existing_person = graph.nodes.match("Person", name=leader).first()
+                    if existing_person:
+                        person_node = existing_person
+                    else:
+                        person_node = Node("Person", name=leader)
+                        graph.merge(person_node, "Person", "name")
 
-        # Safe access to board members
-        for member in leadership.get("board_members", []):
-            if member:
-                member_node = Node("Person", name=member, role="Board Member")
-                graph.merge(member_node, "Person", "name")
-                graph.merge(Relationship(member_node, "MEMBER_OF", main_company))
+                    # Create relationship if it doesn't exist
+                    if not graph.match((person_node, main_company), "LEADS").first():
+                        graph.merge(Relationship(person_node, "LEADS", main_company))
+        else:
+            if leaders:
+                # Check if person already exists
+                existing_person = graph.nodes.match("Person", name=leaders).first()
+                if existing_person:
+                    person_node = existing_person
+                else:
+                    person_node = Node("Person", name=leaders)
+                    graph.merge(person_node, "Person", "name")
 
-        # Safe access to property ownership
-        property_data = data.get("property_ownership", {})
-        
-        owned_properties = flatten_property_data(property_data.get("owns", []))
-        for owned in owned_properties:
-            if owned:
-                property_node = Node("Property", name=owned)
-                graph.merge(property_node, "Property", "name")
-                graph.merge(Relationship(main_company, "OWNS", property_node))
-
-        rented_properties = flatten_property_data(property_data.get("rents", []))
-        for rented in rented_properties:
-            if rented:
-                property_node = Node("Property", name=rented)
-                graph.merge(property_node, "Property", "name")
-                graph.merge(Relationship(main_company, "RENTS", property_node))
 
 def main():
     args = parse_args()
