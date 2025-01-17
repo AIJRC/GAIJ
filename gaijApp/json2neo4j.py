@@ -1,4 +1,4 @@
-from py2neo import Graph, Node, Relationship
+from neo4j import GraphDatabase
 import json
 import os
 import argparse
@@ -9,11 +9,53 @@ def parse_args():
     parser.add_argument('--data-dir', type=str, required=True, help='Directory containing JSON files')
     return parser.parse_args()
 
-def connect_to_neo4j():
-    neo4j_uri = os.getenv('NEO4J_URI', 'bolt://localhost:7687')
-    neo4j_user = os.getenv('NEO4J_USER', 'neo4j')
-    neo4j_password = os.getenv('NEO4J_PASSWORD', 'password')
-    return Graph(neo4j_uri, auth=(neo4j_user, neo4j_password))
+class Neo4jConnector:
+    def __init__(self):
+        neo4j_uri = os.getenv('NEO4J_URI', 'bolt://localhost:7687')
+        neo4j_user = os.getenv('NEO4J_USER', 'neo4j')
+        neo4j_password = os.getenv('NEO4J_PASSWORD', 'password')
+        self.driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
+
+    def close(self):
+        self.driver.close()
+
+    def create_company(self, tx, company_data):
+        query = """
+        MERGE (c:Company {id: $id})
+        SET c.name = $name,
+            c.address = $address,
+            c.type = $type
+        RETURN c
+        """
+        return tx.run(query, 
+                     id=company_data.get("ID"),
+                     name=company_data.get("name")[0] if isinstance(company_data.get("name"), list) else company_data.get("name"),
+                     address=company_data.get("address", ""),
+                     type=company_data.get("type", ""))
+
+    def create_address(self, tx, company_id, address):
+        query = """
+        MATCH (c:Company {id: $company_id})
+        MERGE (a:Address {full_address: $address})
+        MERGE (c)-[:LOCATED_AT]->(a)
+        """
+        return tx.run(query, company_id=company_id, address=address)
+
+    def create_relationship(self, tx, from_id, to_name, rel_type):
+        query = f"""
+        MATCH (c1:Company {{id: $from_id}})
+        MERGE (c2:Company {{name: $to_name}})
+        MERGE (c1)-[:{rel_type}]->(c2)
+        """
+        return tx.run(query, from_id=from_id, to_name=to_name)
+
+    def create_person_relationship(self, tx, person_name, company_id):
+        query = """
+        MATCH (c:Company {id: $company_id})
+        MERGE (p:Person {name: $person_name})
+        MERGE (p)-[:LEADS]->(c)
+        """
+        return tx.run(query, person_name=person_name, company_id=company_id)
 
 def load_json_files(directory_path):
     json_data = []
@@ -21,147 +63,60 @@ def load_json_files(directory_path):
     
     for filename in tqdm(files, desc="Loading JSON files"):
         try:
-            # First try with utf-8-sig
             with open(os.path.join(directory_path, filename), 'r', encoding='utf-8-sig') as file:
                 json_data.append(json.load(file))
         except UnicodeDecodeError:
-            # If that fails, try with latin-1
             with open(os.path.join(directory_path, filename), 'r', encoding='latin-1') as file:
                 json_data.append(json.load(file))
     return json_data
 
-
-def flatten_property_data(property_data):
-    """Extract property names from nested structures"""
-    if isinstance(property_data, str):
-        return [property_data]
-    if isinstance(property_data, dict):
-        properties = []
-        for value in property_data.values():
-            properties.extend(flatten_property_data(value))
-        return properties
-    if isinstance(property_data, list):
-        properties = []
-        for item in property_data:
-            properties.extend(flatten_property_data(item))
-        return properties
-    return []
-
-
-# def populate_graph_from_directory(directory_path, graph):
-#     companies_data = load_json_files(directory_path)
-
-def populate_graph_from_directory(directory_path, graph):
+def populate_graph_from_directory(directory_path, neo4j):
     companies_data = load_json_files(directory_path)
     
-    company_nodes = {}
-    for data in tqdm(companies_data, desc="Creating company nodes"):
-        # Check if company already exists in database
-        company_id = data.get("ID")
-        company_name = data.get("name")
+    with neo4j.driver.session() as session:
+        for data in tqdm(companies_data, desc="Processing companies"):
+            if not data.get("ID") or not data.get("name"):
+                continue
 
-         # Handle case where name is a list
-        if isinstance(company_name, list):
-            company_name = company_name[0] if company_name else None
-            
-        if not company_id or not company_name:
-            continue
-            
-        existing = graph.nodes.match("Company", id=company_id).first()
-        if existing:
-            company_nodes[company_name] = existing
-            continue
-        # Create node with new structure
-        company_node = Node(
-            "Company",
-            name=data.get("name", "Unknown"),
-            id=company_id,
-            address=data.get("address", ""),
-            type=data.get("type", "")
-        )
-        graph.merge(company_node, "Company", "id")
-        company_nodes[data.get("name")[0]] = company_node
+            # Create company node
+            session.execute_write(neo4j.create_company, data)
 
-        # Create address node if address exists
-        if data.get("address"):
-            address_node = Node("Address", full_address=data["address"])
-            graph.merge(address_node, "Address", "full_address")
-            graph.merge(Relationship(company_node, "LOCATED_AT", address_node))
+            # Create address relationship
+            if data.get("address"):
+                session.execute_write(neo4j.create_address, data["ID"], data["address"])
 
-    for data in tqdm(companies_data, desc="Creating relationships"):
-        company_name = data.get("name")[0]
-        if not company_name or company_name not in company_nodes:
-            continue
-            
-        main_company = company_nodes[company_name]
-        
-        subsidiaries = data.get("subsidiaries", [])
-        if type(subsidiaries) == list:
+            # Create subsidiary relationships
+            subsidiaries = data.get("subsidiaries", []) or []  # Default to empty list if None
+            if isinstance(subsidiaries, str):
+                subsidiaries = [subsidiaries]
             for subsidiary in subsidiaries:
-                if subsidiary in company_nodes:
-                    graph.merge(Relationship(main_company, "PARENT_OF", company_nodes[subsidiary]))
-                else:
-                    subsidiary_node = Node("Company", name=subsidiary)
-                    graph.merge(subsidiary_node, "Company", "name")
-                    graph.merge(Relationship(main_company, "PARENT_OF", subsidiary_node))
-        elif type(subsidiaries) == str:
-            if subsidiaries in company_nodes:
-                graph.merge(Relationship(main_company, "PARENT_OF", company_nodes[subsidiaries]))
-            else:
-                subsidiary_node = Node("Company", name=subsidiaries)
-                graph.merge(subsidiary_node, "Company", "name")
-                graph.merge(Relationship(main_company, "PARENT_OF", subsidiary_node))
+                if subsidiary:
+                    session.execute_write(neo4j.create_relationship, data["ID"], subsidiary, "PARENT_OF")
 
-        # Handle parent company
-        parents = data.get("parent",[])
-        if type(parents) == list:
+            # Create parent relationships
+            parents = data.get("parent", []) or []  # Default to empty list if None
+            if isinstance(parents, str):
+                parents = [parents]
             for parent in parents:
-                if parent and parent in company_nodes:
-                    graph.merge(Relationship(company_nodes[parent], "PARENT_OF", main_company))
-                else:
-                    parent_node = Node("Company", name=parent)
-                    graph.merge(parent_node, "Company", "name")
-                    graph.merge(Relationship(parent_node, "PARENT_OF", main_company))
-        elif type(parents) == str:
-                if parents and parents in company_nodes:
-                    graph.merge(Relationship(company_nodes[parents], "PARENT_OF", main_company))
-                else:
-                    parent_node = Node("Company", name=parents)
-                    graph.merge(parent_node, "Company", "name")
-                    graph.merge(Relationship(parent_node, "PARENT_OF", main_company))
-            
+                if parent:
+                    session.execute_write(neo4j.create_relationship, data["ID"], parent, "PARENT_OF")
 
-        leaders = data.get("leadership", [])
-        if type(leaders) == list:
+            # Create leadership relationships
+            leaders = data.get("leadership", []) or []  # Default to empty list if None
+            if isinstance(leaders, str):
+                leaders = [leaders]
             for leader in leaders:
                 if leader:
-                    # Check if person already exists
-                    existing_person = graph.nodes.match("Person", name=leader).first()
-                    if existing_person:
-                        person_node = existing_person
-                    else:
-                        person_node = Node("Person", name=leader)
-                        graph.merge(person_node, "Person", "name")
-
-                    # Create relationship if it doesn't exist
-                    if not graph.match((person_node, main_company), "LEADS").first():
-                        graph.merge(Relationship(person_node, "LEADS", main_company))
-        else:
-            if leaders:
-                # Check if person already exists
-                existing_person = graph.nodes.match("Person", name=leaders).first()
-                if existing_person:
-                    person_node = existing_person
-                else:
-                    person_node = Node("Person", name=leaders)
-                    graph.merge(person_node, "Person", "name")
-
+                    session.execute_write(neo4j.create_person_relationship, leader, data["ID"])
 
 def main():
     args = parse_args()
-    graph = connect_to_neo4j()
-    populate_graph_from_directory(args.data_dir, graph)
-    print("Knowledge graph populated successfully!")
+    neo4j = Neo4jConnector()
+    try:
+        populate_graph_from_directory(args.data_dir, neo4j)
+        print("Knowledge graph populated successfully!")
+    finally:
+        neo4j.close()
 
 if __name__ == "__main__":
     main()

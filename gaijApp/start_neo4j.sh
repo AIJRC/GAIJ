@@ -12,4 +12,4 @@ sudo docker run \
   -v $HOME/neo4j/logs:/logs \
   -v $HOME/neo4j/conf:/conf \
   --env NEO4J_AUTH=neo4j/test \
-  neo4j:4.4
+  neo4j
