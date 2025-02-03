@@ -1,0 +1,20 @@
+.info_table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.info_table td {
+  padding: 8px;
+  vertical-align: top;
+  border-bottom: 1px solid #eee;
+}
+
+.info_table .first_col {
+  width: 150px;
+  color: #666;
+  font-weight: 500;
+}
+
+.info_table .second_col {
+  color: #333;
+}

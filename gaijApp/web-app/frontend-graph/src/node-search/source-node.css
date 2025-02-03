@@ -1,0 +1,23 @@
+.source_node_container {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.source_node_container.single {
+  justify-content: center;
+}
+
+.source_node_section {
+  flex: 1;
+}
+
+.source_node_section.single {
+  flex: 0 1 auto;
+  width: 50%;
+}
+
+.source_node_container.dual .node_search_form {
+  width: 100%;
+}

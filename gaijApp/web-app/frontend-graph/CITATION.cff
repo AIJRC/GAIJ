@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+title: >-
+  greenelab/connectivity-search-frontend repository:
+  Frontend source code for Hetnet connectivity search
+message: >-
+  This citation is for the code repository.
+  To cite Hetnet connectivity search more generally,
+  see the manuscript at <https://greenelab.github.io/connectivity-search-manuscript/>.
+type: software
+authors:
+  - given-names: Vincent
+    family-names: Rubinetti
+    orcid: 'https://orcid.org/0000-0002-4655-3773'
+  - given-names: Daniel
+    family-names: Himmelstein
+    orcid: 'https://orcid.org/0000-0002-3012-7446'
+  - given-names: Dongbo
+    family-names: Hu
+    orcid: 'https://orcid.org/0000-0001-7870-8242'
+  - given-names: Casey
+    family-names: Greene
+    orcid: 'https://orcid.org/0000-0001-8713-9213'
+identifiers:
+  - type: swh
+    value: 'swh:1:snp:8619a270140589cdd6849f17490ccbd7b5dbcc32'
+    description: Software Heritage Revision Snapshot
+  - type: swh
+    value: 'swh:1:dir:5f9f089341bb4ed40c696e307d18752ad6e03135'
+    description: Software Heritage Directory Snapshot
+repository-code: 'https://github.com/greenelab/connectivity-search-frontend'
+url: 'https://het.io/search/'
+abstract: Source code for the Hetnet connectivity search React webapp.
+keywords:
+  - react
+  - search
+  - website
+  - paths
+  - webapp
+  - networks
+  - hetio
+  - hetmech
+  - hetnets
+  - hetnet-connectivity-search
+license: BSD-3-Clause

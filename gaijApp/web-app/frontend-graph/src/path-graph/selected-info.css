@@ -1,0 +1,9 @@
+#graph_info_container {
+  margin-top: 10px;
+  min-height: 120px;
+}
+@media only screen and (max-width: 640px) {
+  #graph_info_container {
+    min-height: 200px;
+  }
+}
