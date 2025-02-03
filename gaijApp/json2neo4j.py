@@ -13,7 +13,7 @@ class Neo4jConnector:
     def __init__(self):
         neo4j_uri = os.getenv('NEO4J_URI', 'bolt://localhost:7687')
         neo4j_user = os.getenv('NEO4J_USER', 'neo4j')
-        neo4j_password = os.getenv('NEO4J_PASSWORD', 'password')
+        neo4j_password = os.getenv('NEO4J_PASSWORD', 'testtest')
         self.driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
 
     def close(self):

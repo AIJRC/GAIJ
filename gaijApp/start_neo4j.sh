@@ -11,5 +11,5 @@ sudo docker run \
   -v $HOME/neo4j/import:/var/lib/neo4j/import \
   -v $HOME/neo4j/logs:/logs \
   -v $HOME/neo4j/conf:/conf \
-  --env NEO4J_AUTH=neo4j/test \
+  --env NEO4J_AUTH=neo4j/testtest \
   neo4j

@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Translate Norwegian Files",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/translation_tools/g_translation.py",
+            "console": "integratedTerminal",
+            "args": [
+                "/Users/nuno/repos/gaij/suspects/mds/cleaned_no"
+            ]
+        }
+    ]
+}
