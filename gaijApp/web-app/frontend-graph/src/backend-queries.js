@@ -417,3 +417,235 @@ export async function getTopSharedAddresses() {
     await session.close();
   }
 }
+export async function getSharedLeadership() {
+  const session = driver.session();
+  try {
+    const query = `
+      MATCH (p:Person)-[:LEADS]->(c1:Company)
+      MATCH (p)-[:LEADS]->(c2:Company)
+      WHERE c1 <> c2
+      WITH p, c1, c2
+      RETURN DISTINCT p, c1, c2
+      LIMIT 100
+    `;
+    
+    const result = await session.run(query);
+    const graphData = {
+      nodes: [],
+      edges: []
+    };
+    
+    const nodesMap = new Map();
+
+    result.records.forEach(record => {
+      const person = record.get('p');
+      const company1 = record.get('c1');
+      const company2 = record.get('c2');
+      
+      // Add person if not already added
+      if (!nodesMap.has(person.identity.toNumber())) {
+        nodesMap.set(person.identity.toNumber(), {
+          neo4j_id: person.identity.toNumber(),
+          name: person.properties.name,
+          metanode: 'Person',
+          properties: person.properties
+        });
+      }
+      
+      // Add companies if not already added
+      [company1, company2].forEach(company => {
+        if (!nodesMap.has(company.identity.toNumber())) {
+          nodesMap.set(company.identity.toNumber(), {
+            neo4j_id: company.identity.toNumber(),
+            name: company.properties.name,
+            metanode: 'Company',
+            properties: company.properties
+          });
+        }
+      });
+
+      // Add edges
+      graphData.edges.push({
+        source_neo4j_id: person.identity.toNumber(),
+        target_neo4j_id: company1.identity.toNumber(),
+        kind: 'LEADS',
+        directed: true,
+        properties: {}
+      });
+      
+      graphData.edges.push({
+        source_neo4j_id: person.identity.toNumber(),
+        target_neo4j_id: company2.identity.toNumber(),
+        kind: 'LEADS',
+        directed: true,
+        properties: {}
+      });
+    });
+
+    graphData.nodes = Array.from(nodesMap.values());
+    return graphData;
+  } catch (error) {
+    console.error('Error getting shared leadership:', error);
+    throw error;
+  } finally {
+    await session.close();
+  }
+}
+
+export async function getParentSubsidiaryLeadership() {
+  const session = driver.session();
+  try {
+    const query = `
+      MATCH (person:Person)-[:LEADS]->(companyA:Company)-[:PARENT_OF]->(companyB:Company),
+            (person)-[:LEADS]->(companyB)
+      WITH person, companyA, companyB
+      RETURN DISTINCT person, companyA, companyB
+      LIMIT 100
+    `;
+    
+    const result = await session.run(query);
+    const graphData = {
+      nodes: [],
+      edges: []
+    };
+    
+    const nodesMap = new Map();
+
+    result.records.forEach(record => {
+      const person = record.get('person');
+      const companyA = record.get('companyA');
+      const companyB = record.get('companyB');
+      
+      // Add person if not already added
+      if (!nodesMap.has(person.identity.toNumber())) {
+        nodesMap.set(person.identity.toNumber(), {
+          neo4j_id: person.identity.toNumber(),
+          name: person.properties.name,
+          metanode: 'Person',
+          properties: person.properties
+        });
+      }
+      
+      // Add companies if not already added
+      [companyA, companyB].forEach(company => {
+        if (!nodesMap.has(company.identity.toNumber())) {
+          nodesMap.set(company.identity.toNumber(), {
+            neo4j_id: company.identity.toNumber(),
+            name: company.properties.name,
+            metanode: 'Company',
+            properties: company.properties
+          });
+        }
+      });
+
+      // Add LEADS edges from person to both companies
+      graphData.edges.push({
+        source_neo4j_id: person.identity.toNumber(),
+        target_neo4j_id: companyA.identity.toNumber(),
+        kind: 'LEADS',
+        directed: true,
+        properties: {}
+      });
+      
+      graphData.edges.push({
+        source_neo4j_id: person.identity.toNumber(),
+        target_neo4j_id: companyB.identity.toNumber(),
+        kind: 'LEADS',
+        directed: true,
+        properties: {}
+      });
+
+      // Add PARENT_OF edge between companies
+      graphData.edges.push({
+        source_neo4j_id: companyA.identity.toNumber(),
+        target_neo4j_id: companyB.identity.toNumber(),
+        kind: 'PARENT_OF',
+        directed: true,
+        properties: {}
+      });
+    });
+
+    graphData.nodes = Array.from(nodesMap.values());
+    return graphData;
+  } catch (error) {
+    console.error('Error getting parent-subsidiary leadership:', error);
+    throw error;
+  } finally {
+    await session.close();
+  }
+}
+
+export async function getCompaniesWithTwoSubsidiaries() {
+  const session = driver.session();
+  try {
+    const query = `
+      MATCH (parent:Company)-[:PARENT_OF]->(sub1:Company)
+      MATCH (parent)-[:PARENT_OF]->(sub2:Company)
+      WHERE sub1 <> sub2 OR sub1 = parent OR sub2 = parent
+      WITH DISTINCT parent, sub1, sub2
+      RETURN parent, sub1, sub2
+      LIMIT 100
+    `;
+    
+    const result = await session.run(query);
+    const graphData = {
+      nodes: [],
+      edges: []
+    };
+    
+    const nodesMap = new Map();
+
+    result.records.forEach(record => {
+      const parent = record.get('parent');
+      const sub1 = record.get('sub1');
+      const sub2 = record.get('sub2');
+      
+      // Add parent company if not already added
+      if (!nodesMap.has(parent.identity.toNumber())) {
+        nodesMap.set(parent.identity.toNumber(), {
+          neo4j_id: parent.identity.toNumber(),
+          name: parent.properties.name,
+          metanode: 'Company',
+          properties: parent.properties
+        });
+      }
+      
+      // Add subsidiaries if not already added
+      [sub1, sub2].forEach(company => {
+        if (!nodesMap.has(company.identity.toNumber())) {
+          nodesMap.set(company.identity.toNumber(), {
+            neo4j_id: company.identity.toNumber(),
+            name: company.properties.name,
+            metanode: 'Company',
+            properties: company.properties
+          });
+        }
+      });
+
+      // Add PARENT_OF edges
+      graphData.edges.push({
+        source_neo4j_id: parent.identity.toNumber(),
+        target_neo4j_id: sub1.identity.toNumber(),
+        kind: 'PARENT_OF',
+        directed: true,
+        properties: {}
+      });
+      
+      graphData.edges.push({
+        source_neo4j_id: parent.identity.toNumber(),
+        target_neo4j_id: sub2.identity.toNumber(),
+        kind: 'PARENT_OF',
+        directed: true,
+        properties: {}
+      });
+    });
+
+    graphData.nodes = Array.from(nodesMap.values());
+    return graphData;
+  } catch (error) {
+    console.error('Error getting companies with two subsidiaries:', error);
+    throw error;
+  } finally {
+    await session.close();
+  }
+}

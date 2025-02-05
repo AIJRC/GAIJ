@@ -5,11 +5,13 @@ import { SourceNode } from './source-node.js';
 import { TopCompaniesButton } from './top-companies-button.js';
 import { TopBoardMembersButton } from './top-board-members-button.js';
 import { TopAddressesButton } from './top-addresses-button.js';
+import { SharedLeadershipButton } from './shared-leadership-button.js';
+import { ParentSubsidiaryLeadershipButton } from './parent-subsidiary-leadership-button.js';
+import { CompaniesWithTwoSubsidiariesButton } from './get-companies-with-two-subsidiaries-button.js';
 
 import { Statistics } from './statistics.js';
 import './index.css';
 import './button-group.css';
-
 
 export class NodeSearch extends Component {
   render() {
@@ -21,6 +23,9 @@ export class NodeSearch extends Component {
             <TopCompaniesButton className="square_button" />
             <TopBoardMembersButton className="square_button" />
             <TopAddressesButton className="square_button" />
+            <SharedLeadershipButton className="square_button" />
+            <ParentSubsidiaryLeadershipButton className="square_button" />
+            <CompaniesWithTwoSubsidiariesButton className="square_button" />
           </div>
           <Statistics />
         </div>
@@ -28,7 +33,6 @@ export class NodeSearch extends Component {
     );
   }
 }
-
 
 NodeSearch = connect((state) => ({
   metagraph: state.metagraph

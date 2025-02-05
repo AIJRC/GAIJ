@@ -133,7 +133,7 @@ dmypy.json
 web-app/.venv-web-app
 
 
-**/.venv/
-**/.venv*/
+*.venv*
 .vscode
 **/node_modules/
+**/.DS_STORE
