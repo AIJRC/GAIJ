@@ -49,6 +49,7 @@ class App extends Component {
 
   // when component updates
   componentDidUpdate(prevProps) {
+    console.log('INSIDE COMPONENT DID UPDATE FUNCTION')
     if (prevProps.sourceNode.id !== this.props.sourceNode.id) {
       if (this.props.sourceNode.id && !this.state.isPathsLoading) {
         this.setState({ isPathsLoading: true }, async () => {
@@ -80,13 +81,13 @@ class App extends Component {
 
   render() {
     const { sourceNode } = this.props;
-    const shouldRenderGraph = sourceNode?.id && !this.state.isPathsLoading;
+    const shouldRenderResults = sourceNode?.id && !this.state.isPathsLoading;
 
     return (
       <>
         <NodeSearch />
-        {shouldRenderGraph && <NodeResults />}
-        {shouldRenderGraph && <PathGraph />}
+        {shouldRenderResults && <NodeResults />}
+        <PathGraph /> {/* Remove conditional rendering */}
       </>
     );
   }
