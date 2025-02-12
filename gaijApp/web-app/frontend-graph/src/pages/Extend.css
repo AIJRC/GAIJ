@@ -79,3 +79,79 @@
   .extend-form button:hover {
     background-color: #0056b3;
   }
+
+/* Tooltip Wrapper */
+.input-with-tooltip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+/* Info Button (i) */
+.info-button {
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+    position: relative;
+}
+
+.info-button:hover {
+    background-color: #0056b3;
+}
+
+/* Tooltip - Now Hidden by Default */
+.tooltip {
+    position: absolute;
+    top: 30px;
+    bottom: auto !important; /* Override any inherited `bottom: 100%` */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 12px;
+    border-radius: 5px;
+    font-size: 14px;
+    max-width: 350px;
+    min-width: 250px;
+    text-align: left;
+    word-wrap: break-word;
+    white-space: normal !important;
+    display: block;
+    line-height: 1.6;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+
+    /* Tooltip is now hidden by default */
+    /* opacity: 0; */
+    /* visibility: hidden; */
+    transition: opacity 0.2s ease-in-out, visibility 0.2s;
+}
+
+/* Show Tooltip on Hover */
+.input-with-tooltip:hover .tooltip,
+.input-with-tooltip:focus-within .tooltip,
+.info-button:hover + .tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Small triangle pointer */
+.tooltip::after {
+    content: "";
+    position: absolute;
+    /* bottom: 100%; */
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent #333 transparent;
+}
