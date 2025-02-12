@@ -1,0 +1,128 @@
+/* General Navbar Styling */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #5c5c5c;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+  }
+  
+  /* Logo Styling */
+  .navbar-logo {
+    font-size: 20px;
+    font-weight: bold;
+    margin-left: 10px;
+  }
+  
+  /* Navigation Links (Desktop View) */
+  .navbar-links {
+    display: flex;
+    gap: 40px; /* Increased spacing */
+    align-items: center;
+  }
+  
+  /* Navigation Links Styling */
+  .navbar-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+  }
+  
+  .navbar-links a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Login Button */
+  .navbar-login {
+    background: #555;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-right: 30px;  /* Ensures right padding */
+  }
+  
+  /* Hide menu icon on large screens */
+  .menu-icon {
+    display: none;
+  }
+  
+  /* Responsive Styling for Small Screens */
+  @media (max-width: 700px) {
+    .navbar {
+      flex-direction: row;
+      align-items: center;
+    }
+  
+    /* Hamburger Menu (Visible on Small Screens) */
+    .menu-icon {
+      display: block;
+      font-size: 24px;
+      cursor: pointer;
+      margin-right: 20px;
+    }
+  
+    /* Hide Links Initially (Until Menu is Opened) */
+    .navbar-links {
+      display: none;
+      flex-direction: column;
+      background: #333;
+      position: absolute;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      padding: 10px 0;
+    }
+  
+    /* Show Links When Menu is Open */
+    .navbar-links.open {
+      display: flex;
+    }
+  
+    /* Stack Links in Mobile View */
+    .navbar-links a {
+      padding: 10px;
+      font-size: 18px;
+    }
+  
+    /* Move Login Button Inside the Menu */
+    .navbar-login {
+      margin-top: 10px;
+      padding: 12px;
+      width: 80%;
+      text-align: center;
+      background: #777;
+    }
+  }
+
+
+/* Logo Styling */
+.navbar-logo img {
+    height: 40px;  /* Adjust size */
+    width: auto;
+    margin-right: 15px;
+  }
+  
+  /* Make sure it aligns properly in flexbox */
+  .navbar-logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Fix alignment for smaller screens */
+  @media (max-width: 700px) {
+    .navbar-logo img {
+      height: 35px;
+      margin-left: 10px;
+    }
+  }

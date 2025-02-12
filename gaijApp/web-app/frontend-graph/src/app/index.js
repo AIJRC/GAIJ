@@ -1,6 +1,10 @@
-import React from 'react';
-import { Component } from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
+
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import About from '../pages/About';
+import Extend from '../pages/Extend.js';
 
 import { NodeSearch } from '../node-search';
 import { NodeResults } from '../node-results';
@@ -84,12 +88,31 @@ class App extends Component {
     const shouldRenderResults = sourceNode?.id && !this.state.isPathsLoading;
 
     return (
-      <>
-        <NodeSearch />
-        {shouldRenderResults && <NodeResults />}
-        <PathGraph /> {/* Remove conditional rendering */}
-      </>
+      <Router>
+        <Navbar />  Navbar added here
+        <div style={{ padding: '50px' }}>
+          <Switch>
+            <Route exact path="/" render={() => (
+              <>
+                <NodeSearch />
+                {shouldRenderResults && <NodeResults />}
+                <PathGraph />
+              </>
+            )} />
+            <Route path="/about" component={About} />
+            <Route path="/extend" component={Extend} />
+          </Switch>
+        </div>
+      </Router>
     );
+
+    // return (
+    //   <>
+    //     <NodeSearch />
+    //     {shouldRenderResults && <NodeResults />}
+    //     <PathGraph /> {/* Remove conditional rendering */}
+    //   </>
+    // );
   }
 }
 // connect component to global state
