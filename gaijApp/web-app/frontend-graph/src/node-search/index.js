@@ -10,7 +10,7 @@ import { SharedLeadershipButton } from './shared-leadership-button.js';
 import { ParentSubsidiaryLeadershipButton } from './parent-subsidiary-leadership-button.js';
 import { CompaniesWithTwoSubsidiariesButton } from './get-companies-with-two-subsidiaries-button.js';
 
-import { Statistics } from './statistics.js';
+import Statistics from './statistics';
 import './index.css';
 import './button-group.css';
 

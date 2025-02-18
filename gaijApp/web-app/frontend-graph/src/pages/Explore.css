@@ -1,0 +1,21 @@
+.explore-container {
+    max-width: 800px;
+    margin: 80px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    color: #333;
+  }
+  
+  .explore-container h1 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #222;
+  }
+  
+  .explore-container p {
+    text-align: justify;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  

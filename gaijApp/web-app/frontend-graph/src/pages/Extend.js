@@ -2,36 +2,11 @@ import React, { useState } from "react";
 import "./Extend.css"; // Import CSS for styling
 
 const Extend = () => {
-  const [extensionType, setExtensionType] = useState(""); // Stores user selection
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [manualSelection, setManualSelection] = useState("");
+  const [extensionType, setExtensionType] = useState("");
   const [newPropertyName, setNewPropertyName] = useState("");
   const [propertyDescription, setPropertyDescription] = useState("");
   const [selectedProperty, setSelectedProperty] = useState("");
-
-  // Example list of existing properties (this can be fetched dynamically)
-  const existingProperties = ["Location", "Revenue", "Industry", "Ownership"];
-
-  // Handles file selection
-  const handleFileUpload = (event) => {
-    setSelectedFile(event.target.files[0]);
-  };
-
-  // Handles form submission
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    // Prepare data
-    const requestData = {
-      extensionType,
-      selectedFile: selectedFile ? selectedFile.name : null,
-      manualSelection,
-      extraInfo: extensionType === "dig-deeper" ? { newPropertyName, propertyDescription } : selectedProperty,
-    };
-
-    console.log("Submitted Data:", requestData);
-    alert("Request submitted successfully!");
-  };
+  const [showTooltip, setShowTooltip] = useState(false); // Tooltip is now hidden by default
 
   return (
     <div className="extend-container">
@@ -42,8 +17,7 @@ const Extend = () => {
         for any <strong>useful insights</strong> you wish to extract.
       </p>
 
-      <form onSubmit={handleSubmit} className="extend-form">
-        {/* Extension Type Selection */}
+      <form onSubmit={(e) => e.preventDefault()} className="extend-form">
         <label>Select the type of extension:</label>
         <select value={extensionType} onChange={(e) => setExtensionType(e.target.value)} required>
           <option value="">-- Select an option --</option>
@@ -51,23 +25,38 @@ const Extend = () => {
           <option value="fill-missing">Fill Missing Nodes with Properties</option>
         </select>
 
-        {/* Data Selection - Side-by-Side */}
-        <label>Select the dataset subset to extend:</label>
-        <div className="data-selection">
-          <input
-            type="text"
-            value={manualSelection}
-            onChange={(e) => setManualSelection(e.target.value)}
-            placeholder="Manually enter or search company IDs"
-          />
-          <span>OR</span>
-          <input type="file" accept=".csv" onChange={handleFileUpload} />
-        </div>
-
-        {/* Fields for Dig Deeper */}
         {extensionType === "dig-deeper" && (
           <>
-            <label>Desired New Property Name:</label>
+            <div className="input-with-tooltip">
+              <label>Desired New Property Name:</label>
+
+              {/* Info Button (i) */}
+              <div
+                className="info-button"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setTimeout(() => setShowTooltip(false), 300)}
+              >
+                ℹ
+              </div>
+
+              {/* Tooltip (Appears on Hover) */}
+              {showTooltip && (
+                <div
+                  className="tooltip"
+                  onMouseEnter={() => setShowTooltip(true)}
+                  onMouseLeave={() => setShowTooltip(false)}
+                >
+                  <strong>Example:</strong> 
+                  <br />
+                  Desired New Property Name: Risk Score
+                  <br />
+                  Property Description: Risk Score is a categorical assessment of a company's financial, regulatory, or operational risks. It helps investors, regulators, and analysts evaluate how risky a company is regarding fraud, tax evasion, financial instability, or illicit activities. Tax records contain financial disclosures, deductions, and reported earnings. A Risk Score can be derived using data-driven techniques, such as: High offshore transactions, Tax-to-Revenue Ratio where a very low tax paid compared to revenue can indicate aggressive tax avoidance. Also check for statements related to undisclosed income or similar terms.
+                  <br />
+                  Please provide a classification for each company as "high" "medium" "low" or "unknown". 
+                </div>
+              )}
+            </div>
+
             <input
               type="text"
               value={newPropertyName}
@@ -90,20 +79,6 @@ const Extend = () => {
           </>
         )}
 
-        {/* Fields for Filling Missing Nodes */}
-        {extensionType === "fill-missing" && (
-          <>
-            <label>Select an existing property to fill in missing nodes:</label>
-            <select value={selectedProperty} onChange={(e) => setSelectedProperty(e.target.value)} required>
-              <option value="">-- Select a property --</option>
-              {existingProperties.map((prop, index) => (
-                <option key={index} value={prop}>{prop}</option>
-              ))}
-            </select>
-          </>
-        )}
-
-        {/* Submit Button */}
         <button type="submit">Submit Request</button>
       </form>
     </div>

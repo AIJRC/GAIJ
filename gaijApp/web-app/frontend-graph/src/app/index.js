@@ -1,46 +1,35 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { Component } from "react";
+import { connect } from "react-redux";
+import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
+import { AuthProvider } from "../context/AuthContext"; // Import Auth Provider
+import ProtectedRoute from "../components/ProtectedRoute"; // Import ProtectedRoute
+import ScrollToTop from "../components/ScrollToTop"; // Import ScrollToTop
 
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import About from '../pages/About';
-import Extend from '../pages/Extend.js';
+import Navbar from "../components/Navbar";
+import About from "../pages/About";
+import Extend from "../pages/Extend";
+import Login from "../pages/Login";
+import Explore from "../pages/Explore"; // Ensure this exists
 
-import { NodeSearch } from '../node-search';
-import { NodeResults } from '../node-results';
-// import { Results } from '../results';
-import { PathGraph } from '../path-graph';
-import { loadStateFromUrl } from './actions.js';
-import { fetchAndSetDefinitions } from './actions.js';
-import { fetchAndSetPaths } from '../path-results/actions';
-import { testConnection } from '../backend-queries';
+import { loadStateFromUrl } from "./actions.js";
+import { fetchAndSetDefinitions } from "./actions.js";
+import { fetchAndSetPaths } from "../path-results/actions";
+import { testConnection } from "../backend-queries";
 
-import './index.css';
-import '../styles/global.css';
+import "./index.css";
+import "../styles/global.css";
 
-// Note about class arrow functions vs normal functions:
-//
-// Arrow functions automatically bind "this", but do not get added to the class
-// prototype, and thus get duplicated for every instance of the class. For
-// convenience, syntax aesthetics, and mitigation of human errors (forgetting
-// to bind "this"), arrow functions are used in classes, with two exceptions:
-// 1) react life-cycle methods (componentDidUpdate, render, etc) and 2) in
-// cases where there will be many instances of the class (say, > 10), like the
-// reusable "widgets" in /components.
-
-// main app component
+// Main App Component
 class App extends Component {
-  // initialize component
   constructor(props) {
     super(props);
     this.state = {
-      isPathsLoading: false
+      isPathsLoading: false,
     };
     this.loadStateFromUrl = this.loadStateFromUrl.bind(this);
     this.props.dispatch(fetchAndSetDefinitions());
   }
 
-  // load source/target nodes, checked metapaths, etc from url
   loadStateFromUrl() {
     this.props.dispatch(loadStateFromUrl());
   }
@@ -48,12 +37,10 @@ class App extends Component {
   async componentDidMount() {
     await testConnection();
     this.loadStateFromUrl();
-    window.addEventListener('popstate', this.loadStateFromUrl);
+    window.addEventListener("popstate", this.loadStateFromUrl);
   }
 
-  // when component updates
   componentDidUpdate(prevProps) {
-    console.log('INSIDE COMPONENT DID UPDATE FUNCTION')
     if (prevProps.sourceNode.id !== this.props.sourceNode.id) {
       if (this.props.sourceNode.id && !this.state.isPathsLoading) {
         this.setState({ isPathsLoading: true }, async () => {
@@ -64,7 +51,7 @@ class App extends Component {
                 paths: [],
                 nodes: {},
                 relationships: {},
-                preserveChecks: true
+                preserveChecks: true,
               })
             );
           } finally {
@@ -76,7 +63,7 @@ class App extends Component {
           fetchAndSetPaths({
             paths: [],
             nodes: {},
-            relationships: {}
+            relationships: {},
           })
         );
       }
@@ -84,39 +71,35 @@ class App extends Component {
   }
 
   render() {
-    const { sourceNode } = this.props;
-    const shouldRenderResults = sourceNode?.id && !this.state.isPathsLoading;
-
     return (
-      <Router>
-        <Navbar />  Navbar added here
-        <div style={{ padding: '50px' }}>
-          <Switch>
-            <Route exact path="/" render={() => (
-              <>
-                <NodeSearch />
-                {shouldRenderResults && <NodeResults />}
-                <PathGraph />
-              </>
-            )} />
-            <Route path="/about" component={About} />
-            <Route path="/extend" component={Extend} />
-          </Switch>
-        </div>
-      </Router>
-    );
+      <AuthProvider> {/* Ensure Auth Context wraps the app */}
+        <Router>
+          <ScrollToTop /> {/* This ensures scroll resets when navigating */}
+          <Navbar />
+          <div style={{ padding: "50px" }}>
+            <Switch>
+              {/* Set About as the Home page */}
+              <Route exact path="/" component={About} /> 
+              <Route path="/about" component={About} />
+              <Route path="/login" component={Login} />
 
-    // return (
-    //   <>
-    //     <NodeSearch />
-    //     {shouldRenderResults && <NodeResults />}
-    //     <PathGraph /> {/* Remove conditional rendering */}
-    //   </>
-    // );
+              {/* Protect Explore & Extend pages */}
+              <ProtectedRoute path="/extend" component={Extend} />
+              <ProtectedRoute path="/explore" component={Explore} />
+
+              {/* Redirect any unknown routes to About */}
+              <Redirect to="/" />
+            </Switch>
+          </div>
+        </Router>
+      </AuthProvider>
+    );
   }
 }
-// connect component to global state
+
+// Connect component to Redux state
 App = connect((state) => ({
-  sourceNode: state.sourceNode
+  sourceNode: state.sourceNode,
 }))(App);
+
 export { App };
