@@ -48,11 +48,15 @@ def prompt_ENG(prmpt_settings):
     if prmpt_settings.parnt_Flag:
         prompt_quest_temp = prompt_quest_temp + """ 
         "parent_company": "string or null","""
+    if prmpt_settings.audit_Flag:
+        prompt_quest_temp = prompt_quest_temp + """ 
+        "auditor_name": "string or null","""
+       
        
     prompt_quest_temp2 = prompt_quest_temp.rstrip(',') + """
     }
     The name of the company can not be: Brønnøysund.
-    The address of the company can not be: postboks 900, 8910.
+    The address of the company can not be: postboks 900, 8910 or postboks 900, 8910 Brønnøysund.
     You should extract information about the company, not the tax office
     <|user|> Please extract the following information from the tax record:
     """
@@ -87,6 +91,10 @@ def prompt_ENG(prmpt_settings):
     if prmpt_settings.parnt_Flag:
         prompt_quest_temp2 = prompt_quest_temp2 +"""
         - "parent_company": Name of the parent company (null if not available).
+        """
+    if prmpt_settings.audit_Flag:
+        prompt_quest_temp2 = prompt_quest_temp2 +"""
+        - "auditor_name": The name of the auditor who prepared the company's taxes.
         """
     
     
@@ -124,16 +132,17 @@ def prompt_NOR(prmpt_settings):
         "Organisasjonsform": "string","""
     if prmpt_settings.lead_Flag:
             prompt_quest_temp = prompt_quest_temp + """ 
-        "Lederskap": {
-            "Representant_for_selskapet": "string or null",       
-            "Styremedlemmer": [
-                "string" or null           
-            ],
-             "Aksjeeiere": [
-                "string" or null           
-            ],
-            "Styreleder": "string or null" 
+        "Lederskap": { [{"name": "string or null","role": "string or null}]
+            
         },"""
+         #"Representant_for_selskapet": "string or null",       
+         #  "Styremedlemmer": [
+         #       "string" or null           
+         #  ],
+         #    "Aksjeeiere": [
+         #      "string" or null           
+         #   ],
+         #   "Styreleder": "string or null" 
     if prmpt_settings.subs_Flag:
         prompt_quest_temp = prompt_quest_temp + """ 
         "Datterselskaper": [
@@ -142,10 +151,15 @@ def prompt_NOR(prmpt_settings):
     if prmpt_settings.parnt_Flag:
         prompt_quest_temp = prompt_quest_temp + """ 
         "Morselskap": "string or null","""
+    if prmpt_settings.audit_Flag:
+        prompt_quest_temp = prompt_quest_temp + """ 
+        "auditor_name": "string or null","""
        
     prompt_quest_temp2 = prompt_quest_temp.rstrip(',') + """
     }
-    
+    Navnet på selskapet kan ikke være: Brønnøysund.
+    Adressen til selskapet kan ikke være: postboks 900, 8910 eller postboks 900, 8910 Brønnøysund.
+    Du skal hente ut opplysninger om selskapet, ikke skattekontoret 
     <|user|> Vennligst hent ut følgende informasjon fra skatteoppføringen:
     """
     if prmpt_settings.name_Flag:
@@ -166,12 +180,15 @@ def prompt_NOR(prmpt_settings):
         """
     if prmpt_settings.lead_Flag:
         prompt_quest_temp2 = prompt_quest_temp2 +"""
-        - Lederskap: Dette er en nøstet ordbok med følgende informasjon:
-            - "Representant_for_selskapet": Navnet på administrerende direktør.
-            - Styremedlemmer: Liste over styremedlemmer (hvis tilgjengelig).
-            - Aksjeeiere: Liste over aksjeeiere: Liste over aksjeeiere (hvis tilgjengelig).
-            - Styreleder: Navnet på selskapets styreleder.
+        - Lederskap: en nestet ordbokliste med følgende informasjon: { 
+        name: Navnet på en person i en lederstilling i selskapet, 
+        role: Rollen denne personen har i selskapet, for eksempel Representant_for_selskapet, administrerende direktør, styremedlem, styreleder eller aksjonær. } 
         """
+        #- Lederskap: Dette er en nøstet ordbok med følgende informasjon:
+        #    - "Representant_for_selskapet": Navnet på administrerende direktør.
+        #    - Styremedlemmer: Liste over styremedlemmer (hvis tilgjengelig).
+        #    - Aksjeeiere: Liste over aksjeeiere: Liste over aksjeeiere (hvis tilgjengelig).
+        #    - Styreleder: Navnet på selskapets styreleder.
     if prmpt_settings.subs_Flag:
         prompt_quest_temp2 = prompt_quest_temp2 +"""    
         - Datterselskaper: Liste over datterselskaper: Liste over selskapets datterselskaper (tom liste hvis ingen).
@@ -180,11 +197,18 @@ def prompt_NOR(prmpt_settings):
         prompt_quest_temp2 = prompt_quest_temp2 +"""
         - Morselskap: Navn på morselskapet (null hvis ikke tilgjengelig).
         """
+    if prmpt_settings.audit_Flag:
+        prompt_quest_temp2 = prompt_quest_temp2 +"""
+        - revisor_navn: Navnet på revisoren/enheten som har utarbeidet selskapets selvangivelse.
+        """
     
     
     prompt_quest_temp2 = prompt_quest_temp2 +"""
     Please ensure that all fields are included, even if they are empty or null.
     Only return the JSON response; do not add explanations, comments, or repeated entries.
+    The name of the company can not be: Brønnøysund.
+    The address of the company can not be: postboks 900, 8910 or postboks 900, 8910 Brønnøysund.
+    You should extract information about the company, not the tax office.
     <|assistant|>
     """
     prompt_quest = copy.copy(prompt_quest_temp2)

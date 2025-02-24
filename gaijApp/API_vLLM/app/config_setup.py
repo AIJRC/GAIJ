@@ -5,7 +5,7 @@ import json
 import sys
 from utils.support_functions import DotDict,Dic2DotDict
 from prompts.prompt_manager import check_promptSettings
-from utils.arg_parser import argparser_main,argparser_prompt,parser_config,parser_prompt
+from utils.arg_parser import argparser_main,argparser_prompt,argparser_nFiles,parser_config,parser_prompt,parser_nFiles
 
 # Default configuration
 config = {
@@ -24,7 +24,7 @@ def get_configuration():
     # check if arguments have been parsed   
     arg_folders = argparser_main()
     arg_prompt = argparser_prompt()
-    
+    arg_nFiles = argparser_nFiles()
     # check if folder parser empty
     if arg_folders is None:
         # load the config file
@@ -37,6 +37,13 @@ def get_configuration():
         config = parser_config(arg_folders)
         print(" Folder configuration finalized")
         print("Setting up configuration ..1/2")
+        
+    # check if number of files parser empty 
+    if arg_nFiles is None:
+        config.nFiles_r = -1
+    else:
+        nFiles = parser_nFiles(arg_nFiles)
+        config.nFiles_r = nFiles 
     # check if prompt parser is empty 
     if arg_prompt is None:   
         # load the prompt file
@@ -59,6 +66,7 @@ def initianlize_confi_folders():
     
     config_path = os.path.join(os.path.dirname(__file__), "config.json")
     print("Setting up configuration ... 0/2")
+    
      # Check if config file exists
     if os.path.exists(config_path):
         print(" Loading folder configuration from config.json...")
@@ -78,7 +86,6 @@ def initianlize_confi_folders():
      
     print(" Folder configuration finalized")
     print("Setting up configuration ..1/2")
-    
     return config
 
 def initialize_confi_prompt():

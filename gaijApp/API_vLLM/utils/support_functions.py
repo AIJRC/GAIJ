@@ -5,9 +5,9 @@ import re
 
 # ====  dictionary with all the field names ( standar , in english and in Norwegian)
 def fieldNames_dict():
-    fields_NOR = ["Foretaksnavn", "Organisasjonsnummer","Forretningsadresse","Organisasjonsform","Lederskap","Datterselskaper","Morselskap"]
-    fields_ENG = ["company_name","company_id","company_address","company_type","leadership","subsidiaries","parent_company"]
-    fields_general = ["name","ID","address","type","leadership","subsidiaries","parent"]
+    fields_NOR = ["Foretaksnavn", "Organisasjonsnummer","Forretningsadresse","Organisasjonsform","Lederskap","Datterselskaper","Morselskap","Revisor"]
+    fields_ENG = ["company_name","company_id","company_address","company_type","leadership","subsidiaries","parent_company","auditor"]
+    fields_general = ["name","ID","address","type","leadership","subsidiaries","parent","auditor"]
     dataFields_dict = dict()
     for i in range(len(fields_general)):
         field = fields_general[i]
@@ -42,6 +42,9 @@ def get_fields(prmpt_settings):
         # Parent Company
     if prmpt_settings.parnt_Flag == True:
         reqst_fields.append('parent')
+        # Auditor Name 
+    if prmpt_settings.audit_Flag == True:
+        reqst_fields.append('auditor')
     
     return reqst_fields
 

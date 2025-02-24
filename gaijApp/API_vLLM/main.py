@@ -39,7 +39,7 @@ def vLLM_remote():
     if "nFiles_r" in config:
         nFiles_r = config.nFiles_r
     else:
-        nFiles_r = 2
+        nFiles_r = -1
         
     # ====== get the list of files to be processed 
     files_list = whichfiles(input_dir,out_dir)

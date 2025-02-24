@@ -74,6 +74,9 @@ def check_promptSettings(prmpt_settings):
             if "parnt_Flag" not in prmpt_settings:
                 prmpt_settings.parnt_Flag = False
                 print('parent extraction has been set to False')
+            if "audit_Flag" not in prmpt_settings:
+                prmpt_settings.audit_Flag = False
+                print('parent extraction has been set to False')
     else:
             prmpt_settings.name_Flag = True
             prmpt_settings.id_Flag = True
@@ -82,6 +85,7 @@ def check_promptSettings(prmpt_settings):
             prmpt_settings.typ_Flag = True
             prmpt_settings.subs_Flag = True
             prmpt_settings.parnt_Flag = True
+            prmpt_settings.audit_Flag = True
             
     return prmpt_settings
             

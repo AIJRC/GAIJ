@@ -15,9 +15,11 @@ import copy
 import json
 import pandas as pd
 import os
+from datetime import datetime
 from utils.support_functions import fieldNames_dict, get_fields, is_number,is_percentage
 from documents.document_manager import save_JSON,save_text
 from test.test_scripts import check_words
+from prompts.prompt_manager import get_prompt
 
 
 def output2json(output,out_dir,err_dir,id,prmpt_settings):
@@ -42,9 +44,12 @@ def output2json(output,out_dir,err_dir,id,prmpt_settings):
             
             # cleand the data and make it into an standardized structure
             cleanded_JSON = get_standardStructure(json_data,prmpt_settings)
+            
+            # add version control 
+            cleaned_JSON_ver = add_versioncontrol(cleanded_JSON,prmpt_settings)
 
             # Save the JSON data to a file
-            flagSave = save_JSON(cleanded_JSON,json_path2save)
+            flagSave = save_JSON(cleaned_JSON_ver,json_path2save)
            
         
         except json.JSONDecodeError as e: # Error in the spelling
@@ -88,16 +93,30 @@ def get_standardStructure(json_data,prmpt_settings):
             cleaned_data = cleanData(dataChecked)
             
             if field =='address':
-                cleaned_data =", ".join(cleaned_data)
+                try:
+                    cleaned_data =[", ".join(cleaned_data)]
+                except TypeError:
+                    cleaned_data = [copy.copy(cleaned_data)]
             data2save = copy.copy(cleaned_data)
         else:
             data2save = copy.copy(dataChecked)
         
         # check for the unwanted words 
-        check_words(field,data2save)
-        # add it to the new JSON structure 
+        #check_words(field,data2save)
         
-        data_new[field] = data2save
+        # formmating the words - only capitalize the first letter except if it is AS
+        if data2save is not None: 
+            data2save = format_input(data2save)
+        
+        # add it to the new JSON structure 
+        if field == 'leadership':
+            # get  all the field names and their translations 
+            dataFields_dict = fieldNames_dict()
+            # Get the name in the JSON file
+            fieldName = dataFields_dict[field][lng]
+            data_new[field] = {"names":data2save,"roles":json_data[fieldName]}
+        else:
+            data_new[field] = data2save
         
         
     return data_new
@@ -114,19 +133,25 @@ def get_extractedData(field,lng,json_data):
     # find if the field is present in the JSON file 
     if fieldName in json_data:
         # check if the field name is leadership ( if so special treatment)
-        if fieldName =='leadership':
+        if (fieldName =='leadership') | (fieldName == 'Lederskap'):
             # this is a nested dictionary extract all the info as a single list 
             
             for sfield in json_data[fieldName]:
-                tempData = json_data[fieldName][sfield]
-                # check if its a list 
-                if isinstance(tempData,list):
-                    extData.extend(tempData)
-                else:
-                    extData.append(tempData)
-            
+                try:
+                    tempData = sfield['name']
+                    # check if its a list 
+                    if isinstance(tempData,list):
+                        extData.extend(tempData)
+                    else:
+                        extData.append(tempData)
+                except KeyError:
+                    tempData =[]
+
             # also remove any numbers 
-            extData = [item for item in extData if not is_number(item)]
+            try:
+                extData = [item for item in extData if not is_number(item)]
+            except TypeError:
+                extData = []
             if extData is not None and extData:
                 # and percentages 
                 extData = [item for item in extData if not is_percentage(item)]
@@ -137,7 +162,7 @@ def get_extractedData(field,lng,json_data):
             extData = json_data[fieldName]
     else:
         # there is no data to extract 
-        warnings(f"No data extracted for '{field}'")
+        print(f"No data extracted for {field}")
     
     return extData
 
@@ -176,7 +201,7 @@ def cleaningProtocol(data2clean):
     # pattern of unwanted symbols 
     pattern = r"(^-?\d+(\.\d+)?([,\s%-]-?\d+(\.\d+)?)*\s*%?\s*\n)"
     # unwanted words 
-    unwanted_words =["brønnøysundregistrene","lederskap","styremedlemmer","ledende","leder","daglig leder","styrets leder","ledelsen","styreleder","styremedlem"]
+    unwanted_words =["brønnøysundregistrene","lederskap","styremedlemmer","ledende","leder","daglig leder","styrets leder","ledelsen","styreleder","styremedlem","lenn","100.0%","styret"," eierandel","stemmeandel"," direkte og indirekte","100%"]
     # Compile a regex pattern to match unwanted words
     pattern_words = r"\b(" + "|".join(unwanted_words) + r")\b"
     
@@ -188,7 +213,9 @@ def cleaningProtocol(data2clean):
     cleaned_data_1 = re.sub(pattern_words, "", cleaned_data_2, flags=re.IGNORECASE)
     # separate the commas 
     cleaned_data = [s.strip() for s in cleaned_data_1.split(",")]
-    
+    # remove single words
+    cleaned_data =[s for s in cleaned_data if len(s.split(" "))>1]
+   
     return cleaned_data
     
 def cleanData(data2Clean):
@@ -229,6 +256,46 @@ def check_org_type(type_data):
     else: 
         name_org = "not recogized"
     return name_org
+
+            
+            
+def formatting_string(text):
+    words = text.split()
+    
+    formatted_words = [
+        word.upper() if word.upper() == "AS" else word.capitalize()
+        for word in words
+    ]
+    joinedWords = " ".join(formatted_words)
+    return joinedWords
+
+def format_input(input):
+    if len(input)>1:
+        formatted_text = []
+        for item in input:
+            print(item)
+            formatted_temp = formatting_string(item)
+            formatted_text.append(formatted_temp)
+    else:
+        formatted_text = formatting_string(input[0])
+    return formatted_text
+
+def add_versioncontrol(cleanded_JSON,prmpt_settings):
+    " add the version control to the JSON "
+    # get the values
+    curr_version = 'v1_Llama_3.2_3B'
+    date = datetime.today().strftime('%Y-%m-%d')
+    prompt_LANG = "ENG"
+    if prmpt_settings.NOR_Flag:
+        prompt_LANG = "NOR"
+    prompt = get_prompt(prmpt_settings)
+    # make it into a dictionary
+    version_control = dict()
+    version_control = {"version_control":{"version":curr_version,"date":date,"prompt_lang":prompt_LANG,"prompt":prompt}}
+    # update the JSON 
+    cleanded_JSON.update(version_control)
+    
+    return cleanded_JSON
 
             
             

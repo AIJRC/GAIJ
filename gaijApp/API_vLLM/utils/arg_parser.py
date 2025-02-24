@@ -11,7 +11,7 @@ def argparser_main():
     parser.add_argument('--md_dir', required=False, help='directory with the markdown files to be processed')
     parser.add_argument('--out_dir', required=False, help='Output directory for JSON file ')
     parser.add_argument('--error_dir', required=False, help='Output directory for file wth error files (optional) ')
-    parser.add_argument('--run_nFiles', required=False, help='number of Files to run each batch, default -1-> all')
+    #parser.add_argument('--run_nFiles', required=False, help='number of Files to run each batch, default -1-> all')
     # Prompt settings 
     #parser.add_argument('--NOR_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask for the prompt to be in Norwegian - default FALSE')
     #parser.add_argument('--AllFields_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to select all the information files of the prompt - default TRUE')
@@ -23,6 +23,18 @@ def argparser_main():
     #parser.add_argument('--subs_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to extract the subsidiaries of the company - default TRUE only available if AllFields_Flag==FALSE')
     #parser.add_argument('--parnt_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to extract the Parent company of the company - default TRUE only available if AllFields_Flag==FALSE')
     #parser.add_argument('--id_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to extract the ID of the company - default TRUE only available if AllFields_Flag==FALSE')
+    args,unknown = parser.parse_known_args()
+    
+    # check wether any argument has been introduced 
+    [cnt,emptyCont] = count_emptyArgs(args)
+    if emptyCont == cnt:
+        args = None 
+    
+    return args 
+
+def argparser_nFiles():
+    parser = argparse.ArgumentParser(description='number of files fo run')
+    parser.add_argument('--run_nFiles', required=False, help='number of Files to run each batch, default -1-> all')
     args,unknown = parser.parse_known_args()
     
     # check wether any argument has been introduced 
@@ -70,6 +82,7 @@ def parser_config(args):
     else:
         emptyCont +=1
         config.load_directory = 'F:\\Oihane\\OsloMet\\data\\markdown\\markdowns'
+        #config.load_directory = 'F:\\Oihane\\OsloMet\\data\\markdown\\check_Lang'
         #input_dir = 'F:\\Oihane\\OsloMet\\data\\markdown\\check_Lang'
         # input_dir = 'F:\User\markdowns'
         # output ( JSON files)
@@ -77,7 +90,8 @@ def parser_config(args):
         config.save_directory = args.out_dir
     else:
         emptyCont +=1
-        config.save_directory = 'F:\\Oihane\\OsloMet\\data\\JSON\\ENG_prompt'
+        config.save_directory = 'F:\\Oihane\\OsloMet\\data\\JSON\\NOR_prompt\\test\\'
+        #config.save_directory = 'F:\\Oihane\\OsloMet\\data\\JSON\\check_Lang\\NOR\\test'
         #out_dir = 'F:\\Oihane\\OsloMet\\data\\JSON\\NOR_prompt'
         #out_dir = 'F:\\Oihane\\OsloMet\\data\\JSON\\check_Lang\\NOR'
         #out_dir = 'F:\\Oihane\\OsloMet\\data\\JSON\\check_Lang\\ENG'
@@ -90,16 +104,26 @@ def parser_config(args):
         config.error_directory = 'F:\\Oihane\\OsloMet\\data\\errorFiles_oihane\\new_prompt'
         # err_dir = 'F:\User\errorFiles'
         # number of files to run 
-    if args.run_nFiles:
-        config.nFiles_r = int(args.run_nFiles)
-    else:
-        emptyCont +=1
-        config.nFiles_r = -1    
+    #if args.run_nFiles:
+    #    config.nFiles_r = int(args.run_nFiles)
+    #else:
+    #    emptyCont +=1
+    #    config.nFiles_r = -1    
     
     # check if it was empty 
     
         
     return config
+
+def parser_nFiles(args):
+    """ deals with the argument of number of files """
+    if args.run_nFiles:
+        nFiles_r = int(args.run_nFiles)
+    else:
+        emptyCont +=1
+        nFiles_r = -1
+        
+    return nFiles_r 
 
 def parser_prompt(args):
     # Create a prompt setting arguments that supports dot notation 
