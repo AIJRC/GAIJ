@@ -1,8 +1,64 @@
 .source_node_container {
   display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.condition-group {
+  display: flex;
   gap: 20px;
   align-items: flex-start;
   width: 100%;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.source_node_section {
+  flex: 1;
+}
+
+.condition-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.add-condition-button {
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  align-self: center;
+}
+
+.remove-condition-button {
+  padding: 4px 8px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.add-condition-button:hover {
+  background-color: #45a049;
+}
+
+.remove-condition-button:hover {
+  background-color: #da190b;
 }
 
 .source_node_container.single {
@@ -10,14 +66,102 @@
 }
 
 .source_node_section {
-  flex: 1;
-}
-
-.source_node_section.single {
   flex: 0 1 auto;
   width: 50%;
 }
 
 .source_node_container.dual .node_search_form {
   width: 100%;
+}
+.button-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.intersect-button {
+  padding: 8px 16px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.intersect-button:hover {
+  background-color: #1976D2;
+}
+.mode-button {
+  padding: 8px 16px;
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.mode-button.active {
+  background-color: #2196F3;
+  color: white;
+}
+
+.mode-button:hover {
+  background-color: #1976D2;
+  color: white;
+}
+
+.button-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.add-condition-button {
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.refresh-button {
+  padding: 8px 16px;
+  background-color: #607D8B;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.refresh-button:hover {
+  background-color: #455A64;
+}
+.mode-buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.mode-button {
+  padding: 5px 15px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.mode-button.active {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
 }

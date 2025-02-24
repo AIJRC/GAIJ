@@ -131,3 +131,12 @@ dmypy.json
 
 
 web-app/.venv-web-app
+
+
+*.venv*
+.vscode
+**/node_modules/
+**/.DS_STORE
+
+gaijApp/web-app/frontend-graph/node_modules
+gaijApp/web-app/frontend-graph/package-lock.json

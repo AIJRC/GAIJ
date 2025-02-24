@@ -7,6 +7,7 @@ import thunk from 'redux-thunk';
 import { createLogger } from 'redux-logger';
 
 import { Provider } from 'react-redux';
+import { AuthProvider } from './context/AuthContext';
 
 import { Reducer } from './master-reducer.js';
 import { App } from './app';
@@ -28,7 +29,9 @@ export const store = createStore(
 // render/run app
 render(
   <Provider store={store}>
-    <App />
+    <AuthProvider> {/* Wrap the app with AuthProvider */}
+      <App />
+    </AuthProvider>
   </Provider>,
   document.getElementById('root')
 );

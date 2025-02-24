@@ -1,14 +1,14 @@
 import React from 'react';
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import { faBuilding } from '@fortawesome/free-solid-svg-icons';
+import { faUserTie } from '@fortawesome/free-solid-svg-icons';
 import { IconButton } from '../utils/buttons';
-import { getTopSharedAddresses } from '../backend-queries.js';
+import { getSharedLeadership } from '../backend-queries.js';
 import { setPaths } from '../path-graph/actions.js';
 
-export class TopAddressesButton extends Component {
+export class SharedLeadershipButton extends Component {
   onClick = async () => {
-    const graphData = await getTopSharedAddresses();
+    const graphData = await getSharedLeadership();
     
     if (graphData && graphData.nodes.length > 0) {
       const paths = graphData.edges.map((edge, index) => ({
@@ -54,12 +54,12 @@ export class TopAddressesButton extends Component {
     return (
       <IconButton
         className={`square_button ${this.props.className || ''}`}
-        icon={faBuilding}
-        text='Top 10 Addresses shared by multiple companies'
+        icon={faUserTie}
+        text='People leading multiple companies'
         onClick={this.onClick}
       />
     );
   }
 }
 
-TopAddressesButton = connect()(TopAddressesButton);
+SharedLeadershipButton = connect()(SharedLeadershipButton);

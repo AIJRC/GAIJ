@@ -34,34 +34,39 @@ export class PathGraph extends Component {
     this.updateSectionWidth();
     window.addEventListener('resize', this.updateSectionWidth);
     
+    // Graph only initializes if there are nodes
     if (this.props.graph?.nodes?.length > 0) {
       this.initializeGraph();
     }
-  }
+}
 
-  componentDidUpdate(prevProps, prevState) {
+componentDidUpdate(prevProps, prevState) {
+    console.log('PathGraph componentDidUpdate:', {
+      prevGraph: prevProps.graph,
+      currentGraph: this.props.graph,
+      hasNodes: this.props.graph?.nodes?.length > 0,
+      isProcessing: this.state.isProcessing
+    });
+
     if (this.state.isProcessing) {
       return;
     }
 
+    // Graph updates when new data arrives
     if (this.props.graph !== prevProps.graph) {
       const hasNodes = this.props.graph?.nodes?.length > 0;
       
-      if (hasNodes && !this.state.hasRendered) {
+      // Remove the hasRendered condition to allow updates anytime
+      if (hasNodes) {
         this.setState({ 
-          isProcessing: true 
+          isProcessing: true,
+          hasRendered: true,
+          isInitialized: true
         }, () => {
-          this.setState({
-            hasRendered: true,
-            isInitialized: true,
-            isProcessing: false
-          }, () => {
-            if (this.graphRef.current) {
-              setTimeout(() => {
-                this.graphRef.current.fitView();
-              }, 0);
-            }
-          });
+          if (this.graphRef.current) {
+            this.graphRef.current.fitView();
+          }
+          this.setState({ isProcessing: false });
         });
       }
     }
@@ -148,6 +153,14 @@ export class PathGraph extends Component {
 
   // display component
   render() {
+    console.log('PathGraph render:', {
+      hasNodes: this.props.graph?.nodes?.length > 0,
+      isInitialized: this.state.isInitialized,
+      hasRendered: this.state.hasRendered,
+      isProcessing: this.state.isProcessing,
+      graphProps: this.props.graph
+    });
+
     return (
       <CollapsibleSection
         label='Graph'
@@ -183,10 +196,36 @@ export class PathGraph extends Component {
 
 // Connect the component to Redux store to access graph data
 // Modify the connect to include memoization
-export default connect((state) => ({
-  graph: state.graph
-}), null, null, {
-  areStatesEqual: (next, prev) => {
-    return next.graph === prev.graph;
+// export default connect((state) => ({
+//   graph: state.graph
+// }), null, null, {
+//   areStatesEqual: (next, prev) => {
+//     // Deep comparison of relevant properties
+//     return JSON.stringify(next.graph) === JSON.stringify(prev.graph);
+//   }
+// })
+// Single Redux connection export
+export default connect(
+  (state) => ({
+    graph: state.graph || {}
+  }),
+  null,
+  null,
+  {
+    areStatesEqual: (next, prev) => {
+      const nextGraph = next.graph || {};
+      const prevGraph = prev.graph || {};
+      
+      // Compare content instead of references
+      return JSON.stringify({
+        nodes: nextGraph.nodes,
+        relationships: nextGraph.relationships,
+        paths: nextGraph.paths
+      }) === JSON.stringify({
+        nodes: prevGraph.nodes,
+        relationships: prevGraph.relationships,
+        paths: prevGraph.paths
+      });
+    }
   }
-})(PathGraph);
+)(PathGraph);
