@@ -25,6 +25,7 @@ from prompts.prompt_manager import make_prompt
 from documents.document_manager import readfile
 from utils.support_functions import DotDict,get_fields
 from processing.response_parser import output2json
+from llama_cpp import Llama
 
 
 
@@ -91,54 +92,23 @@ def files_loop(files_list,input_dir,out_dir,err_dir,nFiles_r,prmpt_settings):
         print(f"extracted the fields: {" ".join(reqst_fields)}")
     
 
-def send_prompt(prompt_text):
-    # function to send the prompt to the server 
-    # Parameters (hard coded) 
-        # model_path: path to the model in the server 
-        # -- Model parameters 
-        # temperature:  stochasticity of the model
-        # max_tokens:maximum tokens of the answer 
-    # Output:  
-        # response of the model 
-    
-    # ================================================
-    
+
+def set_model():
     # ====== About the model
     model_path = '/home/naic-user/Llama-3.2-3B-Instruct'
     temperature=0.1
-    max_tokens=10000
-    
-    # ====== start the time
-    start_time = time.time()
+    llm = Llama(model_path=model_path,n_gpu_layers=-1, n_ctx=10000, verbose = False, chat_format="chatml",temperature=temperature) 
 
-    # ====== Sed the prompt 
-    response = requests.post(
-    "http://localhost:8000/v1/completions",
-    json={
-        "model": model_path,
-        "prompt": prompt_text,
-        "max_tokens": max_tokens,
-        #"max_model_len": max_model_len,
-        "temperature":temperature
-        })
-    
-    # ====== end time 
-    end_time = time.time() - start_time
-    print(f"time to process 1 file: {end_time}s")
-    
-    return response
+    return llm
 
-def get_response(response: requests.Response) -> List[str]:
-    # function to extract the response of the model
-
-    data = json.loads(response.content)
-    try: # check if the response has been created 
-        output = data['choices']
-        output = output[0]['text']
+def get_response(llm,prompt_question): 
+    output = llm.create_chat_completion(messages=prompt_question,temperature =0)
+                        
+    # Get the response 
+    try:
+        generated_text = output["choices"][0]["message"]
     except:
-        output = -1
-    return output
-    
-
-
+        generated_text = -1
+    print(generated_text)
+    return generated_text
     

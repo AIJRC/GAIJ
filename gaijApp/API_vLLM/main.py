@@ -18,7 +18,8 @@ document, the LLM is run through an API in the server
 
 
 from app.config_setup import initianlize_confi_folders,initialize_confi_prompt,get_configuration
-from scripts.run_LLM_server import files_loop
+#from scripts.run_LLM_server import files_loop
+from scripts.run_LLM_local import files_loop
 from documents.document_manager import whichfiles
 from utils.arg_parser import argparser_main,argparser_prompt,parser_config,parser_prompt
 

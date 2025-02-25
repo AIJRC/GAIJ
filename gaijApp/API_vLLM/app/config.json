@@ -1,5 +1,5 @@
 {
-    "save_directory": "F:\\Oihane\\OsloMet\\data\\JSON",
-    "load_directory": "F:\\Oihane\\OsloMet\\data\\markdown",
-    "error_directory": "F:\\Oihane\\OsloMet\\data\\errorFiles"
+    "save_directory": '/home/naic-user/data/markdowns/',
+    "load_directory": '/home/naic-user/data/jsons/',
+    "error_directory": '/home/naic-user/data/error_files/'
 }
