@@ -1,5 +1,5 @@
 {
-    "save_directory": '/home/naic-user/data/markdowns/',
-    "load_directory": '/home/naic-user/data/jsons/',
-    "error_directory": '/home/naic-user/data/error_files/'
+    "save_directory":"/home/naic-user/data/jsons/",
+    "load_directory":"/home/naic-user/data/markdowns/",
+    "error_directory":"/home/naic-user/data/error_files/"
 }

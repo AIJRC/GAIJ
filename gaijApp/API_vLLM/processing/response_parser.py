@@ -270,14 +270,16 @@ def formatting_string(text):
     return joinedWords
 
 def format_input(input):
-    if len(input)>1:
-        formatted_text = []
-        for item in input:
-            print(item)
-            formatted_temp = formatting_string(item)
-            formatted_text.append(formatted_temp)
-    else:
-        formatted_text = formatting_string(input[0])
+    try:
+        if len(input)>1:
+            formatted_text = []
+            for item in input:
+                formatted_temp = formatting_string(item)
+                formatted_text.append(formatted_temp)
+        else:
+            formatted_text = formatting_string(input[0])
+    except: 
+        formatted_text = input
     return formatted_text
 
 def add_versioncontrol(cleanded_JSON,prmpt_settings):
