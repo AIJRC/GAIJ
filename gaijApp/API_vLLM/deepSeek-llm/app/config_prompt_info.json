@@ -1,0 +1,13 @@
+{
+    "NOR_Flag": true,
+    "AllFields_Flag": true,
+    "name_Flag": true,
+    "id_Flag": true,
+    "adrs_Flag": true,
+    "lead_Flag": true,
+    "typ_Flag": true,
+    "subs_Flag": true,
+    "parnt_Flag": true,
+    "audit_Flag": true
+}
+
