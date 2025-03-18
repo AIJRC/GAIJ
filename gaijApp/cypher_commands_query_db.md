@@ -109,13 +109,16 @@ RETURN c, a, p, prop
 ```cypher 
 MATCH (n)
 DETACH DELETE n
+```
 
 # Get all nodes
 ```cypher 
 MATCH (n)
 RETURN count(n) AS total_nodes
+```
 
 # Get all relationships 
 ```cypher 
 MATCH ()-[r]->()
 RETURN count(r) AS total_relationships
+```
