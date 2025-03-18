@@ -108,3 +108,13 @@ RETURN c, a, p, prop
 # Delete All Nodes and Relationships
 MATCH (n)
 DETACH DELETE n
+
+### Get all nodes
+```cypher 
+MATCH (n)
+RETURN count(n) AS total_nodes
+
+### Get all relationships 
+```cypher 
+MATCH ()-[r]->()
+RETURN count(r) AS total_relationships
