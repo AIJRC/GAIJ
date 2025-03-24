@@ -26,12 +26,12 @@ from prompts.prompt_templates import prompt_ENG,prompt_NOR
 
 
 # ======= Make the prompt 
-def make_prompt(contextText,prmpt_settings):
+def make_prompt(contextText, output_external, prmpt_settings):
     " make the prompt: Question + Text "
     # function to create the prompt including the info from the file 
 
     # ====== Prompt question 
-    prompt_question=get_prompt(prmpt_settings)
+    prompt_question=get_prompt(prmpt_settings, output_external)
         # To do: print the fields that are being extracted and the language 
     # ====== Complete the prompt 
     prompt_text = contextText + prompt_question
@@ -39,13 +39,46 @@ def make_prompt(contextText,prmpt_settings):
     return prompt_text
 
 
-def get_prompt(prmpt_settings):
+def make_external_prompt(external_info):
+    prompt_text = f"""
+    <|system|> You are a helpful assistant. You process information oparse and extract specific information from them, then present it in a structured JSON format. 
+    This is the gathered information you will base your answers on: {external_info}
+
+    Please return only the response in the following JSON format. Do not include any explanation, comments, or extra information.
+
+    The JSON structure should strictly follow this format:
+
+    {{
+        "company_name": "string",     
+        "company_id": "string",   
+        "company_address": "string", 
+        "company_type": "string",
+        "leadership": {
+            "CEO": "string or null",       
+            "board_members": [
+                "string" or null           
+            ],
+             "share_holders": [
+                "string" or null           
+            ],
+            "chairman_of_the_board": "string or null" 
+        },
+        "subsidiaries": [
+            "string" or null               
+        ],  
+        "parent_company": "string or null"
+    }}
+    """
+    return prompt_text
+
+
+def get_prompt(prmpt_settings, output_external):
     " Get the right prompt question"
     if prmpt_settings.NOR_Flag:
         print(f"the prompt is in Norwegian")
-        prompt_quest=prompt_NOR(prmpt_settings)
+        prompt_quest=prompt_NOR(prmpt_settings, output_external)
     else:
-        prompt_quest=prompt_ENG(prmpt_settings)
+        prompt_quest=prompt_ENG(prmpt_settings, output_external)
    
     return prompt_quest
 
@@ -77,6 +110,9 @@ def check_promptSettings(prmpt_settings):
             if "audit_Flag" not in prmpt_settings:
                 prmpt_settings.audit_Flag = False
                 print('parent extraction has been set to False')
+            if "external_Flag" not in prmpt_settings:
+                prmpt_settings.external_Flag = False
+                print('external info extraction has been set to False')
     else:
             prmpt_settings.name_Flag = True
             prmpt_settings.id_Flag = True
@@ -86,6 +122,7 @@ def check_promptSettings(prmpt_settings):
             prmpt_settings.subs_Flag = True
             prmpt_settings.parnt_Flag = True
             prmpt_settings.audit_Flag = True
+            prmpt_settings.external_Flag = True
             
     return prmpt_settings
             

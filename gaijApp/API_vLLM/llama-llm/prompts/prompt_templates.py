@@ -4,7 +4,7 @@ Prompt template in ENG and NOR
 import copy 
 
 # ====== Prompt question English 
-def prompt_ENG(prmpt_settings):
+def prompt_ENG(prmpt_settings, output_external):
 
     prompt_quest_temp = """
     <|system|> You are a helpful assistant. You process tax records of Norwegian companies and extract specific information from them, then present it in a structured JSON format. 
@@ -97,6 +97,11 @@ def prompt_ENG(prmpt_settings):
         - "auditor_name": The name of the auditor who prepared the company's taxes.
         """
     
+
+    if prmpt_settings.external_Flag:
+        prompt_quest_temp2 = prompt_quest_temp2 + f"""
+    We also obtained the following information from external sources: {output_external} 
+    """
     
     prompt_quest_temp2 = prompt_quest_temp2 +"""
     Please ensure that all fields are included, even if they are empty or null.
@@ -107,7 +112,7 @@ def prompt_ENG(prmpt_settings):
     return prompt_quest
 
 # ====================== Prompt Question Norwegian 
-def prompt_NOR(prmpt_settings):
+def prompt_NOR(prmpt_settings, output_external):
     prompt_quest_temp = """
    <|system|> Du er en hjelpsom assistent. Du behandler norske selskapers skattelister og trekker ut spesifikk informasjon fra dem, og presenterer den i et strukturert JSON-format. 
     Dette er skatteoppføringen du vil basere svarene dine på: {context}
@@ -202,6 +207,10 @@ def prompt_NOR(prmpt_settings):
         - revisor_navn: Navnet på revisoren/enheten som har utarbeidet selskapets selvangivelse.
         """
     
+    if prmpt_settings.external_Flag:
+        prompt_quest_temp2 += f"""
+    Vi har også hentet inn følgende informasjon fra eksterne kilder: {output_external} 
+    """
     
     prompt_quest_temp2 = prompt_quest_temp2 +"""
     Please ensure that all fields are included, even if they are empty or null.

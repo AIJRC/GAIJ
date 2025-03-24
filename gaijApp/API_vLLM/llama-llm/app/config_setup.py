@@ -11,6 +11,7 @@ from utils.arg_parser import argparser_main,argparser_prompt,argparser_nFiles,pa
 config = {
     "save_directory": None,
     "load_directory": None,
+    "external_directory": None,
     "error_directory":None}
 
 prmpt_settings = DotDict()
@@ -81,6 +82,7 @@ def initianlize_confi_folders():
         # save directory 
         config = DotDict()
         config.save_directory = mk_directory("save_directory")
+        config.external_directory = mk_directory("external_directory")
         config.error_directory = mk_directory("error_directory")
         config.load_directory = get_directory("Enter the directory where files should be loaded from: ")
      
