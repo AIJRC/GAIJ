@@ -8,5 +8,6 @@
     "typ_Flag": true,
     "subs_Flag": true,
     "parnt_Flag": true,
-    "audit_Flag": true
+    "audit_Flag": true,
+    "external_Flag": true
 }

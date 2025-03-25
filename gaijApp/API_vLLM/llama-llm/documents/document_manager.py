@@ -6,7 +6,7 @@ import os
 import json
 
 
-def whichfiles(input_dir,out_dir):
+def whichfiles(input_dir, out_dir):
     # function to extract the list of files that still need to be processed
     
     # ======  make sure the directories exist 
@@ -60,7 +60,7 @@ def remove_numeric_lines(markdown_content):
     # Join the lines back together
     return "\n".join(filtered_lines)
 
-def save_JSON(json_data,json_path2save):
+def save_JSON(json_data, json_path2save):
     # Save the JSON data to a file
     with open(json_path2save, 'w') as json_file:
         json.dump(json_data, json_file, indent=4, ensure_ascii=False)  # Save the JSON with indentation for readability
@@ -69,7 +69,7 @@ def save_JSON(json_data,json_path2save):
         flagSave = 1
     return flagSave
 
-def save_text(fileName,variable):
+def save_text(fileName, variable):
     # save a variable (str) to a text file 
     with open(fileName, "w") as output:
             output.write(variable)

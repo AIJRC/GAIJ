@@ -30,24 +30,25 @@ def vLLM_remote():
      extract certain data and save it in a JSON format in another directory
      """
      
-    [config,prmpt_settings] = get_configuration() 
+    [config, prmpt_settings] = get_configuration() 
     
     #config = Dic2DotDict(config)
     # get the folders 
     input_dir = config.load_directory
     out_dir = config.save_directory
+    ext_dir = config.external_directory
     err_dir = config.error_directory
     if "nFiles_r" in config:
         nFiles_r = config.nFiles_r
     else:
         nFiles_r = -1
-        
+
     # ====== get the list of files to be processed 
     files_list = whichfiles(input_dir,out_dir)
     # ====== Loop through the files and send to server 
-    files_loop(files_list,input_dir,out_dir,err_dir,nFiles_r,prmpt_settings)
+    files_loop(files_list, input_dir,out_dir, ext_dir, err_dir,nFiles_r,prmpt_settings)
     
-#vLLM_remote(config,prmpt_settings)
+#vLLM_remote(config,prmpt_settings) 
 
 # ========== 
 

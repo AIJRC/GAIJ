@@ -10,6 +10,7 @@ def argparser_main():
     # General settings 
     parser.add_argument('--md_dir', required=False, help='directory with the markdown files to be processed')
     parser.add_argument('--out_dir', required=False, help='Output directory for JSON file ')
+    parser.add_argument('--ext_dir', required=False, help='External info directory for JSON file ')
     parser.add_argument('--error_dir', required=False, help='Output directory for file wth error files (optional) ')
     #parser.add_argument('--run_nFiles', required=False, help='number of Files to run each batch, default -1-> all')
     # Prompt settings 
@@ -55,6 +56,7 @@ def argparser_prompt():
     parser.add_argument('--lead_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to extract the Leadership of the company - default TRUE only available if AllFields_Flag==FALSE')
     parser.add_argument('--subs_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to extract the subsidiaries of the company - default TRUE only available if AllFields_Flag==FALSE')
     parser.add_argument('--parnt_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to extract the Parent company of the company - default TRUE only available if AllFields_Flag==FALSE')
+    parser.add_argument('--external_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to extract External info of the company - default TRUE only available if AllFields_Flag==FALSE')
     #parser.add_argument('--id_Flag',type=lambda x: x.lower() in ['true', '1', 'yes'], required=False, help='Flag to ask to extract the ID of the company - default TRUE only available if AllFields_Flag==FALSE')
     args,unknown = parser.parse_known_args()
     # check wether any argument has been introduced 
@@ -97,6 +99,11 @@ def parser_config(args):
         #out_dir = 'F:\\Oihane\\OsloMet\\data\\JSON\\check_Lang\\ENG'
         # out_dir = 'F:\User\JSON
         # error ( txt files)
+    if args.ext_dir:
+        config.external_directory = args.ext_dir
+    else:
+        emptyCont +=1
+        config.external_directory = '/home/naic-user/data/external_jsons/'
     if args.error_dir:
         config.error_directory = args.error_dir
     else:
@@ -185,6 +192,11 @@ def parser_prompt(args):
             prmpt_settings.parnt_Flag = args.parnt_Flag
         else:
             prmpt_settings.parnt_Flag = False
+            # Flag to add External Info
+        if args.external_Flag is not None:
+            prmpt_settings.external_Flag = args.external_Flag
+        else:
+            prmpt_settings.external_Flag = False
         #    # Flag to extract Name
         #if args.name_Flag is not None:
         #    name_Flag = args.name_Flag
@@ -199,6 +211,7 @@ def parser_prompt(args):
         prmpt_settings.lead_Flag = True
         prmpt_settings.subs_Flag = True
         prmpt_settings.parnt_Flag= True
+        prmpt_settings.external_Flag= True
         #prmpt_settings.name_Flag = True
 
     return(prmpt_settings)

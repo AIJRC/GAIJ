@@ -21,8 +21,9 @@ import requests
 import time
 import json
 from typing import List
-from prompts.prompt_manager import make_prompt
+from prompts.prompt_manager import make_prompt, make_external_prompt
 from documents.document_manager import readfile
+from external_apis.external_apis import run_all_external_apis
 from utils.support_functions import DotDict,get_fields
 from processing.response_parser import output2json
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -35,7 +36,7 @@ import os
 import psutil
 
 
-def files_loop(files_list,input_dir,out_dir,err_dir,nFiles_r,prmpt_settings):
+def files_loop(files_list,input_dir,out_dir,ext_dir,err_dir,nFiles_r,prmpt_settings):
     # function to loop through the folder with the markdown files (to be processed) and extract 
     # the text from each of them using LLM -- Main function
     
@@ -51,7 +52,7 @@ def files_loop(files_list,input_dir,out_dir,err_dir,nFiles_r,prmpt_settings):
     # ====== set the model
     #[tokenizer,model] = set_model()
     # using vllm
-    [llm,sampling_params] = set_model_vllm()
+    [llm, sampling_params] = set_model_vllm()
     for i in range(files2Run):
         
         input_file = files_list[i]
@@ -68,11 +69,31 @@ def files_loop(files_list,input_dir,out_dir,err_dir,nFiles_r,prmpt_settings):
             reqst_fields= get_fields(prmpt_settings)
             print(f"requesting the fields: {" ".join(reqst_fields)}")
             
-        print(f"extracting data of file  {i+1}/{files2Run}.....") 
+        print(f"extracting data of file  {i+1}/{files2Run}.....")
+
+        # ====== calling external APIs
+        try:
+            external_info = run_all_external_apis(id, ext_dir)
+        except Exception as e:
+            print(f"Error calling external APIs for company {id} with error: {e}")
+            cleanup_vllm()
+
+        # ====== run the LLM the first iteration to clean the info
+        try:    
+            # ====== get the prompt 
+            prompt = make_external_prompt(external_info)
+        
+            # ====== send the prompt and get the response 
+            output_external = send_prompt_vllm(llm, sampling_params, prompt)
+        except Exception as e:
+            print(f"Error sending the inital prompt for company {id} with error: {e}")
+            cleanup_vllm()
+
+        # ====== run the LLM
         
         try:    
             # ====== get the prompt 
-            prompt = make_prompt(contextText,prmpt_settings)
+            prompt = make_prompt(contextText, output_external, prmpt_settings)
         
             # ====== send the prompt and get the response 
             #output = get_response(tokenizer,model,prompt)
@@ -171,10 +192,10 @@ def set_model_vllm():
     sampling_params = SamplingParams(temperature=temperature,max_tokens = max_tokens)
     return [llm,sampling_params]
 
-def send_prompt_vllm(llm,sampling_params,prompt):
+def send_prompt_vllm(llm, sampling_params, prompt):
     # ====== start the time
     start_time = time.time()
-    output = llm.generate([prompt],sampling_params)
+    output = llm.generate([prompt], sampling_params)
     # ====== end time 
     end_time = time.time() - start_time
     print(f"time to process 1 file: {end_time}s")
