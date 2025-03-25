@@ -67,15 +67,15 @@ def files_loop(files_list,input_dir,out_dir,ext_dir,err_dir,nFiles_r,prmpt_setti
 
         if i==0: 
             reqst_fields= get_fields(prmpt_settings)
-            print(f"requesting the fields: {" ".join(reqst_fields)}")
+            print(f'requesting the fields: {" ".join(reqst_fields)}')
             
-        print(f"extracting data of file  {i+1}/{files2Run}.....")
+        print(f'extracting data of file  {i+1}/{files2Run}.....')
 
         # ====== calling external APIs
         try:
             external_info = run_all_external_apis(id, ext_dir)
         except Exception as e:
-            print(f"Error calling external APIs for company {id} with error: {e}")
+            print(f'Error calling external APIs for company {id} with error: {e}')
             cleanup_vllm()
 
         # ====== run the LLM the first iteration to clean the info
@@ -86,7 +86,7 @@ def files_loop(files_list,input_dir,out_dir,ext_dir,err_dir,nFiles_r,prmpt_setti
             # ====== send the prompt and get the response 
             output_external = send_prompt_vllm(llm, sampling_params, prompt)
         except Exception as e:
-            print(f"Error sending the inital prompt for company {id} with error: {e}")
+            print(f'Error sending the inital prompt for company {id} with error: {e}')
             cleanup_vllm()
 
         # ====== run the LLM
@@ -101,7 +101,7 @@ def files_loop(files_list,input_dir,out_dir,ext_dir,err_dir,nFiles_r,prmpt_setti
             output = send_prompt_vllm(llm,sampling_params,prompt)
             #output = get_response_vllm(output)
         except Exception as e:
-            print(f"Error processing the prompt: {e}")
+            print(f'Error processing the prompt: {e}')
             #print(prompt)
             #output = -1 
             cleanup_vllm()
@@ -125,18 +125,18 @@ def files_loop(files_list,input_dir,out_dir,ext_dir,err_dir,nFiles_r,prmpt_setti
             flagSave = output2json(output,out_dir,err_dir,id,prmpt_settings)
 
             if flagSave: # file has been succesfully saved 
-                print(f"file  {i+1}/{files2Run} processed :)") 
+                print(f'file  {i+1}/{files2Run} processed :)')
                 nSaved+=1
 
             else: # file has not been saved 
-                 print(f"file  {i+1} with ID {id} has not been saved :(")
+                 print(f'file  {i+1} with ID {id} has not been saved :(')
             # if output ==-1 problem in the data extraction 
 
         else:# data has not been extracted
-            print(f"file  {i+1} with ID {id} has not been processed :(") 
+            print(f'file  {i+1} with ID {id} has not been processed :(') 
     
     # ====== print how many files have been saved 
-    print(f"  {nSaved} / {files2Run} have been saved") 
+    print(f'  {nSaved} / {files2Run} have been saved') 
     # finish the process 
     if dist.is_initialized():
         dist.destroy_process_group()
@@ -166,7 +166,7 @@ def cleanup_vllm():
             dist.destroy_process_group()
             print("Destroyed distributed process group")
     except Exception as e:
-        print(f"Error destroying process group: {e}")
+        print(f'Error destroying process group: {e}')
     
     # Step 3: Kill any lingering vLLM processes
     current_pid = os.getpid()
