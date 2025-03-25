@@ -146,7 +146,7 @@ def mk_directory(directory):
         if not os.path.exists("output"):
             try:
                 os.makedirs("output")
-                print(f"  Created directory: {"output"}")
+                print(f"  Created directory:output")
             except OSError as e:
                 print(f"  Error creating directory: {e}")
                 sys.exit()
