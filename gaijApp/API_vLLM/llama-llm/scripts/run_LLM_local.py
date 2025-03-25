@@ -143,7 +143,7 @@ def files_loop(files_list,input_dir,out_dir,ext_dir,err_dir,nFiles_r,prmpt_setti
     # print the fields that have be extracted in the last file 
     if (i+1)==files2Run: 
         reqst_fields= get_fields(prmpt_settings)
-        print(f"extracted the fields: {" ".join(reqst_fields)}")
+        print(f'extracted the fields: {" ".join(reqst_fields)}')
         
         
 def cleanup_vllm():
