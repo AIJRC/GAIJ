@@ -21,20 +21,16 @@ This script is taylored to use DeepSeek as an LLM and to extract three types of 
 # =========================================================================
 
 
-from app.config_setup import initianlize_confi_folders,initialize_confi_prompt,get_configuration
+from app.config_setup import get_configuration
 from scripts.run_LLM_server import files_loop
-#from scripts.run_LLM_local import files_loop
 from documents.document_manager import whichfiles
-from utils.arg_parser import argparser_main,argparser_prompt,parser_config,parser_prompt
-
-
 
 def vLLM_remote():
     """ Main function to run a list of files located in a directory through vLLM 
      extract certain data and save it in a JSON format in another directory
      """
      
-    [config,prmpt_settings,prmpt_info_settings] = get_configuration() 
+    [config] = get_configuration() 
     
     #config = Dic2DotDict(config)
     # get the folders 
@@ -47,9 +43,11 @@ def vLLM_remote():
         nFiles_r = -1
         
     # ====== get the list of files to be processed 
-    files_list = whichfiles(input_dir,out_dir)
+    input_format = ".md"
+    output_format = ".json"
+    files_list = whichfiles(input_dir,out_dir,input_format,output_format)
     # ====== Loop through the files and send to server 
-    files_loop(files_list,input_dir,out_dir,nFiles_r,prmpt_settings,prmpt_info_settings)
+    files_loop(files_list,input_dir,out_dir,nFiles_r)
     
 #vLLM_remote(config,prmpt_settings)
 

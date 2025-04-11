@@ -113,7 +113,8 @@ def send_prompt(prompt_text):
 
     # ====== Sed the prompt 
     response = requests.post(
-    "http://localhost:8000/v1/completions",
+    #"http://localhost:8000/v1/completions",
+    'http://gaijl4slur-g2gpunodeset-0:8000/v1/completions',
     json={
         "model": model_path,
         "prompt": prompt_text,

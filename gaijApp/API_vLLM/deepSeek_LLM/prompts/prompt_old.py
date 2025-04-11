@@ -1,10 +1,7 @@
-"""
-Prompt template in ENG and NOR 
-    """
-import copy 
+" Script with old prompt to extract: info, notes summaries and red flags"
 
 
-def prompt_data():
+def prompt_data(contextText):
     """ 
     prompt to extract the data from the document
 
@@ -53,9 +50,9 @@ def prompt_data():
     Do not add any explanation in the begining, only provide the JSON. If there is no information for any of the fields have a null entry"""
    # ,
  # "auditor_note":
-    return [user_question,system_prompt]    
+    return [user_question + contextText,system_prompt]    
     
-def prompt_notes():
+def prompt_notes(contextText):
     """
     prompt to extract the notes information
     
@@ -122,10 +119,10 @@ def prompt_notes():
     
     
     """
-    return [user_question ,system_prompt]     
+    return [user_question + contextText,system_prompt]     
 
 
-def prompt_RF():
+def prompt_RF(contextText):
     """
     prompt to extract information about the red flags provided by the journalists
     
@@ -320,10 +317,10 @@ def prompt_RF():
     
     
     """
-    return [user_question,system_prompt]    
+    return [user_question + contextText,system_prompt]    
 
 
-def prompt_rf_v2():
+def prompt_rf_v2(contextText):
     """
     prompt to extract information about the red flags provided by the journalists v2
     
@@ -501,4 +498,4 @@ Example: This is just an example with the structure it should have it shull not 
     
     
     """
-    return [user_question,system_prompt]  
+    return [user_question + contextText,system_prompt]  

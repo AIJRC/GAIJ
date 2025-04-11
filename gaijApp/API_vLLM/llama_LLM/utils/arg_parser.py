@@ -81,28 +81,21 @@ def parser_config(args):
         config.load_directory = args.md_dir
     else:
         emptyCont +=1
-        config.load_directory = '/home/naic-user/data/markdowns/'
-        #config.load_directory = 'F:\\Oihane\\OsloMet\\data\\markdown\\check_Lang'
-        #input_dir = 'F:\\Oihane\\OsloMet\\data\\markdown\\check_Lang'
+        config.load_directory = '/home/gaij/data/markdowns/'
         # input_dir = 'F:\User\markdowns'
         # output ( JSON files)
     if args.out_dir:
         config.save_directory = args.out_dir
     else:
         emptyCont +=1
-        config.save_directory = '/home/naic-user/data/jsons/'
-        #config.save_directory = 'F:\\Oihane\\OsloMet\\data\\JSON\\check_Lang\\NOR\\test'
-        #out_dir = 'F:\\Oihane\\OsloMet\\data\\JSON\\NOR_prompt'
-        #out_dir = 'F:\\Oihane\\OsloMet\\data\\JSON\\check_Lang\\NOR'
-        #out_dir = 'F:\\Oihane\\OsloMet\\data\\JSON\\check_Lang\\ENG'
+        config.save_directory = '/home/gaij/data/jsons/'
         # out_dir = 'F:\User\JSON
         # error ( txt files)
     if args.error_dir:
         config.error_directory = args.error_dir
     else:
         emptyCont +=1
-        config.error_directory = '/home/naic-user/data/error_files/'
-        # err_dir = 'F:\User\errorFiles'
+        config.error_directory = '/home/gaij/data/error_files/'
         # number of files to run 
     #if args.run_nFiles:
     #    config.nFiles_r = int(args.run_nFiles)

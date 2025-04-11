@@ -6,11 +6,11 @@ Created on Tue Dec 10 2024
 # =========================================================================
 """
 Goal: run the markdonwfiles through an LLM to extract the important information in a JSON formatted
-document, the LLM is run through an API in the server
+document, the LLM is run in the server
      This is the main component of the pipeline which inculdes
      - Getting the input
      - Selecting the right prompt 
-     - Run the API 
+     - Run the LLM
      - Clean the output and save it 
 
 """
@@ -20,15 +20,15 @@ import re
 import requests
 import time
 import json
+import copy
 from typing import List
-from prompts.prompt_manager import prompt_rf_v2,prompt_data
-from documents.document_manager import readfile
-from utils.support_functions import DotDict,get_fields
+from prompts.prompts_redFlags_unified import prompt_RF_v2,prompt_wordsContext
+from documents.document_manager import readfile,save_json
 from processing.response_parser import output2json
 
 
-
-def files_loop(files_list,input_dir,out_dir,nFiles_r,prmpt_settings,prmpt_info_settings):
+def files_loop(files_list,input_dir,out_dir,nFiles_r):
+    flag_separatePrompts = False
     # function to loop through the folder with the markdown files (to be processed) and extract 
     # the text from each of them using LLM -- Main function
     
@@ -42,66 +42,81 @@ def files_loop(files_list,input_dir,out_dir,nFiles_r,prmpt_settings,prmpt_info_s
         
         input_file = files_list[i]
         
-        # ========= Get the identity of the markdown file 
+        # ====== Get the identity of the markdown file 
         input_sep = input_file.split('/')
         id = input_sep[-1][:-3]
         
-        # ======= Open the file and read it 
+        # ====== Open the file and read it 
         contextText = readfile(input_dir,input_file)
-        
-        
-        
-        # get the type of data that needs to be extracted 
-        
-        if prmpt_settings.info_Flag:
-            # extract the information of the file
-            print(f"extracting information of file  {i+1}/{files2Run}.....")  
-        if prmpt_settings.notes_Flag: 
-            # extract the summary of the file
-            print(f"extracting summary of notes of file  {i+1}/{files2Run}.....")  
-        if prmpt_settings.redFlags_Flag: 
-            # extract the red flags from the file 
-            print(f"extracting red flags of file  {i+1}/{files2Run}.....") 
             
+        print(f'extracting data of file  {i+1}/{files2Run}.....') 
+        bigJson = None
         
-        # get notes prompt
-        flag_saveInference = False
-        notes_prompt,system_notesPrompt = prompt_rf_v2()
-        # ==== send prompt 
-        response = send_prompt(notes_prompt+contextText,system_notesPrompt)
         
-        # ====== get the response 
-        output = get_response(response)
-    
-        print(output)
-            # data has been extracted 
-        
-        if type(output)==str:
-           # ====== transform to JSON and save and translate 
+        try:    
+
+            # get the prompt 
+            user_prompt,system_prompt = prompt_RF_v2()
+            # send the prompt and get the response 
+            bigJson = mainProcess(user_prompt,system_prompt,contextText,out_dir,bigJson)
             
-            [json_data,inference] = output2json(output,out_dir)
+            # check if there are words of interest in the records 
+            foundWords = find_words(contextText)
+            if len(foundWords)>0:
+                # flagged words 
+                print("extracting flagged words")
+                #print(f"found words {foundWords}")
+                # make the approproate prompt 
+                user_prompt,system_Prompt = prompt_wordsContext(foundWords)
+                # send the prompt and get the response 
+                bigJson = mainProcess(user_prompt,system_Prompt,contextText,out_dir,bigJson)
+        except Exception as e:
+            print(f'Error processing the file: {e}')
+        
+            
+       
+          
+          
+        # ===== save the data 
+        if isinstance(bigJson, dict):
+            save_json(bigJson,out_dir,id)
+            print(f"file  {i+1}/{files2Run} processed :)") 
+        else:
+            print(f"file  {i+1} with ID {id} notes have not been processed :(") 
+           
+        
+
+def mainProcess(user_prompt,system_prompt,contextText,out_dir,bigJson):
+    " script to run the main process after creating the prompt "
+    # ==== send prompt 
+    response = send_prompt(user_prompt+ contextText ,system_prompt)
+        
+    # ====== get the response 
+    output = get_response(response)
+    if type(output)==str:
+           # ====== transform to JSON and save and (translate )
+            
+            [json_data,inference] = output2json(output,out_dir,user_prompt)
             if json_data is not None: 
                 # ==== translate the data 
-                json_dataENG = translate_json(json_data)
-                
+                #json_dataENG = translate_json(json_data)
+                json_dataENG = copy.copy(json_data)
                 # === save the data 
-                print("savind the extracted data of the file")
                 if isinstance(json_dataENG, dict):
-                    savejson(json_dataENG,out_dir,id)
-            if flag_saveInference:
-                saveInference(inference,out_dir)
-            print(f"file  {i+1}/{files2Run} processed :)") 
-            # if output ==-1 problem in the data extraction 
-        else:
-           print(f"file  {i+1} with ID {id} notes have not been processed :(") 
-    
-    # ====== print how many files have been saved 
-    print(f"  {nSaved} / {files2Run} have been saved") 
-    # print the fields that have be extracted in the last file 
-    if (i+1)==files2Run: 
-        reqst_fields= get_fields(prmpt_info_settings)
-        print(f"extracted the fields: {" ".join(reqst_fields)}")
-    
+                    print("adding the extracted data of the file")
+                    if bigJson is not None: 
+                        bigJson.update(json_dataENG)
+                    else: 
+                        bigJson = json_data 
+                #if isinstance(json_dataENG, dict):
+                #    savejson(json_dataENG,out_dir,id)
+            #if flag_saveInference:
+                #saveInference(inference,out_dir)
+            flagSaved = 1 
+    else:
+            flagSaved = 0
+    return bigJson 
+              
 
 def send_prompt(user_prompt,system_prompt):
     # function to send the prompt to the server 
@@ -132,7 +147,8 @@ def send_prompt(user_prompt,system_prompt):
     # =============== Sed the prompt 
     response = requests.post(
     #"http://localhost:8000/v1/completions",
-    "http://localhost:8000/v1/chat/completions",
+    #"http://localhost:8000/v1/chat/completions",#
+    'http://gaijl4slur-g2gpunodeset-0:8000/v1/chat/completions',
     json={
         "model": model_path,
         #"prompt": prompt_text,
@@ -150,6 +166,10 @@ def send_prompt(user_prompt,system_prompt):
     # ===== get the answer 
     return response
 
+
+
+
+
 def get_response(response: requests.Response) -> List[str]:
 
     
@@ -166,34 +186,17 @@ def get_response(response: requests.Response) -> List[str]:
     except:
         output = -1
     return output
-    
 
-    
 
-def run_extractInfo(contextText,out_dir,prmpt_info_settings):
-    " script that run the necesary steps to extract and save the data "
-    
-    flag_saveInference = True
-    notes_prompt,system_notesPrompt = prompt_data()
-    # ==== send prompt 
-    response = send_prompt(notes_prompt,system_notesPrompt)
-        
-    # ====== get the response 
-    output = get_response(response)
-    # get the JSON of the response 
-    if type(output)==str:
-           # ====== transform to JSON and save and translate 
-            
-            [json_data,inference] = output2json(output,out_dir)
-            if json_data is not None: 
-                json_data = json.loads(json_data)
-            
-                # cleand the data and make it into an standardized structure
-                cleanded_JSON = get_standardStructure(json_data,prmpt_info_settings)
-            
-                # add version control 
-                cleaned_JSON_ver = add_versioncontrol(cleanded_JSON,notes_prompt+system_notesPrompt)
+def find_words(text):
+    " use regex to find particular words in the tax record"
+    words2find = ["kompensasjon", "sluttavtale", "oppsigelsesdato", "oppsigelse", "sluttdato", "opphør", "trukket", "etterlønn", "bonus", "variabel lønn", "resultatbasert", "milepæl", "etterbetaling", "etterbetalt", "privatlån", "private lån", "selgerkreditt", "interntransaksjon", "diskresjonær", "låneforfall", "forfalt", "ubetalt", "solgt aksjer"]
+    people2find = ["Kjell Inge Røkke"]
+    # concatenate all the words
+    allwords2find = words2find + people2find
+    # Compile a regex pattern to match unwanted words
+    #pattern_words = r"\b(" + "|".join(allwords2find) + r")\b"        
+    #foundWords = [word for word in allwords2find if re.search(r"\b(" + "|".join(word) + r")\b",text, flags=re.IGNORECASE)]
+    foundWords = [word for word in allwords2find if re.search(rf'\b{re.escape(word)}s?\b',text, flags=re.IGNORECASE)]
 
-                # Save the JSON data to a file
-                flagSave = save_JSON(cleaned_JSON_ver,out_dir)
-    
+    return foundWords  

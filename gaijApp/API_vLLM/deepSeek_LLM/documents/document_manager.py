@@ -4,26 +4,26 @@ Interface to load the required documents
 
 import os
 import json
+import re
+import copy
 
-
-outputadd = "\\JSON_notes\\"
-
-def whichfiles(out_dir,input_format,output_format):
+outputadd = '//concatenated//'
+def whichfiles(input_dir,out_dir,input_format,output_format):
     # function to extract the list of files that still need to be processed
     """ modified so it lists of the already processed files to add """
     
     # ===  make sure the directories exist 
+    os.makedirs(input_dir, exist_ok=True)
     os.makedirs(out_dir, exist_ok=True)
-    os.makedirs(out_dir+ outputadd, exist_ok=True)
     # ==== List tje JSON and MD files 
     json = list(filter(lambda x: x.endswith(output_format), os.listdir(out_dir)))
-    markdown = list(filter(lambda x: x.endswith(output_format), os.listdir(out_dir)))
+    markdown = list(filter(lambda x: x.endswith(input_format), os.listdir(input_dir)))
     # ==== Find all files to be procesed ( that have not been processed yet)
-    files_list = list(set(markdown).difference(set(map(lambda x: os.path.splitext(x)[0] + output_format+outputadd, json))))
+    files_list = list(set(markdown).difference(set(map(lambda x: os.path.splitext(x)[0] + output_format, json))))
     # change the outfor to the input format 
     files2proces = [re.sub(output_format,input_format,file) for file in files_list]
     
-    print(f"{len(files2proces)} files found, example file: {files2proces[0]}")
+    print(f'{len(files2proces)} files found, example file: {files2proces[0]}')
     
     return(files2proces)
 
@@ -41,11 +41,11 @@ def readfile(input_dir,input_file):
 
     
 
-def savejson(json_data,json_path,id):
+def savejson_concatenate(json_data,json_path,id):
     " save the JSON file checking whether another one already exits and if so updating it"
     json_path2save = f'{json_path}{outputadd}{id}.json'
     json_pathFile = f'{json_path}\\{id}.json'
-    print(json_pathFile)
+    
     # check wether a file with the name exists
     if os.path.exists(json_pathFile):
         # load the existing data 
@@ -71,6 +71,22 @@ def savejson(json_data,json_path,id):
         json.dump(existing_data, json_file, indent=4, ensure_ascii=False)  # Save the JSON with indentation for readability
 
     print(f"JSON data saved to '{json_path2save}'")
+    
+def save_json(json_data,json_path,id):
+    " save the JSON file checking whether another one already exits and if so updating it"
+    json_path2save = f'{json_path}/{id}.json'
+    
+    # Save the JSON data to a file
+    try:
+        flagSave = 1
+        with open(json_path2save, 'w', encoding="utf-8") as json_file:
+            json.dump(json_data, json_file, indent=4, ensure_ascii=False)  # Save the JSON with indentation for readability
+
+        print(f"JSON data saved to '{json_path2save}'")
+    except Exception as e:
+        print(f'Error saving the file: {e}') 
+        flagSave = 0
+    return flagSave
     
     
 def saveInference(inference,out_dir):

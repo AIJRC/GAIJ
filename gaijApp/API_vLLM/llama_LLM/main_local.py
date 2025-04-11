@@ -6,22 +6,21 @@ Created on Tue Dec 10 2024
 # =========================================================================
 """
 Goal: run the markdonwfiles through an LLM to extract the important information in a JSON formatted
-document, the LLM is run through an API in the server
+document, the LLM is run in the server or locally
      This is the main component of the pipeline which inculdes
      - Getting the input
      - Selecting the right prompt 
-     - Run the API 
+     - Run the LLM
      - Clean the output and save it 
 
 """
 # =========================================================================
 
 
-from app.config_setup import initianlize_confi_folders,initialize_confi_prompt,get_configuration
-#from scripts.run_LLM_server import files_loop
+from app.config_setup import get_configuration
 from scripts.run_LLM_local import files_loop
 from documents.document_manager import whichfiles
-from utils.arg_parser import argparser_main,argparser_prompt,parser_config,parser_prompt
+
 
 
 
