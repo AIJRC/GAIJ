@@ -37,7 +37,7 @@ def api_endpoint(api_url, method='get', verify=True, data=None, payload=None):
     return resp
 
 
-def run_all_external_apis(id, ext_dir):
+def run_all_external_apis(id):
     results = []
     for url_template in API_ENDPOINTS:
         url = url_template.format(id=id)
@@ -52,12 +52,11 @@ def run_all_external_apis(id, ext_dir):
 # if __name__ == "__main__":
 #     import sys
 
-#     if len(sys.argv) < 2:
-#         print("Usage: python external_apis.py <org_id> [ext_dir]")
+#     if len(sys.argv) < 1:
+#         print("Usage: python external_apis.py <org_id>")
 #         sys.exit(1)
 
 #     org_id = sys.argv[1]
-#     ext_dir = sys.argv[2] if len(sys.argv) > 2 else "."
 
-#     output = run_all_external_apis(org_id, ext_dir)
+#     output = run_all_external_apis(org_id)
 #     print(output)
