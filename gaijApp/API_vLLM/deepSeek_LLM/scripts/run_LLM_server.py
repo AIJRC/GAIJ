@@ -37,7 +37,7 @@ def files_loop(files_list,input_dir,out_dir,nFiles_r):
         files2Run = nFiles
     else:
         files2Run = nFiles_r
-        print(f"{files2Run} files will be processed")
+    print(f"{files2Run} files will be processed from {input_dir}")
     for i in range(files2Run):
         
         input_file = files_list[i]
@@ -190,7 +190,7 @@ def get_response(response: requests.Response) -> List[str]:
 
 def find_words(text):
     " use regex to find particular words in the tax record"
-    words2find = ["kompensasjon", "sluttavtale", "oppsigelsesdato", "oppsigelse", "sluttdato", "opphør", "trukket", "etterlønn", "bonus", "variabel lønn", "resultatbasert", "milepæl", "etterbetaling", "etterbetalt", "privatlån", "private lån", "selgerkreditt", "interntransaksjon", "diskresjonær", "låneforfall", "forfalt", "ubetalt", "solgt aksjer"]
+    words2find = ["kompensasjon", "sluttavtale", "oppsigelsesdato", "oppsigelse", "sluttdato", "opphør", "trukket", "etterlønn", "bonus", "variabel lønn", "resultatbasert", "milepæl", "etterbetaling", "etterbetalt", "privatlån", "private lån", "selgerkreditt", "interntransaksjon", "diskresjonær", "låneforfall", "forfalt", "ubetalt", "solgt aksjer","covid","covid-19"]
     people2find = ["Kjell Inge Røkke"]
     # concatenate all the words
     allwords2find = words2find + people2find

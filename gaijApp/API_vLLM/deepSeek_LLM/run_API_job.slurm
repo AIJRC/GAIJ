@@ -7,7 +7,7 @@
 #SBATCH --output=vllm_api_.log
 
 # Optional: Load your Python environment or modules
-source /home/gaij/venv_deepSeek/bin/activate
+source /home/gaij/gaij/venv_deepSeek/bin/activate
 
 # Launch the API server
 python3 -m vllm.entrypoints.openai.api_server \
@@ -16,3 +16,4 @@ python3 -m vllm.entrypoints.openai.api_server \
     --port 8000 \
     --max_model_len 30000 \
     --pipeline-parallel-size 2
+

@@ -390,7 +390,6 @@ Only provide explicitly stated details—do not infer or assume information.
   }
 }
     """
-    afterContext = """<|im_end|>
-<|im_start|>assistant"""
+    
 
-    return [user_question,system_prompt,afterContext]
+    return [user_question,system_prompt]
