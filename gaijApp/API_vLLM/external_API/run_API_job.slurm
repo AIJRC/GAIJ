@@ -9,9 +9,8 @@
 # Optional: Load your Python environment or modules
 source /home/gaij/venv_llama/bin/activate
 
-# Launch the API server
 python -m vllm.entrypoints.openai.api_server \
-    --model '/home/gaij/.cache/huggingface/hub/models--meta-llama--Llama-3.2-1b-Instruct/snapshots/9213176726f574b556790deb65791e0c5aa438b6'\
-    --host 0.0.0.0 \
-    --port 8000 \
-    --max_model_len 65536
+  --model /home/gaij/models/llama-3.2-3b-instruct \
+  --host 0.0.0.0 \
+  --port 8013 \
+  --max-model-len 8192

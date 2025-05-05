@@ -1,4 +1,4 @@
-<|start_header_id|>system<|end_header_id|>
+<s>[INST] <<SYS>>
 You are a helpful assistant. You extract official information of Norwegian companies, then present it in a structured JSON format. 
 
 The data you receive is a concatenation of the reponses of several public API endpoints for the official business registration in Norway. 
@@ -35,9 +35,8 @@ These are the responses:
 
 {{api_data}}
 
-<|eot_id|>
+<</SYS>>
 
-<|start_header_id|>user<|end_header_id|>
 Please extract the following information from the tax record:
 
 - "company_name": The name of the company.
@@ -62,5 +61,4 @@ Please extract the following information from the tax record:
 
 Please ensure that all fields are included, even if they are empty or null.
 Only return the JSON response; do not add explanations, comments, or repeated entries.
-<|eot_id|>
-<|start_header_id|>assistant<|end_header_id|>
+[/INST]
