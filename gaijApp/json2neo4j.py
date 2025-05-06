@@ -88,12 +88,15 @@ def load_company_jsons(base_path):
     return company_data
 
 def transform_property(value):
-    """Recursively convert Maps or list of Maps to strings."""
-    if isinstance(value, dict):  # If it's a map (dictionary), convert to string
-        return json.dumps(value)  # Use JSON string representation of the map
-    elif isinstance(value, list):  # If it's a list, check each item
-        # Recursively apply the transformation to each item in the list
-        return [transform_property(item) for item in value]
+    """Recursively convert Maps or list of Maps to strings, and remove None from lists or dictionaries."""
+    if isinstance(value, dict):  # If it's a map (dictionary)
+        # Recursively clean the dictionary
+        cleaned_dict = {k: transform_property(v) for k, v in value.items() if v is not None}
+        return json.dumps(cleaned_dict)  # Return JSON string representation of the cleaned map
+    elif isinstance(value, list):  # If it's a list
+        # Remove None values and recursively apply transformation to each item
+        cleaned_list = [transform_property(item) for item in value if item is not None]
+        return cleaned_list  # Return the cleaned list
     else:  # If it's a primitive value, return it as is
         return value
 
