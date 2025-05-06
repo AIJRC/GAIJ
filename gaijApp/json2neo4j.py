@@ -15,11 +15,10 @@ class Neo4jConnector:
     def __init__(self):
         neo4j_uri = os.getenv('NEO4J_URI', 'bolt://localhost:7687')
         neo4j_user = os.getenv('NEO4J_USER', 'neo4j')
-        neo4j_password = os.getenv('NEO4J_PASSWORD')
-        # if not neo4j_password:
-            # raise ValueError("NEO4J_PASSWORD environment variable is not set")
-        # self.driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
-        self.driver = 1
+        neo4j_password = os.getenv('NEO4J_PASSWORD', 'testtest')
+        if not neo4j_password:
+            raise ValueError("NEO4J_PASSWORD environment variable is not set")
+        self.driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
 
     def close(self):
         self.driver.close()
@@ -90,15 +89,13 @@ def load_company_jsons(base_path):
 def populate_graph_from_directory(directory_path, neo4j):
     companies_data = load_company_jsons(directory_path)
 
-    # with neo4j.driver.session() as session:
-    if True:
-        session = True
+    with neo4j.driver.session() as session:
         for company_id, data_sources in tqdm(companies_data.items(), desc="Processing companies"):
             external = data_sources.get("external", {})
             # print(external)
             llama = data_sources.get("llama", {})
             red_flags = data_sources.get("red_flags", {})
-            print(red_flags)
+            # print(red_flags)
 
             if not external.get("company_id") and not llama.get("ID"):
                 continue
@@ -180,90 +177,90 @@ def populate_graph_from_directory(directory_path, neo4j):
                     "auditor_name_redflag": red_flags.get("auditor_name")
                 })
             
-            session.execute_write(neo4j.create_company, base_data)
+            # session.execute_write(neo4j.create_company, base_data)
 
-            if base_data["ext.company_address"]:
-                session.execute_write(neo4j.create_address, base_data["ID"], base_data["ext.company_address"])
+            # if base_data["ext.company_address"]:
+            #     session.execute_write(neo4j.create_address, base_data["ID"], base_data["ext.company_address"])
 
-            if base_data["company_address"]:
-                session.execute_write(neo4j.create_address, base_data["ID"], base_data["company_address"])
+            # if base_data["company_address"]:
+            #     session.execute_write(neo4j.create_address, base_data["ID"], base_data["company_address"])
 
-            for entity in base_data.get("subsidiaries") or []:
-                if isinstance(entity, str):
-                    entity = [entity]
-                for sub in entity:
-                    if sub:
-                        session.execute_write(
-                            neo4j.create_relationship,
-                            base_data["ID"],
-                            sub,
-                            "PARENT_OF"
-                        )
+            # for entity in base_data.get("subsidiaries") or []:
+            #     if isinstance(entity, str):
+            #         entity = [entity]
+            #     for sub in entity:
+            #         if sub:
+            #             session.execute_write(
+            #                 neo4j.create_relationship,
+            #                 base_data["ID"],
+            #                 sub,
+            #                 "PARENT_OF"
+            #             )
 
-            parent = base_data.get("parent_company")
-            if parent:
-                session.execute_write(
-                    neo4j.create_relationship,
-                    base_data["ID"],
-                    parent,
-                    "CHILD_OF"
-                )
+            # parent = base_data.get("parent_company")
+            # if parent:
+            #     session.execute_write(
+            #         neo4j.create_relationship,
+            #         base_data["ID"],
+            #         parent,
+            #         "CHILD_OF"
+            #     )
 
-            for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
-                people = base_data.get(f"leadership.{role}") or []
-                if isinstance(people, str):
-                    people = [people]
-                for person in people:
-                    if person:
-                        session.execute_write(
-                            neo4j.create_person_relationship,
-                            person,
-                            base_data["ID"]
-                        )
+            # for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
+            #     people = base_data.get(f"leadership.{role}") or []
+            #     if isinstance(people, str):
+            #         people = [people]
+            #     for person in people:
+            #         if person:
+            #             session.execute_write(
+            #                 neo4j.create_person_relationship,
+            #                 person,
+            #                 base_data["ID"]
+            #             )
 
-            for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
-                people = base_data.get(f"ext.leadership.{role}") or []
-                if isinstance(people, str):
-                    people = [people]
-                for person in people:
-                    if person:
-                        session.execute_write(
-                            neo4j.create_person_relationship,
-                            person,
-                            base_data["ID"]
-                        )
+            # for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
+            #     people = base_data.get(f"ext.leadership.{role}") or []
+            #     if isinstance(people, str):
+            #         people = [people]
+            #     for person in people:
+            #         if person:
+            #             session.execute_write(
+            #                 neo4j.create_person_relationship,
+            #                 person,
+            #                 base_data["ID"]
+            #             )
 
-            for entity in base_data.get("ext.subsidiaries") or []:
-                if isinstance(entity, str):
-                    entity = [entity]
-                for sub in entity:
-                    if sub:
-                        session.execute_write(
-                            neo4j.create_relationship,
-                            base_data["ID"],
-                            sub,
-                            "PARENT_OF"
-                        )
+            # for entity in base_data.get("ext.subsidiaries") or []:
+            #     if isinstance(entity, str):
+            #         entity = [entity]
+            #     for sub in entity:
+            #         if sub:
+            #             session.execute_write(
+            #                 neo4j.create_relationship,
+            #                 base_data["ID"],
+            #                 sub,
+            #                 "PARENT_OF"
+            #             )
 
-            parent_ext = base_data.get("ext.parent_company")
-            if parent_ext:
-                session.execute_write(
-                    neo4j.create_relationship,
-                    base_data["ID"],
-                    parent_ext,
-                    "CHILD_OF"
-                )
+            # parent_ext = base_data.get("ext.parent_company")
+            # if parent_ext:
+            #     session.execute_write(
+            #         neo4j.create_relationship,
+            #         base_data["ID"],
+            #         parent_ext,
+            #         "CHILD_OF"
+            #     )
 
 
 
 def main():
     args = parse_args()
     neo4j = Neo4jConnector()
-    # try:
-    populate_graph_from_directory(args.data_dir, neo4j)
-    print("Knowledge graph populated successfully!")
-    # finally:
-        # neo4j.close()
+    try:
+        populate_graph_from_directory(args.data_dir, neo4j)
+        print("Knowledge graph populated successfully!")
+    finally:
+        neo4j.close()
 
 if __name__ == "__main__":
     main()
