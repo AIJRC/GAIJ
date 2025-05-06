@@ -97,6 +97,14 @@ def transform_property(value):
     else:  # If it's a primitive value, return it as is
         return value
 
+def parse_flag(value):
+    """Return the boolean value of the 'flag' key, handling 'true' string as True and other values as False."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() == "true"  # Only "true" (case insensitive) returns True
+    return False  # Everything else (None, empty, etc.) is False
+
 def flatten_keys(d):
     """Flatten nested structures by replacing '.' with '_', and transform values."""
     return {
@@ -151,44 +159,59 @@ def populate_graph_from_directory(directory_path, neo4j):
                 }))
             
             if red_flags:
+
+
                 base_data.update(flatten_keys({
-                    "finance.unclear_instruments.flag": bool(red_flags.get("finance", {}).get("unclear_instruments")),
-                    "finance.unclear_instruments.details": red_flags.get("finance", {}).get("unclear_instruments"),
-                    "finance.hidden_leasing.flag": bool(red_flags.get("finance", {}).get("hidden_leasing")),
-                    "finance.hidden_leasing.details": red_flags.get("finance", {}).get("hidden_leasing"),
-                    "finance.guarantee.flag": bool(red_flags.get("finance", {}).get("guarantee")),
-                    "finance.guarantee.details": red_flags.get("finance", {}).get("guarantee"),
-                    "finance.balance_values.flag": bool(red_flags.get("finance", {}).get("balance_values")),
-                    "finance.balance_values.details": red_flags.get("finance", {}).get("balance_values"),
-                    "finance.dependency.flag": bool(red_flags.get("finance", {}).get("dependency")),
-                    "finance.dependency.details": red_flags.get("finance", {}).get("dependency"),
+                    "finance.unclear_instruments.flag": parse_flag(red_flags.get("finance", {}).get("unclear_instruments", {}).get("flag")),
+                    "finance.unclear_instruments.details": red_flags.get("finance", {}).get("unclear_instruments", {}).get("details"),
+                    
+                    "finance.hidden_leasing.flag": parse_flag(red_flags.get("finance", {}).get("hidden_leasing", {}).get("flag")),
+                    "finance.hidden_leasing.details": red_flags.get("finance", {}).get("hidden_leasing", {}).get("details"),
 
-                    "transactions.one_off_expense.flag": bool(red_flags.get("transactions", {}).get("one_off_expense")),
-                    "transactions.one_off_expense.details": red_flags.get("transactions", {}).get("one_off_expense"),
-                    "transactions.internal_transactions.flag": bool(red_flags.get("transactions", {}).get("internal_transactions")),
-                    "transactions.internal_transactions.details": red_flags.get("transactions", {}).get("internal_transactions"),
-                    "transactions.outstanding_receivables.flag": bool(red_flags.get("transactions", {}).get("outstanding_receivables")),
-                    "transactions.outstanding_receivables.details": red_flags.get("transactions", {}).get("outstanding_receivables"),
+                    "finance.guarantee.flag": parse_flag(red_flags.get("finance", {}).get("guarantee", {}).get("flag")),
+                    "finance.guarantee.details": red_flags.get("finance", {}).get("guarantee", {}).get("details"),
 
-                    "accounting.auditor_reservations.flag": bool(red_flags.get("accounting", {}).get("auditor_reservations")),
-                    "accounting.auditor_reservations.details": red_flags.get("accounting", {}).get("auditor_reservations"),
-                    "accounting.change_accounting.flag": bool(red_flags.get("accounting", {}).get("change_accounting")),
-                    "accounting.change_accounting.details": red_flags.get("accounting", {}).get("change_accounting"),
-                    "accounting.adjustments.flag": bool(red_flags.get("accounting", {}).get("adjustments")),
-                    "accounting.adjustments.details": red_flags.get("accounting", {}).get("adjustments"),
-                    "accounting.tax_benefits.flag": bool(red_flags.get("accounting", {}).get("tax_benefits")),
-                    "accounting.tax_benefits.details": red_flags.get("accounting", {}).get("tax_benefits"),
-                    "accounting.tax_payments.flag": bool(red_flags.get("accounting", {}).get("tax_payments")),
-                    "accounting.tax_payments.details": red_flags.get("accounting", {}).get("tax_payments"),
-                    "accounting.no_audit.flag": bool(red_flags.get("accounting", {}).get("no_audit")),
-                    "accounting.no_audit.details": red_flags.get("accounting", {}).get("no_audit"),
-                    "accounting.conditional_outcomes.flag": bool(red_flags.get("accounting", {}).get("conditional_outcomes")),
-                    "accounting.conditional_outcomes.details": red_flags.get("accounting", {}).get("conditional_outcomes"),
+                    "finance.balance_values.flag": parse_flag(red_flags.get("finance", {}).get("balance_values", {}).get("flag")),
+                    "finance.balance_values.details": red_flags.get("finance", {}).get("balance_values", {}).get("details"),
 
-                    "liquidity.negative_wProfit.flag": bool(red_flags.get("liquidity", {}).get("negative_wProfit")),
-                    "liquidity.negative_wProfit.details": red_flags.get("liquidity", {}).get("negative_wProfit"),
-                    "liquidity.pensions.flag": bool(red_flags.get("liquidity", {}).get("pensions")),
-                    "liquidity.pensions.details": red_flags.get("liquidity", {}).get("pensions"),
+                    "finance.dependency.flag": parse_flag(red_flags.get("finance", {}).get("dependency", {}).get("flag")),
+                    "finance.dependency.details": red_flags.get("finance", {}).get("dependency", {}).get("details"),
+
+                    "transactions.one_off_expense.flag": parse_flag(red_flags.get("transactions", {}).get("one_off_expense", {}).get("flag")),
+                    "transactions.one_off_expense.details": red_flags.get("transactions", {}).get("one_off_expense", {}).get("details"),
+
+                    "transactions.internal_transactions.flag": parse_flag(red_flags.get("transactions", {}).get("internal_transactions", {}).get("flag")),
+                    "transactions.internal_transactions.details": red_flags.get("transactions", {}).get("internal_transactions", {}).get("details"),
+
+                    "transactions.outstanding_receivables.flag": parse_flag(red_flags.get("transactions", {}).get("outstanding_receivables", {}).get("flag")),
+                    "transactions.outstanding_receivables.details": red_flags.get("transactions", {}).get("outstanding_receivables", {}).get("details"),
+
+                    "accounting.auditor_reservations.flag": parse_flag(red_flags.get("accounting", {}).get("auditor_reservations", {}).get("flag")),
+                    "accounting.auditor_reservations.details": red_flags.get("accounting", {}).get("auditor_reservations", {}).get("details"),
+
+                    "accounting.change_accounting.flag": parse_flag(red_flags.get("accounting", {}).get("change_accounting", {}).get("flag")),
+                    "accounting.change_accounting.details": red_flags.get("accounting", {}).get("change_accounting", {}).get("details"),
+
+                    "accounting.adjustments.flag": parse_flag(red_flags.get("accounting", {}).get("adjustments", {}).get("flag")),
+                    "accounting.adjustments.details": red_flags.get("accounting", {}).get("adjustments", {}).get("details"),
+
+                    "accounting.tax_benefits.flag": parse_flag(red_flags.get("accounting", {}).get("tax_benefits", {}).get("flag")),
+                    "accounting.tax_benefits.details": red_flags.get("accounting", {}).get("tax_benefits", {}).get("details"),
+
+                    "accounting.tax_payments.flag": parse_flag(red_flags.get("accounting", {}).get("tax_payments", {}).get("flag")),
+                    "accounting.tax_payments.details": red_flags.get("accounting", {}).get("tax_payments", {}).get("details"),
+
+                    "accounting.no_audit.flag": parse_flag(red_flags.get("accounting", {}).get("no_audit", {}).get("flag")),
+                    "accounting.no_audit.details": red_flags.get("accounting", {}).get("no_audit", {}).get("details"),
+
+                    "accounting.conditional_outcomes.flag": parse_flag(red_flags.get("accounting", {}).get("conditional_outcomes", {}).get("flag")),
+                    "accounting.conditional_outcomes.details": red_flags.get("accounting", {}).get("conditional_outcomes", {}).get("details"),
+
+                    "liquidity.negative_wProfit.flag": parse_flag(red_flags.get("liquidity", {}).get("negative_wProfit", {}).get("flag")),
+                    "liquidity.negative_wProfit.details": red_flags.get("liquidity", {}).get("negative_wProfit", {}).get("details"),
+
+                    "liquidity.pensions.flag": parse_flag(red_flags.get("liquidity", {}).get("pensions", {}).get("flag")),
+                    "liquidity.pensions.details": red_flags.get("liquidity", {}).get("pensions", {}).get("details"),
 
                     "delivery_date": red_flags.get("delivery_date"),
                     "mentioned_companies": red_flags.get("mentioned_companies"),
