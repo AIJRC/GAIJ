@@ -32,7 +32,7 @@ class Neo4jConnector:
         RETURN c
         """
         print(query)
-        # return tx.run(query, **props)
+        return tx.run(query, **props)
 
     def create_address(self, tx, company_id, address):
         query = """
