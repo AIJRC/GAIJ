@@ -31,7 +31,7 @@ class Neo4jConnector:
         SET {set_clause}
         RETURN c
         """
-        print(query, props)
+        # print(query, props)
         return tx.run(query, **props)
 
     def create_address(self, tx, company_id, address):
@@ -69,7 +69,7 @@ def load_company_jsons(base_path):
     for folder in folders:
         folder_path = os.path.join(base_path, folder)
         files = [f.name for f in Path(folder_path).glob('*.json')]
-        # files = files[:10]
+        files = files[:100]
         for filename in tqdm(files, desc=f"Loading from {folder}"):
             try:
                 filepath = os.path.join(folder_path, filename)
@@ -221,14 +221,14 @@ def populate_graph_from_directory(directory_path, neo4j):
                     "mentioned_people": red_flags.get("mentioned_people"),
                     "auditor_name_redflag": red_flags.get("auditor_name")
                 }))
-            # print(base_data)
-            session.execute_write(neo4j.create_company, base_data)
-            # break
-            # if base_data["ext.company_address"]:
-            #     session.execute_write(neo4j.create_address, base_data["ID"], base_data["ext.company_address"])
 
-            # if base_data["company_address"]:
-            #     session.execute_write(neo4j.create_address, base_data["ID"], base_data["company_address"])
+            session.execute_write(neo4j.create_company, base_data)
+
+            if base_data["ext.company_address"]:
+                session.execute_write(neo4j.create_address, base_data["id"], base_data["ext.company_address"])
+
+            if base_data["company_address"]:
+                session.execute_write(neo4j.create_address, base_data["id"], base_data["company_address"])
 
             # for entity in base_data.get("subsidiaries") or []:
             #     if isinstance(entity, str):
