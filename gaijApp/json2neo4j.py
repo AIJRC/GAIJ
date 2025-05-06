@@ -84,8 +84,21 @@ def load_company_jsons(base_path):
 
     return company_data
 
+def transform_property(value):
+    """Recursively convert Maps or list of Maps to strings."""
+    if isinstance(value, dict):  # If it's a map (dictionary), convert to string
+        return json.dumps(value)  # Use JSON string representation of the map
+    elif isinstance(value, list):  # If it's a list, check each item
+        # Recursively apply the transformation to each item in the list
+        return [transform_property(item) for item in value]
+    else:  # If it's a primitive value, return it as is
+        return value
+
 def flatten_keys(d):
-    return {k.replace('.', '_'): v for k, v in d.items()}
+    """Flatten nested structures by replacing '.' with '_', and transform values."""
+    return {
+        k.replace('.', '_'): transform_property(v) for k, v in d.items()
+    }
 
 def populate_graph_from_directory(directory_path, neo4j):
     companies_data = load_company_jsons(directory_path)
