@@ -95,6 +95,7 @@ def populate_graph_from_directory(directory_path, neo4j):
             external = data_sources.get("external", {})
             # print(external)
             llama = data_sources.get("llama", {})
+            # print(llama)
             red_flags = data_sources.get("red_flags", {})
             # print(red_flags)
 
@@ -103,7 +104,6 @@ def populate_graph_from_directory(directory_path, neo4j):
                 continue
 
             base_data = {"id": company_id}
-            print(base_data)
 
             if external:
                 base_data.update(flatten_keys({
@@ -181,7 +181,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                 }))
             # print(base_data)
             session.execute_write(neo4j.create_company, base_data)
-            break
+            # break
             # if base_data["ext.company_address"]:
             #     session.execute_write(neo4j.create_address, base_data["ID"], base_data["ext.company_address"])
 
