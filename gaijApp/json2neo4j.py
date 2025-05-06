@@ -33,19 +33,6 @@ class Neo4jConnector:
         """
         print(query)
         # return tx.run(query, **props)
-    def create_company(self, tx, company_data):
-        query = """
-        MERGE (c:Company {id: $id})
-        SET c.name = $name,
-            c.address = $address,
-            c.type = $type
-        RETURN c
-        """
-        return tx.run(query, 
-                     id=company_data.get("ID"),
-                     name=company_data.get("name")[0] if isinstance(company_data.get("name"), list) else company_data.get("name"),
-                     address=company_data.get("address", ""),
-                     type=company_data.get("type", ""))
 
     def create_address(self, tx, company_id, address):
         query = """
