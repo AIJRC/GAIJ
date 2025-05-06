@@ -109,6 +109,7 @@ def populate_graph_from_directory(directory_path, neo4j):
             # print(red_flags)
 
             if not external.get("company_id") and not llama.get("ID"):
+                print(f"[WARNING] No data found for {company_id}. Skipping.")
                 continue
 
             base_data = {"ID": company_id}
