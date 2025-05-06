@@ -61,6 +61,8 @@ class Neo4jConnector:
 
 def load_company_jsons(base_path):
     folders = ['external', 'llama', 'red_flags']
+    folders = ['external']
+
     company_data = defaultdict(dict)
 
     for folder in folders:
