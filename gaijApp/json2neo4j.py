@@ -22,7 +22,17 @@ class Neo4jConnector:
 
     def close(self):
         self.driver.close()
-
+    
+    def create_company(self, tx, company_data):
+        props = {k: v for k, v in company_data.items() if v is not None}
+        set_clause = ",\n            ".join([f'c.`{k}` = ${k}' for k in props])
+        query = f"""
+        MERGE (c:Company {{id: $id}})
+        SET {set_clause}
+        RETURN c
+        """
+        print(query)
+        return tx.run(query, **props)
     def create_company(self, tx, company_data):
         query = """
         MERGE (c:Company {id: $id})
@@ -176,9 +186,9 @@ def populate_graph_from_directory(directory_path, neo4j):
                     "mentioned_people": red_flags.get("mentioned_people"),
                     "auditor_name_redflag": red_flags.get("auditor_name")
                 })
-            
-            # session.execute_write(neo4j.create_company, base_data)
-
+            print(base_data)
+            session.execute_write(neo4j.create_company, base_data)
+            break
             # if base_data["ext.company_address"]:
             #     session.execute_write(neo4j.create_address, base_data["ID"], base_data["ext.company_address"])
 
