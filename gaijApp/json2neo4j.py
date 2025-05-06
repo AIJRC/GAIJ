@@ -230,71 +230,73 @@ def populate_graph_from_directory(directory_path, neo4j):
             if base_data.get("company_address"):
                 session.execute_write(neo4j.create_address, base_data["id"], base_data["company_address"])
 
-            # for entity in base_data.get("subsidiaries") or []:
-            #     if isinstance(entity, str):
-            #         entity = [entity]
-            #     for sub in entity:
-            #         if sub:
-            #             session.execute_write(
-            #                 neo4j.create_relationship,
-            #                 base_data["ID"],
-            #                 sub,
-            #                 "PARENT_OF"
-            #             )
+            for entity in base_data.get("subsidiaries") or []:
+                if isinstance(entity, str):
+                    entity = [entity]
+                for sub in entity:
+                    if sub:
+                        session.execute_write(
+                            neo4j.create_relationship,
+                            base_data["id"],
+                            sub,
+                            "PARENT_OF"
+                        )
 
-            # parent = base_data.get("parent_company")
-            # if parent:
-            #     session.execute_write(
-            #         neo4j.create_relationship,
-            #         base_data["ID"],
-            #         parent,
-            #         "CHILD_OF"
-            #     )
+            parent = base_data.get("parent_company")
+            if parent:
+                session.execute_write(
+                    neo4j.create_relationship,
+                    base_data["id"],
+                    parent,
+                    "CHILD_OF"
+                )
 
-            # for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
-            #     people = base_data.get(f"leadership.{role}") or []
-            #     if isinstance(people, str):
-            #         people = [people]
-            #     for person in people:
-            #         if person:
-            #             session.execute_write(
-            #                 neo4j.create_person_relationship,
-            #                 person,
-            #                 base_data["ID"]
-            #             )
+            for entity in base_data.get("ext_subsidiaries") or []:
+                if isinstance(entity, str):
+                    entity = [entity]
+                for sub in entity:
+                    if sub:
+                        session.execute_write(
+                            neo4j.create_relationship,
+                            base_data["id"],
+                            sub,
+                            "PARENT_OF"
+                        )
 
-            # for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
-            #     people = base_data.get(f"ext.leadership.{role}") or []
-            #     if isinstance(people, str):
-            #         people = [people]
-            #     for person in people:
-            #         if person:
-            #             session.execute_write(
-            #                 neo4j.create_person_relationship,
-            #                 person,
-            #                 base_data["ID"]
-            #             )
+            parent_ext = base_data.get("ext_parent_company")
+            if parent_ext:
+                session.execute_write(
+                    neo4j.create_relationship,
+                    base_data["id"],
+                    parent_ext,
+                    "CHILD_OF"
+                )
 
-            # for entity in base_data.get("ext.subsidiaries") or []:
-            #     if isinstance(entity, str):
-            #         entity = [entity]
-            #     for sub in entity:
-            #         if sub:
-            #             session.execute_write(
-            #                 neo4j.create_relationship,
-            #                 base_data["ID"],
-            #                 sub,
-            #                 "PARENT_OF"
-            #             )
+            for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
+                people = base_data.get(f"leadership_{role}") or []
+                if isinstance(people, str):
+                    people = [people]
+                for person in people:
+                    if person:
+                        session.execute_write(
+                            neo4j.create_person_relationship,
+                            person,
+                            base_data["id"]
+                        )
 
-            # parent_ext = base_data.get("ext.parent_company")
-            # if parent_ext:
-            #     session.execute_write(
-            #         neo4j.create_relationship,
-            #         base_data["ID"],
-            #         parent_ext,
-            #         "CHILD_OF"
-            #     )
+            for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
+                people = base_data.get(f"ext_leadership_{role}") or []
+                if isinstance(people, str):
+                    people = [people]
+                for person in people:
+                    if person:
+                        session.execute_write(
+                            neo4j.create_person_relationship,
+                            person,
+                            base_data["id"]
+                        )
+
+
 
 
 
