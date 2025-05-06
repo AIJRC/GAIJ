@@ -224,10 +224,10 @@ def populate_graph_from_directory(directory_path, neo4j):
 
             session.execute_write(neo4j.create_company, base_data)
 
-            if base_data["ext_company_address"]:
+            if base_data.get("ext_company_address"):
                 session.execute_write(neo4j.create_address, base_data["id"], base_data["ext_company_address"])
 
-            if base_data["company_address"]:
+            if base_data.get("company_address"):
                 session.execute_write(neo4j.create_address, base_data["id"], base_data["company_address"])
 
             # for entity in base_data.get("subsidiaries") or []:
