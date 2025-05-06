@@ -32,7 +32,7 @@ class Neo4jConnector:
         RETURN c
         """
         print(query)
-        return tx.run(query, **props)
+        # return tx.run(query, **props)
     def create_company(self, tx, company_data):
         query = """
         MERGE (c:Company {id: $id})
