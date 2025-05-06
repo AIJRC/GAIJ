@@ -102,7 +102,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                 print(f"[WARNING] No data found for {company_id}. Skipping.")
                 continue
 
-            base_data = {"ID": company_id}
+            base_data = {"id": company_id}
             print(base_data)
 
             if external:
