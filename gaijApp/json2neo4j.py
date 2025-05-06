@@ -31,7 +31,7 @@ class Neo4jConnector:
         SET {set_clause}
         RETURN c
         """
-        print(query)
+        print(query, props)
         return tx.run(query, **props)
 
     def create_address(self, tx, company_id, address):
