@@ -113,6 +113,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                 continue
 
             base_data = {"ID": company_id}
+            print(base_data)
 
             if external:
                 base_data.update({
