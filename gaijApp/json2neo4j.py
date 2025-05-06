@@ -69,7 +69,7 @@ def load_company_jsons(base_path):
     for folder in folders:
         folder_path = os.path.join(base_path, folder)
         files = [f.name for f in Path(folder_path).glob('*.json')]
-        files = files[:10]
+        files = files[:100]
         for filename in tqdm(files, desc=f"Loading from {folder}"):
             try:
                 filepath = os.path.join(folder_path, filename)
