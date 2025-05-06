@@ -84,6 +84,9 @@ def load_company_jsons(base_path):
 
     return company_data
 
+def flatten_keys(d):
+    return {k.replace('.', '_'): v for k, v in d.items()}
+
 def populate_graph_from_directory(directory_path, neo4j):
     companies_data = load_company_jsons(directory_path)
 
@@ -103,7 +106,7 @@ def populate_graph_from_directory(directory_path, neo4j):
             print(base_data)
 
             if external:
-                base_data.update({
+                base_data.update(flatten_keys({
                     "ext.company_name": external.get("company_name"),
                     "ext.company_address": external.get("company_address"),
                     "ext.company_type": external.get("company_type"),
@@ -114,10 +117,10 @@ def populate_graph_from_directory(directory_path, neo4j):
                     "ext.subsidiaries": external.get("subsidiaries"),
                     "ext.parent_company": external.get("parent_company"),
                     "ext.auditor_name": external.get("auditor_name"),
-                })
+                }))
             
             if llama:
-                base_data.update({
+                base_data.update(flatten_keys({
                     "company_name": llama.get("company_name"),
                     "company_address": llama.get("company_address"),
                     "company_type": llama.get("company_type"),
@@ -129,10 +132,10 @@ def populate_graph_from_directory(directory_path, neo4j):
                     "parent_company": llama.get("parent_company"),
                     "auditor_name": llama.get("auditor_name"),
                     "version_control": llama.get("version_control"),
-                })
+                }))
             
             if red_flags:
-                base_data.update({
+                base_data.update(flatten_keys({
                     "finance.unclear_instruments.flag": bool(red_flags.get("finance", {}).get("unclear_instruments")),
                     "finance.unclear_instruments.details": red_flags.get("finance", {}).get("unclear_instruments"),
                     "finance.hidden_leasing.flag": bool(red_flags.get("finance", {}).get("hidden_leasing")),
@@ -175,7 +178,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                     "mentioned_companies": red_flags.get("mentioned_companies"),
                     "mentioned_people": red_flags.get("mentioned_people"),
                     "auditor_name_redflag": red_flags.get("auditor_name")
-                })
+                }))
             # print(base_data)
             session.execute_write(neo4j.create_company, base_data)
             break
