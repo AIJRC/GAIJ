@@ -74,3 +74,19 @@ Currently the GAIJ system extracts the following company properties:
 - Web server
 - LLM integration
 - Graph visualization library
+
+
+
+# Instructions
+
+
+on the server you can access the neo4j database console with
+
+`sudo docker exec -it neo4j cypher-shell -u neo4j -p testtest`
+
+Now you can look for the file `cypher_commands_query_db.md` for some examples
+
+## json2neo4j.py
+
+run this command to import all jsons available into the neo4j database. This assumes there is a docker container running called neo4j
+
