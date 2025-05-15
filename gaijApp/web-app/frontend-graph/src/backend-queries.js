@@ -57,6 +57,167 @@ function processGraphResults(records, getNodesAndRelationships) {
   return graph;
 }
 
+// Utility function to transform the user selection into a query
+
+function processUserSelection(userSelections) {
+ 
+  // information outlet for the graph ( relationship sufix)
+  if (userSelections.info == 'external') {
+    var sufix = ['_ext'];
+  } else if (userSelections.info == 'llm') {
+    var sufix = ['_llm'];
+
+  }
+  else if (userSelections.info == ['external','llm']) {
+    var sufix = ['_ext','_llm'];
+  }
+  else {
+    console.log('No information outlet has been selected it will be set to: llm');
+    var sufix = ['_llm'];
+  }
+  
+  // Number of selected nodes 
+  var nodes = userSelections.nodeCount
+
+  // Filters: 
+  var filters = `
+  MATCH (c:Company)`
+  var counter = 0 
+  // Filter: Month
+  const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  if (userSelections.reportMonth.enabled) {
+    counter +=1 
+    const month = userSelections.reportMonth.value
+    const monthIndex = monthNames.indexOf(month) + 1 
+    if (counter > 1) {
+      filters += `
+  AND c.deliveryDate.month = ${monthIndex}`
+    } else {
+      filters += `
+  WHERE c.deliveryDate.month = ${monthIndex}
+      ` 
+    }
+   
+  }
+  // Filter: Keyword 
+  if (userSelections.keyword.enabled) {
+    counter +=1
+    const keyword = userSelections.keyword.value
+    if (counter > 1) {
+      filters += `
+  AND c.flagged_words.word = ${keyword}`
+    } else {
+      filters += `
+  WHERE c.flagged_words.word = ${keyword}` 
+    }
+   
+  }
+  
+  // Filters ( True - False)
+  const handles = ["unclear_instruments","hidden_leasing","guarantee","balance_values","dependency",
+  "one_off_expense","internal_transactions","outstanding_receivables", 
+  "auditor_reservations","change_accounting", "adjustments","tax_benefits","tax_payments","no_audit","conditional_outcomes",
+  "negative_wProfit","pensions"]
+  
+  // True answers 
+  const trueAnswers = Object.entries(userSelections.trueFalseAnswers)
+  .filter(([key, value]) => value.answer === "true")
+  .map(([key]) => parseInt(key));
+  console.log(trueAnswers); 
+  for (let i in trueAnswers) {
+    counter +=1
+    if (counter > 1) {
+      filters += `
+  AND c.${handles[trueAnswers[i]]} = true`
+    } else {
+      filters += `
+  WHERE c.${handles[trueAnswers[i]]} = true` 
+    }
+    
+  }
+  // False answers 
+  const falseAnswers = Object.entries(userSelections.trueFalseAnswers)
+  .filter(([key, value]) => value.answer === "false")
+  .map(([key]) => parseInt(key));
+  for (let j in falseAnswers) {
+    counter +=1
+    if (counter > 1) {
+      filters += `
+  AND c.${handles[falseAnswers[j]]} <> true`
+    } else {
+      filters += `
+  WHERE c.${handles[falseAnswers[j]]} <> true
+      ` 
+    }
+  }
+  console.log(falseAnswers)
+
+  console.log(filters)
+
+
+  // Sorting 
+  if (userSelections.sortBy == 'TopCompaniesButton') {
+    // loop through the info outlet 
+    let text_1 = "";
+    let text_2 = "";
+    let text_3 = `RETURN DISTINCT n, `;
+    for (let i in sufix) {
+      text_1 = ` 
+    MATCH (c:Company)-[:PARENT_OF${sufix[i]}]->(sub:Company)`
+      text_2 =  
+    `MATCH path${sufix[i]} = (c)-[:PARENT_OF${sufix[i]}]->(sub:Company)
+    UNWIND relationships(path${sufix[i]}) as rel${sufix[i]}
+    MATCH (n)-[rel${sufix[i]}]->(m)`
+      text_3 += ` rel${sufix[i]}, `
+    }
+    text_3+= `m`
+    var query = `
+      ${text_1}
+    WITH c, count(sub) as subsidiary_count
+    ORDER BY subsidiary_count DESC
+    LIMIT ${nodes}
+    WITH collect(c) as companies
+    UNWIND companies as c
+      ${text_2}
+      ${text_3}
+    `;
+  } else if (userSelections.sortBy == 'TopBoardMembersButton') {
+    var sufix = ['_llm'];
+  } else if (userSelections.sortBy == 'TopCompaniesMentionButton') {
+    var sufix = ['_llm'];
+  } else if (userSelections.sortBy == 'TopAddressesButton') {
+    var sufix = ['_llm'];
+  } else if (userSelections.sortBy == 'TopAuditorButton') {
+    var sufix = ['_llm'];
+  } else if (userSelections.sortBy == 'SharedLeadershipButton') {
+    // loop through the info outlet 
+    let text = "";
+    for (let k in sufix) {
+      text = ` 
+    MATCH (p:Person)-[:LEADS${sufix[k]}]->(c1:Company)
+    MATCH (p)-[:LEADS${sufix[k]}]->(c2:Company)`
+    }
+    var query = `
+    ${text}
+    WHERE c1 <> c2
+    WITH p, c1, c2
+    RETURN DISTINCT p, c1, c2
+    LIMIT ${nodes}
+    `;
+    
+  } else if (userSelections.sortBy == 'TopPeopleMentionButton') {
+    var sufix = ['_llm'];
+  } else if (userSelections.sortBy == 'ParentSubsidiaryLeadershipButton') {
+    var sufix = ['_llm'];
+  } else if (userSelections.sortBy == 'CompaniesWithTwoSubsidiariesButton') {
+    var sufix = ['_llm'];
+  }
+  console.log(query)
+  
+  return query
+}
+
+
 // Example of how to refactor one of the existing functions:
 export async function getSharedLeadership() {
   const session = driver.session();
@@ -422,6 +583,29 @@ export async function getTopCompanies() {
       MATCH (n)-[rel]->(m)
       RETURN DISTINCT n, rel, m
     `;
+    
+    const result = await session.run(query);
+    return processGraphResults(result.records, record => ({
+      nodes: [record.get('n'), record.get('m')],
+      relationships: [{
+        source: record.get('n'),
+        target: record.get('m'),
+        relationship: record.get('rel')
+      }]
+    }));
+  } catch (error) {
+    console.error('Error getting top companies:', error);
+    return null;
+  } finally {
+    await session.close();
+  }
+}
+
+
+export async function getUserOptions(userSelections) {
+  const session = driver.session();
+  try {
+    const query = processUserSelection(userSelections);
     
     const result = await session.run(query);
     return processGraphResults(result.records, record => ({
