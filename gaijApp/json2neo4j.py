@@ -154,6 +154,7 @@ def flatten_keys(d):
 def populate_graph_from_directory(directory_path, neo4j):
     companies_data = load_company_jsons(directory_path)
 
+
     with neo4j.driver.session() as session:
         for company_id, data_sources in tqdm(companies_data.items(), desc="Processing companies"):
             external = data_sources.get("external", {})
