@@ -154,7 +154,6 @@ def flatten_keys(d):
 def populate_graph_from_directory(directory_path, neo4j):
     companies_data = load_company_jsons(directory_path)
 
-
     with neo4j.driver.session() as session:
         for company_id, data_sources in tqdm(companies_data.items(), desc="Processing companies"):
             external = data_sources.get("external", {})
@@ -173,6 +172,7 @@ def populate_graph_from_directory(directory_path, neo4j):
             if external:
                 base_data.update(flatten_keys({
                     "ext_company_name": external.get("company_name"),
+                    "name": external.get("company_name"),
                     "ext_company_address": external.get("company_address"),
                     "ext_company_type": external.get("company_type"),
                     "ext_leadership.CEO": external.get("leadership", {}).get("CEO"),
@@ -186,7 +186,7 @@ def populate_graph_from_directory(directory_path, neo4j):
             
             if llama:
                 base_data.update(flatten_keys({
-                    "company_name": llama.get("company_name"),
+                    "name": llama.get("company_name"),
                     "company_address": llama.get("company_address"),
                     "company_type": llama.get("company_type"),
                     "leadership.CEO": llama.get("leadership", {}).get("CEO"),
