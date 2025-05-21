@@ -34,11 +34,18 @@ class Neo4jConnector:
         # print(query, props)
         return tx.run(query, **props)
 
-    def create_address(self, tx, company_id, address):
+    def create_address_ext(self, tx, company_id, address):
         query = """
         MATCH (c:Company {id: $company_id})
         MERGE (a:Address {full_address: $address})
-        MERGE (c)-[:LOCATED_AT]->(a)
+        MERGE (c)-[:LOCATED_AT_ext]->(a)
+        """
+        return tx.run(query, company_id=company_id, address=address)
+    def create_address_llm(self, tx, company_id, address):
+        query = """
+        MATCH (c:Company {id: $company_id})
+        MERGE (a:Address {full_address: $address})
+        MERGE (c)-[:LOCATED_AT_llm]->(a)
         """
         return tx.run(query, company_id=company_id, address=address)
 
@@ -50,11 +57,41 @@ class Neo4jConnector:
         """
         return tx.run(query, from_id=from_id, to_name=to_name)
 
-    def create_person_relationship(self, tx, person_name, company_id):
+    def create_person_relationship_ext(self, tx, person_name, company_id):
         query = """
         MATCH (c:Company {id: $company_id})
         MERGE (p:Person {name: $person_name})
-        MERGE (p)-[:LEADS]->(c)
+        MERGE (p)-[:LEADS_ext]->(c)
+        """
+        return tx.run(query, person_name=person_name, company_id=company_id)
+    def create_person_relationship_llm(self, tx, person_name, company_id):
+        query = """
+        MATCH (c:Company {id: $company_id})
+        MERGE (p:Person {name: $person_name})
+        MERGE (p)-[:LEADS_llm]->(c)
+        """
+        return tx.run(query, person_name=person_name, company_id=company_id)
+    
+    def create_person_relationship_mentioned(self, tx, person_name, company_id):
+        query = """
+        MATCH (c:Company {id: $company_id})
+        MERGE (p:Person {name: $person_name})
+        MERGE (p)-[:mentioned_llm]->(c)
+        """
+        return tx.run(query, person_name=person_name, company_id=company_id)
+    
+    def create_auditor_llm(self, tx, person_name, company_id):
+        query = """
+        MATCH (c:Company {id: $company_id})
+        MERGE (d:Auditor {name_aud: $person_name})
+        MERGE (d)-[:auditor_llm]->(c)
+        """
+        return tx.run(query, person_name=person_name, company_id=company_id)
+    def create_auditor_ext(self, tx, person_name, company_id):
+        query = """
+        MATCH (c:Company {id: $company_id})
+        MERGE (d:Auditor {name_aud: $person_name})
+        MERGE (d)-[:auditor_ext]->(c)
         """
         return tx.run(query, person_name=person_name, company_id=company_id)
 
@@ -134,16 +171,16 @@ def populate_graph_from_directory(directory_path, neo4j):
 
             if external:
                 base_data.update(flatten_keys({
-                    "ext.company_name": external.get("company_name"),
-                    "ext.company_address": external.get("company_address"),
-                    "ext.company_type": external.get("company_type"),
-                    "ext.leadership.CEO": external.get("leadership", {}).get("CEO"),
-                    "ext.leadership.board_members": external.get("leadership", {}).get("board_members"),
-                    "ext.leadership.share_holders": external.get("leadership", {}).get("share_holders"),
-                    "ext.leadership.chairman_of_the_board": external.get("leadership", {}).get("chairman_of_the_board"),
-                    "ext.subsidiaries": external.get("subsidiaries"),
-                    "ext.parent_company": external.get("parent_company"),
-                    "ext.auditor_name": external.get("auditor_name"),
+                    "ext_company_name": external.get("company_name"),
+                    "ext_company_address": external.get("company_address"),
+                    "ext_company_type": external.get("company_type"),
+                    "ext_leadership.CEO": external.get("leadership", {}).get("CEO"),
+                    "ext_leadership.board_members": external.get("leadership", {}).get("board_members"),
+                    "ext_leadership.share_holders": external.get("leadership", {}).get("share_holders"),
+                    "ext_leadership.chairman_of_the_board": external.get("leadership", {}).get("chairman_of_the_board"),
+                    "ext_subsidiaries": external.get("subsidiaries"),
+                    "ext_parent_company": external.get("parent_company"),
+                    "ext_auditor_name": external.get("auditor_name"),
                 }))
             
             if llama:
@@ -215,20 +252,37 @@ def populate_graph_from_directory(directory_path, neo4j):
 
                     "liquidity.pensions.flag": parse_flag(red_flags.get("liquidity", {}).get("pensions", {}).get("flag")),
                     "liquidity.pensions.details": red_flags.get("liquidity", {}).get("pensions", {}).get("details"),
-
-                    "delivery_date": red_flags.get("delivery_date"),
                     "mentioned_companies": red_flags.get("mentioned_companies"),
                     "mentioned_people": red_flags.get("mentioned_people"),
                     "auditor_name_redflag": red_flags.get("auditor_name")
                 }))
+                
+                if "flagged_words" in red_flags:
+                    base_data.update(flatten_keys({
+                    "flagged_words.flag": "true",
+                    "flagged_words.word" : parse_flag(red_flags.get("flagged_words", {}).get("word")),
+                    "flagged_words.details": red_flags.get("flagged_words", {}).get("sentence")
+                    }))
+                else:
+                     base_data.update(flatten_keys({"flagged_words.flag": "false"}))
+                
+                try:
+                    base_data.update(flatten_keys({
+                    "delivery_date.day": red_flags.get("delivery_date").split['.'][1],
+                    "delivery_date.month": red_flags.get("delivery_date").split['.'][0],
+                    "delivery_date.year": red_flags.get("delivery_date").split['.'][2]
+                    }))
+                except: 
+                    print("no date of delivery")
+                    
 
             session.execute_write(neo4j.create_company, base_data)
 
             if base_data.get("ext_company_address"):
-                session.execute_write(neo4j.create_address, base_data["id"], base_data["ext_company_address"])
-
+                session.execute_write(neo4j.create_address_ext, base_data["id"], base_data["ext_company_address"])
+                
             if base_data.get("company_address"):
-                session.execute_write(neo4j.create_address, base_data["id"], base_data["company_address"])
+                session.execute_write(neo4j.create_address_llm, base_data["id"], base_data["company_address"])
 
             #for entity in base_data.get("subsidiaries") or []:
             entity = base_data.get("subsidiaries") or []
@@ -240,7 +294,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                     neo4j.create_relationship,
                     base_data["id"],
                     sub,
-                    "PARENT_OF"
+                    "PARENT_OF_llm"
                     )
 
             parent = base_data.get("parent_company")
@@ -249,7 +303,19 @@ def populate_graph_from_directory(directory_path, neo4j):
                     neo4j.create_relationship,
                     base_data["id"],
                     parent,
-                    "CHILD_OF"
+                    "CHILD_OF_llm"
+                )
+                
+            company = base_data.get("mentioned_companies") or []
+            if isinstance(company, str):
+                company = [company]
+            for comp in company:
+                if comp:
+                    session.execute_write(
+                    neo4j.create_relationship,
+                    base_data["id"],
+                    parent,
+                    "mentioned"
                 )
 
             #for entity in base_data.get("ext_subsidiaries") or []:
@@ -262,7 +328,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                     neo4j.create_relationship,
                     base_data["id"],
                     sub,
-                    "PARENT_OF"
+                    "PARENT_OF_ext"
                     )
 
             parent_ext = base_data.get("ext_parent_company")
@@ -271,7 +337,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                     neo4j.create_relationship,
                     base_data["id"],
                     parent_ext,
-                    "CHILD_OF"
+                    "CHILD_OF_ext"
                 )
 
             for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
@@ -281,7 +347,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                 for person in people:
                     if person:
                         session.execute_write(
-                            neo4j.create_person_relationship,
+                            neo4j.create_person_relationship_llm,
                             person,
                             base_data["id"]
                         )
@@ -293,9 +359,43 @@ def populate_graph_from_directory(directory_path, neo4j):
                 for person in people:
                     if person:
                         session.execute_write(
-                            neo4j.create_person_relationship,
+                            neo4j.create_person_relationship_llm,
                             person,
                             base_data["id"]
+                        )
+             
+            
+            people = base_data.get("mentioned_people") or []
+            if isinstance(people, str):
+                people = [people]
+            for person in people:
+                if person:
+                    session.execute_write(
+                            neo4j.create_person_relationship_mentioned,
+                            person,
+                            base_data["id"]
+                        )        
+        
+            auditor = base_data.get("auditor_name_redflag") or []
+            if isinstance(auditor, str):
+                auditor = [auditor]
+            for person in auditor:
+                if person:
+                    session.execute_write(
+                        neo4j.create_auditor_relationship_llm,
+                        person,
+                        base_data["id"]
+                        )
+            
+            auditor = base_data.get("ext_auditor_name") or []
+            if isinstance(auditor, str):
+                auditor = [auditor]
+            for person in auditor:
+                if person:
+                    session.execute_write(
+                        neo4j.create_auditor_relationship_ext,
+                        person,
+                        base_data["id"]
                         )
 
 
