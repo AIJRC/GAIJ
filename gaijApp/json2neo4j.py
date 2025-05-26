@@ -261,16 +261,16 @@ def populate_graph_from_directory(directory_path, neo4j):
                 if "flagged_words" in red_flags:
                     base_data.update(flatten_keys({
                     "flagged_words.flag": "true",
-                    "flagged_words.word" : parse_flag(red_flags.get("flagged_words", {}).get("word")),
-                    "flagged_words.details": red_flags.get("flagged_words", {}).get("sentence")
+                    "flagged_words.word" : list(red_flags["flagged_words"].keys()),
+                    "flagged_words.details": [red_flags["flagged_words"][word]["sentence"] for word in  list(red_flags["flagged_words"].keys())]
                     }))
                 else:
                      base_data.update(flatten_keys({"flagged_words.flag": "false"}))
                 
                 try:
                     base_data.update(flatten_keys({
-                    "delivery_date.day": red_flags.get("delivery_date").split['.'][1],
-                    "delivery_date.month": red_flags.get("delivery_date").split['.'][0],
+                    "delivery_date.day": red_flags.get("delivery_date").split['.'][0],
+                    "delivery_date.month": red_flags.get("delivery_date").split['.'][1],
                     "delivery_date.year": red_flags.get("delivery_date").split['.'][2]
                     }))
                 except: 
