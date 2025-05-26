@@ -172,6 +172,7 @@ def populate_graph_from_directory(directory_path, neo4j):
             if external:
                 base_data.update(flatten_keys({
                     "ext_company_name": external.get("company_name"),
+                    "name": external.get("company_name"),
                     "ext_company_address": external.get("company_address"),
                     "ext_company_type": external.get("company_type"),
                     "ext_leadership.CEO": external.get("leadership", {}).get("CEO"),
@@ -185,7 +186,7 @@ def populate_graph_from_directory(directory_path, neo4j):
             
             if llama:
                 base_data.update(flatten_keys({
-                    "company_name": llama.get("company_name"),
+                    "name": llama.get("company_name"),
                     "company_address": llama.get("company_address"),
                     "company_type": llama.get("company_type"),
                     "leadership.CEO": llama.get("leadership", {}).get("CEO"),
@@ -260,17 +261,17 @@ def populate_graph_from_directory(directory_path, neo4j):
                 if "flagged_words" in red_flags:
                     base_data.update(flatten_keys({
                     "flagged_words.flag": "true",
-                    "flagged_words.word" : parse_flag(red_flags.get("flagged_words", {}).get("word")),
-                    "flagged_words.details": red_flags.get("flagged_words", {}).get("sentence")
+                    "flagged_words.word" : list(red_flags["flagged_words"].keys()),
+                    "flagged_words.details": [red_flags["flagged_words"][word]["sentence"] for word in  list(red_flags["flagged_words"].keys())]
                     }))
                 else:
                      base_data.update(flatten_keys({"flagged_words.flag": "false"}))
                 
                 try:
                     base_data.update(flatten_keys({
-                    "delivery_date.day": red_flags.get("delivery_date").split['.'][1],
-                    "delivery_date.month": red_flags.get("delivery_date").split['.'][0],
-                    "delivery_date.year": red_flags.get("delivery_date").split['.'][2]
+                    "delivery_date.day": int(red_flags.get("delivery_date").split['.'][0]),
+                    "delivery_date.month": int(red_flags.get("delivery_date").split['.'][1]),
+                    "delivery_date.year": int(red_flags.get("delivery_date").split['.'][2])
                     }))
                 except: 
                     print("no date of delivery")
