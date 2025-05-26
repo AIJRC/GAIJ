@@ -26,7 +26,6 @@ def clean_llm_output(raw_response: str) -> dict:
 def clean_fields(data: dict) -> dict:
     cleaned = {}
     leadership_names = set()
-
     for key, value in data.items():
         if key.lower() == "leadership":
             cleaned_value = check_empty(value)
@@ -35,9 +34,11 @@ def clean_fields(data: dict) -> dict:
                     names = check_empty(names)
                     if names:
                         if isinstance(names, list):
-                            leadership_names.update(names)
-                        else:
-                            leadership_names.add(names)
+                            for name in names:
+                                if isinstance(name, str):
+                                    leadership_names.add(name)
+                        elif isinstance(names, str):
+                            leadership_names.add(names)                            
             elif isinstance(cleaned_value, list):
                 leadership_names.update(cleaned_value)
             elif isinstance(cleaned_value, str):
