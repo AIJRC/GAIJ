@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styles from './SelectionPanel.module.css';
-import { getUserOptions } from '../backend-queries.js';
+import { processUserSelection } from '../backend-queries.js';
 import { setPaths } from '../path-graph/actions.js';
 
 const SelectionPanel = ({ onSubmit }) => {
@@ -79,9 +79,9 @@ const SelectionPanel = ({ onSubmit }) => {
         console.log('Submitted selections:', userSelections);
 
         try {
-            const graphData = await getUserOptions(userSelections);
+            const graphData = await processUserSelection(userSelections);
             console.log('Graph Data:', graphData);
-            /* == uncoment to print graph
+            
             if (graphData && graphData.nodes.length > 0) {
                 const paths = graphData.edges.map((edge, index) => ({
                     node_ids: [edge.source_neo4j_id, edge.target_neo4j_id],
@@ -103,7 +103,7 @@ const SelectionPanel = ({ onSubmit }) => {
                         }, {})
                     })
                 );
-            } */
+            }
         } catch (error) {
             console.error('Error fetching graph data:', error);
         }
@@ -270,7 +270,7 @@ const SelectionPanel = ({ onSubmit }) => {
                             }}
                         >
                             {[
-                                'none', 'kompensasjon', 'sluttavtale', 'oppsigelsesdato',
+                                'kompensasjon', 'sluttavtale', 'oppsigelsesdato',
                                 'oppsigelse', 'sluttdato', 'opphør', 'trukket', 'etterlønn',
                                 'bonus', 'variabel_lønn', 'resultatbasert', 'milepæl',
                                 'etterbetaling', 'etterbetalt', 'privatlån', 'private_lån',
