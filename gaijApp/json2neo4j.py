@@ -269,9 +269,9 @@ def populate_graph_from_directory(directory_path, neo4j):
                 
                 try:
                     base_data.update(flatten_keys({
-                    "delivery_date.day": red_flags.get("delivery_date").split['.'][0],
-                    "delivery_date.month": red_flags.get("delivery_date").split['.'][1],
-                    "delivery_date.year": red_flags.get("delivery_date").split['.'][2]
+                    "delivery_date.day": int(red_flags.get("delivery_date").split['.'][0]),
+                    "delivery_date.month": int(red_flags.get("delivery_date").split['.'][1]),
+                    "delivery_date.year": int(red_flags.get("delivery_date").split['.'][2])
                     }))
                 except: 
                     print("no date of delivery")
