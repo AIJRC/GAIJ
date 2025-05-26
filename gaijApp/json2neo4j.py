@@ -52,7 +52,7 @@ def load_company_jsons(base_path):
     for folder in folders:
         folder_path = os.path.join(base_path, folder)
         files = [f.name for f in Path(folder_path).glob('*.json')]
-        files = files[:3000]
+        files = files[:5000]
         for filename in tqdm(files, desc=f"Loading from {folder}"):
             try:
                 filepath = os.path.join(folder_path, filename)
@@ -171,6 +171,7 @@ def populate_graph_from_directory(directory_path, neo4j):
 
     with neo4j.driver.session() as session:
         for company_id, data_sources in tqdm(companies_data.items(), desc="Processing companies"):
+
             external = data_sources.get("external", {})
             # print(external)
             llama = data_sources.get("llama", {})
@@ -241,9 +242,8 @@ def populate_graph_from_directory(directory_path, neo4j):
             prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("ext_subsidiaries", []), "PARENT_OF_ext")
             prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("ext_parent_company", []), "CHILD_OF_ext")
 
-            for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
-                prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"leadership_{role}, []"), "LEADS_llm")
-                prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"ext_leadership_{role}, []"), "LEADS_ext")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"leadership", []), "LEADS_llm")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"ext_leadership", []), "LEADS_ext")
 
             prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get("mentioned_people", []), "mentioned_llm")
             prepare_create_company_links(session, neo4j, base_data["id"], "Auditor", base_data.get("auditor_name_redflag", []), "auditor_llm")
