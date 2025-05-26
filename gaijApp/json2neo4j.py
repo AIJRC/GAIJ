@@ -52,7 +52,7 @@ def load_company_jsons(base_path):
     for folder in folders:
         folder_path = os.path.join(base_path, folder)
         files = [f.name for f in Path(folder_path).glob('*.json')]
-        files = files[:100]
+        files = files[:3000]
         for filename in tqdm(files, desc=f"Loading from {folder}"):
             try:
                 filepath = os.path.join(folder_path, filename)
@@ -185,15 +185,30 @@ def populate_graph_from_directory(directory_path, neo4j):
             base_data = {"id": company_id}
 
             if external:
+                
+                def build_ext_leadership(leadership):
+                    roles = ["CEO", "board_members", "share_holders", "chairman_of_the_board"]
+                    people = []
+                    for role in roles:
+                        val = leadership.get(role)
+                        if val is None or val == "null":
+                            continue
+                        if isinstance(val, list):
+                            people.extend([p for p in val if p and p != "null" and p != ["null"]])
+                        else:
+                            if val != "null":
+                                people.append(val)
+                    # Remove any accidental ['null'] entries
+                    people = [p for p in people if p and p != "null" and p != ["null"]]
+                    return people
+
+                ext_leadership = build_ext_leadership(external.get("leadership", {}))
                 base_data.update(flatten_keys({
                     "ext_company_name": external.get("company_name"),
                     "name": external.get("company_name"),
                     "ext_company_address": external.get("company_address"),
                     "ext_company_type": external.get("company_type"),
-                    "ext_leadership.CEO": external.get("leadership", {}).get("CEO"),
-                    "ext_leadership.board_members": external.get("leadership", {}).get("board_members"),
-                    "ext_leadership.share_holders": external.get("leadership", {}).get("share_holders"),
-                    "ext_leadership.chairman_of_the_board": external.get("leadership", {}).get("chairman_of_the_board"),
+                    "ext_leadership": ext_leadership,
                     "ext_subsidiaries": external.get("subsidiaries"),
                     "ext_parent_company": external.get("parent_company"),
                     "ext_auditor_name": external.get("auditor_name"),
@@ -201,16 +216,13 @@ def populate_graph_from_directory(directory_path, neo4j):
             
             if llama:
                 base_data.update(flatten_keys({
-                    "name": llama.get("company_name"),
-                    "company_address": llama.get("company_address"),
-                    "company_type": llama.get("company_type"),
-                    "leadership.CEO": llama.get("leadership", {}).get("CEO"),
-                    "leadership.board_members": llama.get("leadership", {}).get("board_members"),
-                    "leadership.share_holders": llama.get("leadership", {}).get("share_holders"),
-                    "leadership.chairman_of_the_board": llama.get("leadership", {}).get("chairman_of_the_board"),
+                    "name": llama.get("name"),
+                    "company_address": llama.get("address"),
+                    "company_type": llama.get("type"),
+                    "leadership": llama.get("leadership", {}).get("names", {}),
                     "subsidiaries": llama.get("subsidiaries"),
-                    "parent_company": llama.get("parent_company"),
-                    "auditor_name": llama.get("auditor_name"),
+                    "parent_company": llama.get("parent"),
+                    "auditor_name": llama.get("auditor"),
                     "version_control": llama.get("version_control"),
                 }))
             
