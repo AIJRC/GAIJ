@@ -22,7 +22,7 @@ export class NodeSearch extends Component {
           <Statistics />
         </CollapsibleSection>
         
-        <CollapsibleSection label="Quick Searches" tooltipText="Predefined graph queries">
+        {/*<CollapsibleSection label="Quick Searches" tooltipText="Predefined graph queries">
           <div className='button_group' style={{display: 'flex', justifyContent: 'center', gap: '10px'}}>
             <TopCompaniesButton className="square_button" />
             <TopBoardMembersButton className="square_button" />
@@ -31,7 +31,7 @@ export class NodeSearch extends Component {
             <ParentSubsidiaryLeadershipButton className="square_button" />
             <CompaniesWithTwoSubsidiariesButton className="square_button" />
           </div>
-        </CollapsibleSection>
+        </CollapsibleSection>*/}
 
         <div className='node_search_content'>
           <SourceNode />
