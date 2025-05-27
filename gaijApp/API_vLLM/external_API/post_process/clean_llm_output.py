@@ -1,6 +1,7 @@
 import re
 import json
-import copy
+import os
+import sys
 
 EMPTY_VALUES = {
     'null', 'none', 'nan', 'string', 'string or null', 'integer or null',
@@ -24,23 +25,74 @@ def clean_llm_output(raw_response: str) -> dict:
 
 def clean_fields(data: dict) -> dict:
     cleaned = {}
+    leadership_names = set()
     for key, value in data.items():
-        cleaned_value = check_empty(value)
-        if cleaned_value is not None:
-            cleaned[key] = cleaned_value
+        if key.lower() == "leadership":
+            cleaned_value = check_empty(value)
+            if isinstance(cleaned_value, dict):
+                for role, names in cleaned_value.items():
+                    names = check_empty(names)
+                    if names:
+                        if isinstance(names, list):
+                            for name in names:
+                                if isinstance(name, str):
+                                    leadership_names.add(name)
+                        elif isinstance(names, str):
+                            leadership_names.add(names)                            
+            elif isinstance(cleaned_value, list):
+                leadership_names.update(cleaned_value)
+            elif isinstance(cleaned_value, str):
+                leadership_names.add(cleaned_value)
+        else:
+            cleaned_value = check_empty(value)
+            if cleaned_value is not None:
+                cleaned[key] = cleaned_value
+
+    if leadership_names:
+        cleaned["leadership"] = sorted(leadership_names)
+
     return cleaned
 
 def check_empty(value):
-    """Cleans out empty or junk values."""
-    if isinstance(value, list):
-        filtered = [
-            v.strip() for v in value
-            if isinstance(v, str) and v.strip().lower() not in EMPTY_VALUES
-        ]
-        return filtered if filtered else None
+    """Recursively cleans out empty or junk values."""
+    if isinstance(value, dict):
+        cleaned = {k: check_empty(v) for k, v in value.items()}
+        cleaned = {k: v for k, v in cleaned.items() if v is not None}
+        return cleaned if cleaned else None
+    elif isinstance(value, list):
+        cleaned = [check_empty(v) for v in value]
+        cleaned = [v for v in cleaned if v is not None]
+        return cleaned if cleaned else None
     elif isinstance(value, str):
-        return value.strip() if value.strip().lower() not in EMPTY_VALUES else None
+        stripped = value.strip()
+        return stripped if stripped.lower() not in EMPTY_VALUES else None
     elif value is None:
         return None
     else:
-        return value  # numeric or boolean
+        return value
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print(f"Usage: python {sys.argv[0]} <folder_path>")
+        sys.exit(1)
+
+    folder_path = sys.argv[1]
+
+    if not os.path.isdir(folder_path):
+        print(f"Error: {folder_path} is not a valid directory")
+        sys.exit(1)
+
+    for fname in os.listdir(folder_path):
+        if fname.endswith(".json"):
+            path = os.path.join(folder_path, fname)
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                print(data)
+                cleaned = clean_fields(data)
+                print(f"Cleaned {fname}:")
+                print(json.dumps(cleaned, indent=2, ensure_ascii=False))
+                print(cleaned)
+            except Exception as e:
+                print(f"Failed to process {fname}: {e}")
