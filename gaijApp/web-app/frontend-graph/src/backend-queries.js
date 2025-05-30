@@ -217,14 +217,14 @@ export async function processUserSelection(userSelections) {
     try {
       /**/
       query = `
-  MATCH (c:Company)-[:LEADS${sufix}]->(p:Person)
+  MATCH (c:Company)-[:LED_BY${sufix}]->(p:Person)
   WITH p, count(c) as company_count, collect(c) as companies
   ORDER BY company_count DESC
   LIMIT ${nodes}
-  MATCH path = (c:Company)-[:LEADS${sufix}]->(p)
+  MATCH path = (c:Company)-[:LED_BY${sufix}]->(p)
   WHERE c IN companies
   RETURN path`;
-
+      
       const result = await session.run(query);
       return processGraphResults(result.records, record => {
         const path = record.get('path');
@@ -358,19 +358,20 @@ export async function processUserSelection(userSelections) {
 } else if (userSelections.sortBy === 'SharedLeadershipButton') {
   try {
     query = `
-  MATCH (c1:Company)-[:LEADS${sufix}]->(p)
-  MATCH (c2:Company)-[:LEADS${sufix}]->(p)
+  MATCH (c1:Company)-[:LED_BY${sufix}]->(p)
+  MATCH (c2:Company)-[:LED_BY${sufix}]->(p)
   WHERE c1 <> c2
   WITH p, c1, c2
   RETURN DISTINCT p, c1, c2
   LIMIT ${nodes}
     `;
+    
     const result = await session.run(query);
     return processGraphResults(result.records, record => ({
       nodes: [record.get('p'), record.get('c1'), record.get('c2')],
       relationships: [
-        { source: record.get('p'), target: record.get('c1'), relationship: { type: 'LEADS' } },
-        { source: record.get('p'), target: record.get('c2'), relationship: { type: 'LEADS' } }
+        { source: record.get('p'), target: record.get('c1'), relationship: { type: 'LED_BY${sufix}' } },
+        { source: record.get('p'), target: record.get('c2'), relationship: { type: 'LED_BY${sufix}' } }
       ]
     }));
   } catch (error) {
@@ -414,19 +415,28 @@ export async function processUserSelection(userSelections) {
 
 } else if (userSelections.sortBy === 'ParentSubsidiaryLeadershipButton') {
   try {
+    /*
     query = `
-  MATCH (person:Person)-[:LEADS${sufix}]->(companyA:Company)-[:PARENT_OF${sufix}]->(companyB:Company),
-          (person)-[:LEADS${sufix}]->(companyB)
+  MATCH (person:Person)-[:LED_BY${sufix}]->(companyA:Company)-[:PARENT_OF${sufix}]->(companyB:Company),
+          (person)-[:LED_BY${sufix}]->(companyB)
+  WITH person, companyA, companyB
+  RETURN DISTINCT person, companyA, companyB
+  LIMIT ${nodes}
+    `; */
+    query = `
+  MATCH (companyA:Company)-[:LED_BY${sufix}]->(person:Person),
+          (companyB)-[:LED_BY${sufix}]->(person)
   WITH person, companyA, companyB
   RETURN DISTINCT person, companyA, companyB
   LIMIT ${nodes}
     `;
+    
      const result = await session.run(query);
     return processGraphResults(result.records, record => ({
       nodes: [record.get('person'), record.get('companyA'), record.get('companyB')],
       relationships: [
-        { source: record.get('person'), target: record.get('companyA'), relationship: { type: 'LEADS' } },
-        { source: record.get('person'), target: record.get('companyB'), relationship: { type: 'LEADS' } },
+        { source: record.get('person'), target: record.get('companyA'), relationship: { type: 'LED_BY' } },
+        { source: record.get('person'), target: record.get('companyB'), relationship: { type: 'LED_BY' } },
         { source: record.get('companyA'), target: record.get('companyB'), relationship: { type: 'PARENT_OF' } }
       ]
     }));
@@ -461,7 +471,6 @@ export async function processUserSelection(userSelections) {
     await session.close();
   }
 }
-console.log(query)
 }
 
 
