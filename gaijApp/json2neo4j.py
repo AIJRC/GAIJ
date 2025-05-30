@@ -34,67 +34,13 @@ class Neo4jConnector:
         # print(query, props)
         return tx.run(query, **props)
 
-    def create_address_ext(self, tx, company_id, address):
-        query = """
-        MATCH (c:Company {id: $company_id})
-        MERGE (a:Address {full_address: $address})
-        MERGE (c)-[:LOCATED_AT_ext]->(a)
-        """
-        return tx.run(query, company_id=company_id, address=address)
-    def create_address_llm(self, tx, company_id, address):
-        query = """
-        MATCH (c:Company {id: $company_id})
-        MERGE (a:Address {full_address: $address})
-        MERGE (c)-[:LOCATED_AT_llm]->(a)
-        """
-        return tx.run(query, company_id=company_id, address=address)
-
-    def create_relationship(self, tx, from_id, to_name, rel_type):
+    def create_relationship(self, tx, from_id, to_name, to_type, rel_type):
         query = f"""
-        MATCH (c1:Company {{id: $from_id}})
-        MERGE (c2:Company {{name: $to_name}})
-        MERGE (c1)-[:{rel_type}]->(c2)
+        MATCH (a:Company {{id: $from_id}})
+        MERGE (b:{to_type} {{name: $to_name}})
+        MERGE (a)-[:{rel_type}]->(b)
         """
         return tx.run(query, from_id=from_id, to_name=to_name)
-
-    def create_person_relationship_ext(self, tx, person_name, company_id):
-        query = """
-        MATCH (c:Company {id: $company_id})
-        MERGE (p:Person {name: $person_name})
-        MERGE (p)-[:LEADS_ext]->(c)
-        """
-        return tx.run(query, person_name=person_name, company_id=company_id)
-    def create_person_relationship_llm(self, tx, person_name, company_id):
-        query = """
-        MATCH (c:Company {id: $company_id})
-        MERGE (p:Person {name: $person_name})
-        MERGE (p)-[:LEADS_llm]->(c)
-        """
-        return tx.run(query, person_name=person_name, company_id=company_id)
-    
-    def create_person_relationship_mentioned(self, tx, person_name, company_id):
-        query = """
-        MATCH (c:Company {id: $company_id})
-        MERGE (p:Person {name: $person_name})
-        MERGE (p)-[:mentioned_llm]->(c)
-        """
-        return tx.run(query, person_name=person_name, company_id=company_id)
-    
-    def create_auditor_llm(self, tx, person_name, company_id):
-        query = """
-        MATCH (c:Company {id: $company_id})
-        MERGE (d:Auditor {name_aud: $person_name})
-        MERGE (d)-[:auditor_llm]->(c)
-        """
-        return tx.run(query, person_name=person_name, company_id=company_id)
-    def create_auditor_ext(self, tx, person_name, company_id):
-        query = """
-        MATCH (c:Company {id: $company_id})
-        MERGE (d:Auditor {name_aud: $person_name})
-        MERGE (d)-[:auditor_ext]->(c)
-        """
-        return tx.run(query, person_name=person_name, company_id=company_id)
-
 
 def load_company_jsons(base_path):
     folders = ['external', 'llama', 'red_flags']
@@ -106,7 +52,7 @@ def load_company_jsons(base_path):
     for folder in folders:
         folder_path = os.path.join(base_path, folder)
         files = [f.name for f in Path(folder_path).glob('*.json')]
-        # files = files[:100]
+        # files = files[:5000]
         for filename in tqdm(files, desc=f"Loading from {folder}"):
             try:
                 filepath = os.path.join(folder_path, filename)
@@ -151,11 +97,81 @@ def flatten_keys(d):
         k.replace('.', '_'): transform_property(v) for k, v in d.items()
     }
 
+def prepare_create_company_links(session, neo4j_connector, source_company_id, to_type, entity_names, relationship_label=""):
+    entity_names = entity_names or []
+    if isinstance(entity_names, str):
+        entity_names = [entity_names]
+    for entity_name in entity_names:
+        if entity_name:
+            session.execute_write(
+                neo4j_connector.create_relationship,
+                source_company_id,
+                entity_name,
+                to_type,
+                relationship_label
+            )
+
+def extract_red_flag_data(red_flags_dict):
+    """Helper function to extract structured data from the red_flags dictionary."""
+    extracted_data = {}
+
+    flag_categories = [
+        ("finance", ["unclear_instruments", "hidden_leasing", "guarantee", "balance_values", "dependency"]),
+        ("transactions", ["one_off_expense", "internal_transactions", "outstanding_receivables"]),
+        ("accounting", ["auditor_reservations", "change_accounting", "adjustments", "tax_benefits", "tax_payments", "no_audit", "conditional_outcomes"]),
+        ("liquidity", ["negative_wProfit", "pensions"])
+    ]
+
+    for category_key, sub_items in flag_categories:
+        category_data = red_flags_dict.get(category_key, {})
+        for sub_item_key in sub_items:
+            sub_item_data = category_data.get(sub_item_key, {})
+            extracted_data[f"{category_key}.{sub_item_key}.flag"] = parse_flag(sub_item_data.get("flag"))
+            extracted_data[f"{category_key}.{sub_item_key}.details"] = sub_item_data.get("details")
+
+    # Handle direct mappings
+    direct_mappings = {
+        "mentioned_companies": "mentioned_companies",
+        "mentioned_people": "mentioned_people",
+        "auditor_name_redflag": "auditor_name" # target key in base_data : Source key in red_flags
+    }
+    for target_key, source_key in direct_mappings.items():
+        extracted_data[target_key] = red_flags_dict.get(source_key)
+
+    # handle flagged_words
+    if "flagged_words" in red_flags_dict:
+        flagged_words_data = red_flags_dict.get("flagged_words", {})
+        extracted_data["flagged_words.flag"] = "true" 
+        extracted_data["flagged_words.word"] = parse_flag(flagged_words_data.get("word")) 
+        extracted_data["flagged_words.details"] = flagged_words_data.get("sentence")
+    else:
+        extracted_data["flagged_words.flag"] = "false"
+
+    # Handle delivery_date
+    delivery_date_str = red_flags_dict.get("delivery_date")
+    if delivery_date_str and isinstance(delivery_date_str, str):
+        try:
+            parts = delivery_date_str.split('.') 
+            if len(parts) == 3:
+                extracted_data["delivery_date.day"] = parts[1] 
+                extracted_data["delivery_date.month"] = parts[0]
+                extracted_data["delivery_date.year"] = parts[2]
+            else:
+                print(f"Warning: delivery_date '{delivery_date_str}' has unexpected format. Skipping date parsing.")
+        except Exception as e: #
+            print(f"Error parsing delivery_date '{delivery_date_str}': {e}. Skipping date parsing.")
+    elif delivery_date_str: # If it exists but isn't a string, or if parsing failed earlier
+        print(f"Warning: delivery_date '{delivery_date_str}' is not a string or has an issue. Skipping date parsing.")
+
+    return extracted_data
+
+
 def populate_graph_from_directory(directory_path, neo4j):
     companies_data = load_company_jsons(directory_path)
 
     with neo4j.driver.session() as session:
         for company_id, data_sources in tqdm(companies_data.items(), desc="Processing companies"):
+
             external = data_sources.get("external", {})
             # print(external)
             llama = data_sources.get("llama", {})
@@ -170,15 +186,30 @@ def populate_graph_from_directory(directory_path, neo4j):
             base_data = {"id": company_id}
 
             if external:
+                
+                def build_ext_leadership(leadership):
+                    roles = ["CEO", "board_members", "share_holders", "chairman_of_the_board"]
+                    people = []
+                    for role in roles:
+                        val = leadership.get(role)
+                        if val is None or val == "null":
+                            continue
+                        if isinstance(val, list):
+                            people.extend([p for p in val if p and p != "null" and p != ["null"]])
+                        else:
+                            if val != "null":
+                                people.append(val)
+                    # Remove any accidental ['null'] entries
+                    people = [p for p in people if p and p != "null" and p != ["null"]]
+                    return people
+
+                # ext_leadership = build_ext_leadership(external.get("leadership", {}))
                 base_data.update(flatten_keys({
                     "ext_company_name": external.get("company_name"),
                     "name": external.get("company_name"),
                     "ext_company_address": external.get("company_address"),
                     "ext_company_type": external.get("company_type"),
-                    "ext_leadership.CEO": external.get("leadership", {}).get("CEO"),
-                    "ext_leadership.board_members": external.get("leadership", {}).get("board_members"),
-                    "ext_leadership.share_holders": external.get("leadership", {}).get("share_holders"),
-                    "ext_leadership.chairman_of_the_board": external.get("leadership", {}).get("chairman_of_the_board"),
+                    "ext_leadership": external.get("leadership", []),
                     "ext_subsidiaries": external.get("subsidiaries"),
                     "ext_parent_company": external.get("parent_company"),
                     "ext_auditor_name": external.get("auditor_name"),
@@ -186,221 +217,37 @@ def populate_graph_from_directory(directory_path, neo4j):
             
             if llama:
                 base_data.update(flatten_keys({
-                    "name": llama.get("company_name"),
-                    "company_address": llama.get("company_address"),
-                    "company_type": llama.get("company_type"),
-                    "leadership.CEO": llama.get("leadership", {}).get("CEO"),
-                    "leadership.board_members": llama.get("leadership", {}).get("board_members"),
-                    "leadership.share_holders": llama.get("leadership", {}).get("share_holders"),
-                    "leadership.chairman_of_the_board": llama.get("leadership", {}).get("chairman_of_the_board"),
+                    "name": llama.get("name"),
+                    "company_address": llama.get("address"),
+                    "company_type": llama.get("type"),
+                    "leadership": llama.get("leadership", {}).get("names", {}),
                     "subsidiaries": llama.get("subsidiaries"),
-                    "parent_company": llama.get("parent_company"),
-                    "auditor_name": llama.get("auditor_name"),
+                    "parent_company": llama.get("parent"),
+                    "auditor_name": llama.get("auditor"),
                     "version_control": llama.get("version_control"),
                 }))
             
             if red_flags:
-
-
-                base_data.update(flatten_keys({
-                    "finance.unclear_instruments.flag": parse_flag(red_flags.get("finance", {}).get("unclear_instruments", {}).get("flag")),
-                    "finance.unclear_instruments.details": red_flags.get("finance", {}).get("unclear_instruments", {}).get("details"),
-                    
-                    "finance.hidden_leasing.flag": parse_flag(red_flags.get("finance", {}).get("hidden_leasing", {}).get("flag")),
-                    "finance.hidden_leasing.details": red_flags.get("finance", {}).get("hidden_leasing", {}).get("details"),
-
-                    "finance.guarantee.flag": parse_flag(red_flags.get("finance", {}).get("guarantee", {}).get("flag")),
-                    "finance.guarantee.details": red_flags.get("finance", {}).get("guarantee", {}).get("details"),
-
-                    "finance.balance_values.flag": parse_flag(red_flags.get("finance", {}).get("balance_values", {}).get("flag")),
-                    "finance.balance_values.details": red_flags.get("finance", {}).get("balance_values", {}).get("details"),
-
-                    "finance.dependency.flag": parse_flag(red_flags.get("finance", {}).get("dependency", {}).get("flag")),
-                    "finance.dependency.details": red_flags.get("finance", {}).get("dependency", {}).get("details"),
-
-                    "transactions.one_off_expense.flag": parse_flag(red_flags.get("transactions", {}).get("one_off_expense", {}).get("flag")),
-                    "transactions.one_off_expense.details": red_flags.get("transactions", {}).get("one_off_expense", {}).get("details"),
-
-                    "transactions.internal_transactions.flag": parse_flag(red_flags.get("transactions", {}).get("internal_transactions", {}).get("flag")),
-                    "transactions.internal_transactions.details": red_flags.get("transactions", {}).get("internal_transactions", {}).get("details"),
-
-                    "transactions.outstanding_receivables.flag": parse_flag(red_flags.get("transactions", {}).get("outstanding_receivables", {}).get("flag")),
-                    "transactions.outstanding_receivables.details": red_flags.get("transactions", {}).get("outstanding_receivables", {}).get("details"),
-
-                    "accounting.auditor_reservations.flag": parse_flag(red_flags.get("accounting", {}).get("auditor_reservations", {}).get("flag")),
-                    "accounting.auditor_reservations.details": red_flags.get("accounting", {}).get("auditor_reservations", {}).get("details"),
-
-                    "accounting.change_accounting.flag": parse_flag(red_flags.get("accounting", {}).get("change_accounting", {}).get("flag")),
-                    "accounting.change_accounting.details": red_flags.get("accounting", {}).get("change_accounting", {}).get("details"),
-
-                    "accounting.adjustments.flag": parse_flag(red_flags.get("accounting", {}).get("adjustments", {}).get("flag")),
-                    "accounting.adjustments.details": red_flags.get("accounting", {}).get("adjustments", {}).get("details"),
-
-                    "accounting.tax_benefits.flag": parse_flag(red_flags.get("accounting", {}).get("tax_benefits", {}).get("flag")),
-                    "accounting.tax_benefits.details": red_flags.get("accounting", {}).get("tax_benefits", {}).get("details"),
-
-                    "accounting.tax_payments.flag": parse_flag(red_flags.get("accounting", {}).get("tax_payments", {}).get("flag")),
-                    "accounting.tax_payments.details": red_flags.get("accounting", {}).get("tax_payments", {}).get("details"),
-
-                    "accounting.no_audit.flag": parse_flag(red_flags.get("accounting", {}).get("no_audit", {}).get("flag")),
-                    "accounting.no_audit.details": red_flags.get("accounting", {}).get("no_audit", {}).get("details"),
-
-                    "accounting.conditional_outcomes.flag": parse_flag(red_flags.get("accounting", {}).get("conditional_outcomes", {}).get("flag")),
-                    "accounting.conditional_outcomes.details": red_flags.get("accounting", {}).get("conditional_outcomes", {}).get("details"),
-
-                    "liquidity.negative_wProfit.flag": parse_flag(red_flags.get("liquidity", {}).get("negative_wProfit", {}).get("flag")),
-                    "liquidity.negative_wProfit.details": red_flags.get("liquidity", {}).get("negative_wProfit", {}).get("details"),
-
-                    "liquidity.pensions.flag": parse_flag(red_flags.get("liquidity", {}).get("pensions", {}).get("flag")),
-                    "liquidity.pensions.details": red_flags.get("liquidity", {}).get("pensions", {}).get("details"),
-                    "mentioned_companies": red_flags.get("mentioned_companies"),
-                    "mentioned_people": red_flags.get("mentioned_people"),
-                    "auditor_name_redflag": red_flags.get("auditor_name")
-                }))
-                
-                if "flagged_words" in red_flags:
-                    base_data.update(flatten_keys({
-                    "flagged_words.flag": "true",
-                    "flagged_words.word" : list(red_flags["flagged_words"].keys()),
-                    "flagged_words.details": [red_flags["flagged_words"][word]["sentence"] for word in  list(red_flags["flagged_words"].keys())]
-                    }))
-                else:
-                     base_data.update(flatten_keys({"flagged_words.flag": "false"}))
-                
-                try:
-                    base_data.update(flatten_keys({
-                    "delivery_date.day": int(red_flags.get("delivery_date").split['.'][0]),
-                    "delivery_date.month": int(red_flags.get("delivery_date").split['.'][1]),
-                    "delivery_date.year": int(red_flags.get("delivery_date").split['.'][2])
-                    }))
-                except: 
-                    print("no date of delivery")
-                    
+                extracted_rf_data = extract_red_flag_data(red_flags)
+                base_data.update(flatten_keys(extracted_rf_data))
 
             session.execute_write(neo4j.create_company, base_data)
 
-            if base_data.get("ext_company_address"):
-                session.execute_write(neo4j.create_address_ext, base_data["id"], base_data["ext_company_address"])
-                
-            if base_data.get("company_address"):
-                session.execute_write(neo4j.create_address_llm, base_data["id"], base_data["company_address"])
-
-            #for entity in base_data.get("subsidiaries") or []:
-            entity = base_data.get("subsidiaries") or []
-            if isinstance(entity, str):
-                entity = [entity]
-            for sub in entity:
-                if sub:
-                    session.execute_write(
-                    neo4j.create_relationship,
-                    base_data["id"],
-                    sub,
-                    "PARENT_OF_llm"
-                    )
-
-            parent = base_data.get("parent_company")
-            if parent:
-                session.execute_write(
-                    neo4j.create_relationship,
-                    base_data["id"],
-                    parent,
-                    "CHILD_OF_llm"
-                )
-                
-            company = base_data.get("mentioned_companies") or []
-            if isinstance(company, str):
-                company = [company]
-            for comp in company:
-                if comp:
-                    session.execute_write(
-                    neo4j.create_relationship,
-                    base_data["id"],
-                    parent,
-                    "mentioned"
-                )
-
-            #for entity in base_data.get("ext_subsidiaries") or []:
-            entity = base_data.get("ext_subsidiaries") or []
-            if isinstance(entity, str):
-                entity = [entity]
-            for sub in entity:
-                if sub:
-                    session.execute_write(
-                    neo4j.create_relationship,
-                    base_data["id"],
-                    sub,
-                    "PARENT_OF_ext"
-                    )
-
-            parent_ext = base_data.get("ext_parent_company")
-            if parent_ext:
-                session.execute_write(
-                    neo4j.create_relationship,
-                    base_data["id"],
-                    parent_ext,
-                    "CHILD_OF_ext"
-                )
-
-            for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
-                people = base_data.get(f"leadership_{role}") or []
-                if isinstance(people, str):
-                    people = [people]
-                for person in people:
-                    if person:
-                        session.execute_write(
-                            neo4j.create_person_relationship_llm,
-                            person,
-                            base_data["id"]
-                        )
-
-            for role in ("CEO", "board_members", "share_holders", "chairman_of_the_board"):
-                people = base_data.get(f"ext_leadership_{role}") or []
-                if isinstance(people, str):
-                    people = [people]
-                for person in people:
-                    if person:
-                        session.execute_write(
-                            neo4j.create_person_relationship_llm,
-                            person,
-                            base_data["id"]
-                        )
-             
+            prepare_create_company_links(session, neo4j, base_data["id"], "Address", base_data.get("ext_company_address", []), "LOCATED_AT_ext")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Address", base_data.get("company_address", []), "LOCATED_AT_llm")
             
-            people = base_data.get("mentioned_people") or []
-            if isinstance(people, str):
-                people = [people]
-            for person in people:
-                if person:
-                    session.execute_write(
-                            neo4j.create_person_relationship_mentioned,
-                            person,
-                            base_data["id"]
-                        )        
-        
-            auditor = base_data.get("auditor_name_redflag") or []
-            if isinstance(auditor, str):
-                auditor = [auditor]
-            for person in auditor:
-                if person:
-                    session.execute_write(
-                        neo4j.create_auditor_relationship_llm,
-                        person,
-                        base_data["id"]
-                        )
-            
-            auditor = base_data.get("ext_auditor_name") or []
-            if isinstance(auditor, str):
-                auditor = [auditor]
-            for person in auditor:
-                if person:
-                    session.execute_write(
-                        neo4j.create_auditor_relationship_ext,
-                        person,
-                        base_data["id"]
-                        )
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("subsidiaries", []), "PARENT_OF_llm")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("parent_company", []), "CHILD_OF_llm")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("mentioned_companies", []), "mentioned")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("ext_subsidiaries", []), "PARENT_OF_ext")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("ext_parent_company", []), "CHILD_OF_ext")
 
+            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"leadership", []), "LED_BY_llm")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"ext_leadership", []), "LED_BY_ext")
 
-
+            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get("mentioned_people", []), "mentioned_llm")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Auditor", base_data.get("auditor_name_redflag", []), "auditor_llm")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Auditor", base_data.get("ext_auditor_name", []), "auditor_ext")
 
 
 def main():
