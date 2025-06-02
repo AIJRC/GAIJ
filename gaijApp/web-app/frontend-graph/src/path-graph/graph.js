@@ -91,13 +91,25 @@ export class Graph extends Component {
       this.fetchAndDisplayConnections(this.props.graph.source_neo4j_id);
     }
     
-    // update simulation with new data
-    updateSimulation(
-      this.state.simulation,
-      this.props.graph.nodes,
-      this.props.graph.edges,
-      this.props.graph.nodes.length !== prevProps.graph.nodes.length
-    );
+    // Update simulation with new data
+    if (this.props.graph.nodes.length > 100) {
+      // For large graphs, update less frequently
+      updateSimulation(
+        this.state.simulation,
+        this.props.graph.nodes,
+        this.props.graph.edges,
+        false // Don't reheat on every update
+      );
+      this.state.simulation.alpha(0.3); // Lower alpha for smoother transitions
+    } else {
+      // Regular update for smaller graphs
+      updateSimulation(
+        this.state.simulation,
+        this.props.graph.nodes,
+        this.props.graph.edges,
+        this.props.graph.nodes.length !== prevProps.graph.nodes.length
+      );
+    }
 
     // when adding first path to graph, restart graph
     if (prevProps.graph.nodes.length === 0) {
