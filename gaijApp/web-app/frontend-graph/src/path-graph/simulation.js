@@ -11,27 +11,35 @@ import {
 
 // create physics simulation
 export function createSimulation() {
-  // create physics simulation for nodes to detangle and prettify layout
   const simulation = d3
     .forceSimulation()
     .force(
       'link',
-      d3
-        .forceLink()
+      d3.forceLink()
         .distance(nodeDistance)
         .id((d) => d.neo4j_id)
+        .strength(0.1) // Reduce link force strength
     )
     .force(
       'collide',
-      d3
-        .forceCollide()
+      d3.forceCollide()
         .radius(nodeRadius)
-        .strength(1)
+        .strength(0.2) // Reduce collision strength
+        .iterations(1) // Minimize iterations
     )
-    .force('centerX', d3.forceX(0).strength(centeringForce / 100))
-    .force('centerY', d3.forceY(0).strength(centeringForce / 100))
-    .force('charge', d3.forceManyBody().strength(-nodeRepulsion));
-  simulation.on('tick', onSimulationTick);
+    .force('centerX', d3.forceX(0).strength(centeringForce / 200)) // Reduce centering force
+    .force('centerY', d3.forceY(0).strength(centeringForce / 200))
+    .force('charge', d3.forceManyBody()
+      .strength(-nodeRepulsion / 2) // Reduce repulsion
+      .distanceMax(200) // Limit force distance
+      .theta(0.9) // Increase theta for better approximation
+    );
+  
+  simulation
+    .alphaDecay(0.02) // Faster cooling
+    .velocityDecay(0.3) // Less node movement
+    .on('tick', onSimulationTick);
+    
   return simulation;
 }
 
