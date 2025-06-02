@@ -1,9 +1,9 @@
 .explore-container {
-  max-width: 800px;
-  margin: 80px auto;
-  padding: 20px;
+  max-width: 100%;
+  margin: 0 auto;
   font-family: Arial, sans-serif;
   color: #333;
+  box-sizing: border-box;
 }
 
 .explore-container h1 {
@@ -19,51 +19,90 @@
   line-height: 1.6;
 }
 
-/* Top Panel - Search and Results */
-.explore-top-panel {
-    padding: 15px;
-    border-bottom: 1px solid #e0e0e0;
-    background: #ffffff;
-    z-index: 1;
-    position: relative
-    /* Ensure it stays above other content */
+/* Main three-panel layout */
+.explore-layout {
+  display: flex;
+  height: calc(100vh - 100px); /* Account for container padding and margins */
+  width: 100%;
+  overflow: hidden;
+  position: relative; /* For absolute positioning of the toggle button */
 }
 
-/* Bottom Section - Contains left and right panels */
-
-explore-bottom-section {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 60px);
-    overflow: hidden;
-    max-width: 1600px;
-    margin: 0;
-    /* Center the container */
-    width: 100%;
-    /* Ensure it takes full width up to max-width */
+/* Left Sidebar - Filtering Options */
+.explore-left-sidebar {
+  width: 350px;
+  min-width: 350px;
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding-left: 15px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
 }
 
-  /* Left Panel - Selection Panel */
-.explore-left-panel {
-    position: absolute;
-    left: 0;
-    top: 700px; /* Set top to the height of the top panel to position it below */
-    height: calc(100vh - 200px); /* Adjust height to account for the top panel */
-    width: 400px;
-    z-index: 2;   
-    overflow-y: auto;
-    border-right: 1px solid #e0e0e0;
-    background: #f8f9fa;
-    text-align: left;
+/* Hidden sidebar state */
+.explore-left-sidebar.hidden {
+  transform: translateX(-100%);
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-  /* Right Panel - Graph */
-.explore-right-panel {
-    flex: 1;
-    /* Takes remaining space */
-    position: relative;
-    overflow: hidden;
+/* Sidebar toggle button */
+.sidebar-toggle-btn {
+  position: absolute;
+  left: 350px; /* Position at the edge of the sidebar */
+  top: 20px;
+  z-index: 100;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  padding: 10px 5px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: left 0.3s ease-in-out;
 }
-  
 
-  
+/* Toggle button position when sidebar is hidden */
+.explore-left-sidebar.hidden + .sidebar-toggle-btn {
+  left: 0;
+}
+
+/* Central Pane - Graph and Search */
+.explore-central-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Search Section */
+.explore-search-section {
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #ffffff;
+  z-index: 1;
+}
+
+/* Graph Section */
+.explore-graph-section {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Right Sidebar - Node Information */
+.explore-right-sidebar {
+  width: 350px;
+  min-width: 350px;
+  height: 100%;
+  overflow-y: auto;
+  border-left: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding: 15px;
+}

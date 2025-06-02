@@ -76,7 +76,6 @@ class App extends Component {
         <Router>
           <ScrollToTop /> {/* This ensures scroll resets when navigating */}
           <Navbar />
-          <div style={{ padding: "50px" }}>
             <Switch>
               {/* Set About as the Home page */}
               <Route exact path="/" component={About} /> 
@@ -90,7 +89,6 @@ class App extends Component {
               {/* Redirect any unknown routes to About */}
               <Redirect to="/" />
             </Switch>
-          </div>
         </Router>
       </AuthProvider>
     );

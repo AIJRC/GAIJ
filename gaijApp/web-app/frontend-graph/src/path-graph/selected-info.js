@@ -48,10 +48,13 @@ export class SelectedInfo extends Component {
     // get 'extra fields' from node/edge 'properties' field
     let extraFields = [];
     if (element.properties) {
-      extraFields = Object.keys(element.properties).map((field) => ({
-        firstCol: field,
-        secondCol: String(element.properties[field] || '')
-      }));
+      extraFields = Object.keys(element.properties)
+        // Filter out the 'version_control' key
+        .filter(field => field !== 'version_control')
+        .map((field) => ({
+          firstCol: field,
+          secondCol: String(element.properties[field] || '')
+        }));
     }
 
     // combine primary and extra fields

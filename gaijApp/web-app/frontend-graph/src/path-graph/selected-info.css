@@ -1,18 +1,22 @@
 #graph_info_container {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   background: white;
   border-top: 1px solid #ccc;
   padding: 10px;
-  max-height: 200px;
+  margin-top: 15px;
+  max-height: none;
   overflow-y: auto;
   z-index: 1000;
+  font-size: 0.85rem;
 }
 
 .center.light {
   text-align: center;
   color: #666;
   padding: 10px;
+  font-size: 0.85rem;
+}
+
+.graph-info-wrapper {
+  margin-top: 20px;
 }
