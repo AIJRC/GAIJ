@@ -20,3 +20,8 @@
 .graph-info-wrapper {
   margin-top: 20px;
 }
+
+
+.info-section h3 {
+  padding-top: 1.5rem; /* adjust as needed */
+}
