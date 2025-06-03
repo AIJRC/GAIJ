@@ -6,20 +6,22 @@ import { connect } from 'react-redux';
 import { CollapsibleSection } from '../components/collapsible-section.js';
 import { GraphAttic } from './attic.js';
 import { Graph } from './graph.js';
-import { SelectedInfo } from './selected-info.js';
 
 import { minWidth, minHeight, maxWidth, maxHeight } from './constants.js';
 
 // path graph section component
 export class PathGraph extends Component {
   // initialize component
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
+    // Use a more reasonable default width instead of window.innerWidth
+    const defaultWidth = 800; // A reasonable starting width for the central pane
+    
     this.state = {
-      width: window.innerWidth,
-      height: 690,
-      sectionWidth: window.innerWidth,
+      width: defaultWidth,
+      height: Math.ceil((defaultWidth * 3) / 4), // Maintain the 3:4 ratio
+      sectionWidth: defaultWidth,
       selectedElement: null,
       hoveredElement: null,
       isInitialized: false,
@@ -63,6 +65,9 @@ componentDidUpdate(prevProps, prevState) {
           hasRendered: true,
           isInitialized: true
         }, () => {
+          // Call collapseContainer when new graph data arrives
+          this.collapseContainer(true);
+          
           if (this.graphRef.current) {
             this.graphRef.current.fitView();
           }
@@ -78,6 +83,15 @@ componentDidUpdate(prevProps, prevState) {
         this.graphRef.current.fitView();
       }
     }
+
+    // Notify parent component when selected or hovered element changes
+    if (this.state.selectedElement !== prevState.selectedElement && this.props.onElementSelect) {
+      this.props.onElementSelect(this.state.selectedElement);
+    }
+
+    if (this.state.hoveredElement !== prevState.hoveredElement && this.props.onElementHover) {
+      this.props.onElementHover(this.state.hoveredElement);
+    }
   }
 
   initializeGraph = () => {
@@ -85,6 +99,9 @@ componentDidUpdate(prevProps, prevState) {
       isInitialized: true,
       hasRendered: true
     }, () => {
+      // Call collapseContainer when the graph is first created
+      this.collapseContainer(true);
+      
       if (this.graphRef.current) {
         setTimeout(() => {
           this.graphRef.current.fitView();
@@ -130,10 +147,26 @@ componentDidUpdate(prevProps, prevState) {
 
   // collapse graph container to width of <section> element
   collapseContainer = (proportionalHeight) => {
-    const width = ReactDOM.findDOMNode(this).clientWidth;
-    this.setWidth(width);
-    if (proportionalHeight)
-      this.setHeight(Math.ceil((width * 3) / 4));
+    // Use setTimeout to ensure the DOM has been fully rendered
+    setTimeout(() => {
+      const element = ReactDOM.findDOMNode(this);
+      if (element) {
+        // Get the width of the central pane (parent container)
+        const containerWidth = element.parentElement ? 
+          element.parentElement.clientWidth : 
+          element.clientWidth;
+        
+        // Adjust width to fit within the container with some padding
+        const width = Math.max(containerWidth - 40, minWidth);
+        console.log('Collapsing container to width:', width);
+        
+        this.setWidth(width);
+        if (proportionalHeight) {
+          const height = Math.ceil((width * 3) / 4);
+          this.setHeight(height);
+        }
+      }
+    }, 0);
   };
 
   // get current width of <section> element
@@ -141,12 +174,12 @@ componentDidUpdate(prevProps, prevState) {
     this.setState({ sectionWidth: ReactDOM.findDOMNode(this).clientWidth });
   };
 
-  //
+  // Set selected element and notify parent component
   setSelectedElement = (element) => {
     this.setState({ selectedElement: element });
   };
 
-  //
+  // Set hovered element and notify parent component
   setHoveredElement = (element) => {
     this.setState({ hoveredElement: element });
   };
@@ -175,20 +208,18 @@ componentDidUpdate(prevProps, prevState) {
           collapseContainer={this.collapseContainer}
           expandContainer={this.expandContainer}
         />
-        <Graph
-          ref={this.graphRef}
-          width={this.state.width}
-          height={this.state.height}
-          sectionWidth={this.state.sectionWidth}
-          setSelectedElement={this.setSelectedElement}
-          setHoveredElement={this.setHoveredElement}
-          selectedElement={this.state.selectedElement}
-          hoveredElement={this.state.hoveredElement}
-        />
-        <SelectedInfo
-          selectedElement={this.state.selectedElement}
-          hoveredElement={this.state.hoveredElement}
-        />
+        <div className="graph-container-wrapper">
+          <Graph
+            ref={this.graphRef}
+            width={this.state.width}
+            height={this.state.height}
+            sectionWidth={this.state.sectionWidth}
+            setSelectedElement={this.setSelectedElement}
+            setHoveredElement={this.setHoveredElement}
+            selectedElement={this.state.selectedElement}
+            hoveredElement={this.state.hoveredElement}
+          />
+        </div>
       </CollapsibleSection>
     );
   }

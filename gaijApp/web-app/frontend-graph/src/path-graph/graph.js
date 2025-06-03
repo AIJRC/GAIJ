@@ -273,16 +273,6 @@ export class Graph extends Component {
 
   // display component
   render() {
-    // calculate x position of graph container
-    let left = 0;
-    if (this.props.sectionWidth && this.props.width) {
-      left = this.props.sectionWidth / 2 - this.props.width / 2;
-      const minLeft =
-        this.props.sectionWidth / 2 - document.body.clientWidth / 2 + 20;
-      if (left < minLeft)
-        left = minLeft;
-    }
-
     return (
       <div id='graph_container' style={{ height: this.props.height }}>
         <svg
@@ -290,7 +280,6 @@ export class Graph extends Component {
           id='graph'
           width={this.props.width}
           height={this.props.height}
-          style={{ left: left }}
         >
           <GraphDefs />
           <g id='graph_view'>
@@ -356,4 +345,3 @@ Graph = connect(
   null,
   { forwardRef: true }
 )(Graph);
-
