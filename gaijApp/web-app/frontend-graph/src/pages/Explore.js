@@ -15,7 +15,8 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
   const [selectedElement, setSelectedElement] = useState(null);
   const [hoveredElement, setHoveredElement] = useState(null);
   // State to track sidebar visibility
-  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [leftSidebarVisible, setLeftSidebarVisible] = useState(true);
+  const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
 
   const handleSelectionsSubmit = (selections) => {
     console.log('User selections:', selections);
@@ -25,9 +26,14 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
     // 3. Filter/process your data based on selections
   };
 
-  // Toggle sidebar visibility
-  const toggleSidebar = () => {
-    setSidebarVisible(!sidebarVisible);
+  // Toggle left sidebar visibility
+  const toggleLeftSidebar = () => {
+    setLeftSidebarVisible(!leftSidebarVisible);
+  };
+
+  // Toggle right sidebar visibility
+  const toggleRightSidebar = () => {
+    setRightSidebarVisible(!rightSidebarVisible);
   };
 
   return (
@@ -35,17 +41,17 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
       {/* Main three-panel layout */}
       <div className="explore-layout">
         {/* Left Sidebar - Filtering Options */}
-        <div className={`explore-left-sidebar ${sidebarVisible ? '' : 'hidden'}`}>
+        <div className={`explore-left-sidebar ${leftSidebarVisible ? '' : 'hidden'}`}>
           <SelectionPanel onSubmit={handleSelectionsSubmit} />
         </div>
 
-        {/* Toggle Button for Sidebar */}
+        {/* Toggle Button for Left Sidebar */}
         <button 
-          className="sidebar-toggle-btn" 
-          onClick={toggleSidebar} 
-          title={sidebarVisible ? "Hide Filters" : "Show Filters"}
+          className="sidebar-toggle-btn left-sidebar-toggle" 
+          onClick={toggleLeftSidebar} 
+          title={leftSidebarVisible ? "Hide Filters" : "Show Filters"}
         >
-          {sidebarVisible ? '◀' : '▶'}
+          {leftSidebarVisible ? '◀' : '▶'}
         </button>
 
         {/* Central Pane - Graph and Search */}
@@ -65,7 +71,7 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
         </div>
 
         {/* Right Sidebar - Node Information */}
-        <div className="explore-right-sidebar">
+        <div className={`explore-right-sidebar ${rightSidebarVisible ? '' : 'hidden'}`}>
           {shouldRenderResults && <NodeResults />}
           <div className="graph-info-wrapper">
             <SelectedInfo 
@@ -74,6 +80,15 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
             />
           </div>
         </div>
+
+        {/* Toggle Button for Right Sidebar */}
+        <button 
+          className="sidebar-toggle-btn right-sidebar-toggle" 
+          onClick={toggleRightSidebar} 
+          title={rightSidebarVisible ? "Hide Info Panel" : "Show Info Panel"}
+        >
+          {rightSidebarVisible ? '▶' : '◀'}
+        </button>
       </div>
     </div>
   );

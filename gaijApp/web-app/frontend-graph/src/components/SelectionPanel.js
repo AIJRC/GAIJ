@@ -16,6 +16,27 @@ const SelectionPanel = ({ onSubmit }) => {
     });
     const dispatch = useDispatch();
 
+    // Define the questions array at the component level to avoid duplication
+    const financialQuestions = [
+        { id: 0, question: 'Unclear or complicated financial instruments' },
+        { id: 1, question: 'Hidden leasing obligations' },
+        { id: 2, question: 'Guarantee obligations or pledges not clearly explained' },
+        { id: 3, question: 'Writing down values in the balance' },
+        { id: 4, question: 'Increasing dependence on financing to cover operations' },
+        { id: 5, question: 'Large one-off items or extraordinary income/costs' },
+        { id: 6, question: 'Internal transactions between group companies' },
+        { id: 7, question: 'Large outstanding receivables' },
+        { id: 8, question: 'The auditor expresses uncertainties or Going concerns' },
+        { id: 9, question: 'Changes in accounting principles' },
+        { id: 10, question: 'Adjustments to previous years accounts' },
+        { id: 11, question: 'Large deferred tax benefits' },
+        { id: 12, question: 'Abnormally low or outstanding tax payments' },
+        { id: 13, question: 'Lack of audit' },
+        { id: 14, question: 'Ongoing or potential litigation' },
+        { id: 15, question: 'Negative operational cash flows, while in profit' },
+        { id: 16, question: 'Large pension obligations' }
+    ];
+
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
 
@@ -55,20 +76,36 @@ const SelectionPanel = ({ onSubmit }) => {
         }));
     };
 
-    const handleRadioChange = (itemId, questionText, selectedAnswer) => {
+    const handleCheckboxChange = (itemId, questionText, checked) => {
         setUserSelections(prev => ({
             ...prev,
             trueFalseAnswers: {
                 ...prev.trueFalseAnswers,
                 [itemId]: {
                     question: questionText,
-                    answer: selectedAnswer
+                    answer: checked
                 }
             }
         }));
     };
 
-    
+    const handleSelectAllCheckboxes = (checked) => {
+        const newTrueFalseAnswers = {};
+        
+        // Use the financialQuestions array to avoid duplication
+        financialQuestions.forEach(item => {
+            newTrueFalseAnswers[item.id] = {
+                question: item.question,
+                answer: checked
+            };
+        });
+        
+        setUserSelections(prev => ({
+            ...prev,
+            trueFalseAnswers: newTrueFalseAnswers
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -287,44 +324,28 @@ const SelectionPanel = ({ onSubmit }) => {
                 </div>
 
                 <div className={styles.header}>
-                    <b>True&nbsp;&nbsp;&nbsp;False</b>
+                    <b>Filter</b>
+                    <div className={styles.selectAll}>
+                        <input
+                            type="checkbox"
+                            id="selectAll"
+                            onChange={(e) => handleSelectAllCheckboxes(e.target.checked)}
+                            checked={Object.values(userSelections.trueFalseAnswers).length === 17 && 
+                                    Object.values(userSelections.trueFalseAnswers).every(item => item.answer)}
+                        />
+                        {/* <label htmlFor="selectAll">Select All</label> */}
+                    </div>
                 </div>
 
-                {[
-                    { id: 0, question: 'Unclear or complicated financial instruments' },
-                    { id: 1, question: 'Hidden leasing obligations' },
-                    { id: 2, question: 'Guarantee obligations or pledges not clearly explained' },
-                    { id: 3, question: 'Writing down values in the balance' },
-                    { id: 4, question: 'Increasing dependence on financing to cover operations' },
-                    { id: 5, question: 'Large one-off items or extraordinary income/costs' },
-                    { id: 6, question: 'Internal transactions between group companies' },
-                    { id: 7, question: 'Large outstanding receivables' },
-                    { id: 8, question: 'The auditor expresses uncertainties or Going concerns' },
-                    { id: 9, question: 'Changes in accounting principles' },
-                    { id: 10, question: 'Adjustments to previous years accounts' },
-                    { id: 11, question: 'Large deferred tax benefits' },
-                    { id: 12, question: 'Abnormally low or outstanding tax payments' },
-                    { id: 13, question: 'Lack of audit' },
-                    { id: 14, question: 'Ongoing or potential litigation' },
-                    { id: 15, question: 'Negative operational cash flows, while in profit' },
-                    { id: 16, question: 'Large pension obligations' }
-                ].map(item => (
+                {financialQuestions.map(item => (
                     <div key={item.id} className={styles.trueFalse}>
                         <div className={styles.question}>{item.question}</div>
                         <div className={styles.buttonPair} data-pair={item.id}>
                             <input
-                                type="radio"
+                                type="checkbox"
                                 name={`question_${item.id}`}
-                                value="true"
-                                checked={userSelections.trueFalseAnswers[item.id]?.answer === 'true'}
-                                onChange={(e) => handleRadioChange(item.id, item.question, e.target.value)}
-                            />
-                            <input
-                                type="radio"
-                                name={`question_${item.id}`}
-                                value="false"
-                                checked={userSelections.trueFalseAnswers[item.id]?.answer === 'false'}
-                                onChange={(e) => handleRadioChange(item.id, item.question, e.target.value)}
+                                checked={!!userSelections.trueFalseAnswers[item.id]?.answer}
+                                onChange={(e) => handleCheckboxChange(item.id, item.question, e.target.checked)}
                             />
                         </div>
                     </div>
@@ -339,8 +360,3 @@ const SelectionPanel = ({ onSubmit }) => {
 };
 
 export default SelectionPanel;
-
-
-
-
-

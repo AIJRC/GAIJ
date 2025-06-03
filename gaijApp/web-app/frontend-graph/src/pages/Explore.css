@@ -54,22 +54,46 @@
 /* Sidebar toggle button */
 .sidebar-toggle-btn {
   position: absolute;
-  left: 350px; /* Position at the edge of the sidebar */
-  top: 20px;
   z-index: 100;
   background: #2c3e50;
   color: white;
   border: none;
-  border-radius: 0 4px 4px 0;
-  padding: 10px 5px;
+  border-radius: 4px;
+  padding: 8px 6px;
   cursor: pointer;
-  font-size: 12px;
-  transition: left 0.3s ease-in-out;
+  font-size: 14px;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 60px;
 }
 
-/* Toggle button position when sidebar is hidden */
-.explore-left-sidebar.hidden + .sidebar-toggle-btn {
+/* Left sidebar toggle button */
+.left-sidebar-toggle {
+  left: 365px; /* Position at the edge of the sidebar */
+  top: 5%;
+  transform: translateY(-50%);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Right sidebar toggle button */
+.right-sidebar-toggle {
+  right: 380px; /* Position at the edge of the sidebar */
+  top: 5%;
+  transform: translateY(-50%);
+  border-radius: 4px 0 0 4px;
+}
+
+/* Toggle button position when left sidebar is hidden */
+.explore-left-sidebar.hidden + .left-sidebar-toggle {
   left: 0;
+}
+
+/* Toggle button position when right sidebar is hidden */
+.explore-right-sidebar.hidden ~ .right-sidebar-toggle {
+  right: 0;
 }
 
 /* Central Pane - Graph and Search */
@@ -105,4 +129,14 @@
   border-left: 1px solid #e0e0e0;
   background: #f8f9fa;
   padding: 15px;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+}
+
+/* Hidden right sidebar state */
+.explore-right-sidebar.hidden {
+  transform: translateX(100%);
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
 }

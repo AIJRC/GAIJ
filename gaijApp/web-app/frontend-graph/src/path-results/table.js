@@ -11,6 +11,15 @@ import { toFixed } from '../utils/format';
 import { pathChips } from '../components/chips.js';
 import { setPaths } from './actions.js';
 
+// Create a wrapper component for FontAwesomeIcon that uses default parameters instead of defaultProps
+const Icon = ({ icon, className, ...props }) => (
+  <FontAwesomeIcon 
+    icon={icon} 
+    className={className || ''} 
+    {...props} 
+  />
+);
+
 // path table component
 export class PathTable extends Component {
   // display component
@@ -31,8 +40,8 @@ export class PathTable extends Component {
     const sortables = [false, false, true, true, true, true];
 
     const headContents = [
-      <FontAwesomeIcon className='fa-xs' icon={faEye} />,
-      <FontAwesomeIcon className='fa-xs' icon={faHighlighter} />,
+      <Icon className='fa-xs' icon={faEye} />,
+      <Icon className='fa-xs' icon={faHighlighter} />,
       'metapath',
       'path',
       <>
@@ -65,8 +74,8 @@ export class PathTable extends Component {
     ];
 
     const bodyContents = [
-      <FontAwesomeIcon className='fa-xs' icon={faEye} />,
-      <FontAwesomeIcon className='fa-xs' icon={faHighlighter} />,
+      (datum, field, value) => <Icon className='fa-xs' icon={faEye} />,
+      (datum, field, value) => <Icon className='fa-xs' icon={faHighlighter} />,
       (datum, field, value) => <DynamicField value={value} />,
       (datum, field, value) => (
         <DynamicField

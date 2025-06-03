@@ -4,6 +4,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { Tooltip } from './tooltip.js';
 
+// Create a wrapper component for FontAwesomeIcon that uses default parameters instead of defaultProps
+const Icon = ({ icon, className, ...props }) => (
+  <FontAwesomeIcon 
+    icon={icon} 
+    className={className || ''} 
+    {...props} 
+  />
+);
 
 // //////////////////////////////////////////////////
 // INPUT PROPS
@@ -196,7 +204,7 @@ export class IconButton extends Component {
         }}
       >
         <span>{text}</span>
-        <FontAwesomeIcon icon={icon} data-checked={this.props.checked} />
+        <Icon icon={icon} data-checked={this.props.checked} />
       </Button>
     );
   }

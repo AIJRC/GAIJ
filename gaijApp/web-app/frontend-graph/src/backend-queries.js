@@ -91,11 +91,10 @@ export async function processUserSelection(userSelections) {
     const monthIndex = monthNames.indexOf(month) + 1
     if (counter > 1) {
       filters += `
-  AND c.delivery_date_day = ${String(monthIndex.toString().padStart(2, '0'))}`
+  AND c.delivery_date_day = '${monthIndex.toString().padStart(2, '0')}'`
     } else {
       filters += `
-  WHERE c.delivery_date_day = ${String(monthIndex.toString().padStart(2, '0'))}
-      `
+  WHERE c.delivery_date_day = '${monthIndex.toString().padStart(2, '0')}'`
     }
     console.log(typeof(String(monthIndex.toString().padStart(2, '0'))))
   }
@@ -858,5 +857,3 @@ export async function getTopCompanies() {
     await session.close();
   }
 }
-
-

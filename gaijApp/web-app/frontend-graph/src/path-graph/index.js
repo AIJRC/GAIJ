@@ -30,6 +30,7 @@ export class PathGraph extends Component {
     };
 
     this.graphRef = React.createRef();
+    this.containerRef = React.createRef(); // Add a ref for the container element
   }
 
   componentDidMount() {
@@ -40,9 +41,9 @@ export class PathGraph extends Component {
     if (this.props.graph?.nodes?.length > 0) {
       this.initializeGraph();
     }
-}
+  }
 
-componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps, prevState) {
     console.log('PathGraph componentDidUpdate:', {
       prevGraph: prevProps.graph,
       currentGraph: this.props.graph,
@@ -79,7 +80,11 @@ componentDidUpdate(prevProps, prevState) {
     if (!this.state.isProcessing && 
         (this.state.width !== prevState.width || 
          this.state.height !== prevState.height)) {
-      if (this.graphRef.current) {
+      if (this.graphRef.current && 
+          !isNaN(this.state.width) && 
+          !isNaN(this.state.height) && 
+          this.state.width > 0 && 
+          this.state.height > 0) {
         this.graphRef.current.fitView();
       }
     }
@@ -117,6 +122,12 @@ componentDidUpdate(prevProps, prevState) {
 
   // set width of graph container
   setWidth = (width) => {
+    // Ensure width is a valid number
+    if (isNaN(width) || width === null || width === undefined) {
+      console.warn('Invalid width value:', width);
+      return; // Don't update state with invalid values
+    }
+    
     if (Math.round(width) !== width)
       width = Math.round(width);
     if (width > maxWidth)
@@ -128,6 +139,12 @@ componentDidUpdate(prevProps, prevState) {
 
   // set height of graph container
   setHeight = (height) => {
+    // Ensure height is a valid number
+    if (isNaN(height) || height === null || height === undefined) {
+      console.warn('Invalid height value:', height);
+      return; // Don't update state with invalid values
+    }
+    
     if (Math.round(height) !== height)
       height = Math.round(height);
     if (height > maxHeight)
@@ -149,29 +166,47 @@ componentDidUpdate(prevProps, prevState) {
   collapseContainer = (proportionalHeight) => {
     // Use setTimeout to ensure the DOM has been fully rendered
     setTimeout(() => {
-      const element = ReactDOM.findDOMNode(this);
-      if (element) {
-        // Get the width of the central pane (parent container)
-        const containerWidth = element.parentElement ? 
-          element.parentElement.clientWidth : 
-          element.clientWidth;
-        
-        // Adjust width to fit within the container with some padding
-        const width = Math.max(containerWidth - 40, minWidth);
-        console.log('Collapsing container to width:', width);
-        
-        this.setWidth(width);
-        if (proportionalHeight) {
-          const height = Math.ceil((width * 3) / 4);
-          this.setHeight(height);
+      // Find the parent container element (the central pane)
+      // First try using our containerRef
+      let containerWidth;
+      
+      if (this.containerRef.current) {
+        // Get the closest parent with a width
+        let parent = this.containerRef.current;
+        while (parent && (!parent.clientWidth || parent.clientWidth <= 0)) {
+          parent = parent.parentElement;
         }
+        
+        if (parent) {
+          containerWidth = parent.clientWidth;
+        }
+      }
+      
+      // If we couldn't find a width using the ref, try using the document body
+      if (!containerWidth || isNaN(containerWidth) || containerWidth <= 0) {
+        // Fallback to a percentage of the window width
+        containerWidth = Math.max(document.body.clientWidth * 0.6, minWidth);
+        console.log('Using fallback container width:', containerWidth);
+      } else {
+        console.log('Found container width:', containerWidth);
+      }
+      
+      // Adjust width to fit within the container with some padding
+      const width = Math.max(containerWidth - 40, minWidth);
+      
+      this.setWidth(width);
+      if (proportionalHeight) {
+        const height = Math.ceil((width * 3) / 4);
+        this.setHeight(height);
       }
     }, 0);
   };
 
   // get current width of <section> element
   updateSectionWidth = () => {
-    this.setState({ sectionWidth: ReactDOM.findDOMNode(this).clientWidth });
+    if (this.containerRef.current) {
+      this.setState({ sectionWidth: this.containerRef.current.clientWidth });
+    }
   };
 
   // Set selected element and notify parent component
@@ -205,10 +240,13 @@ componentDidUpdate(prevProps, prevState) {
           height={this.state.height}
           setWidth={this.setWidth}
           setHeight={this.setHeight}
-          collapseContainer={this.collapseContainer}
           expandContainer={this.expandContainer}
+          collapseContainer={this.collapseContainer}
         />
-        <div className="graph-container-wrapper">
+        <div 
+          className="graph-container-wrapper"
+          ref={this.containerRef}
+        >
           <Graph
             ref={this.graphRef}
             width={this.state.width}

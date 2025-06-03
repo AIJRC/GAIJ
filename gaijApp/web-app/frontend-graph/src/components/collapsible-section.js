@@ -7,6 +7,15 @@ import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '../utils/buttons';
 import './collapsible-section.css';
 
+// Create a wrapper component for FontAwesomeIcon that uses default parameters instead of defaultProps
+const Icon = ({ icon, className, ...props }) => (
+  <FontAwesomeIcon 
+    icon={icon} 
+    className={className || ''} 
+    {...props} 
+  />
+);
+
 // accordion (collapse/expand) section component
 export class CollapsibleSection extends Component {
   // initialize component
@@ -55,7 +64,7 @@ export class CollapsibleSection extends Component {
           onClick={this.toggle}
         >
           <div>{this.props.label}</div>
-          <FontAwesomeIcon
+          <Icon
             icon={this.state.collapsed ? faAngleUp : faAngleDown}
           />
         </Button>

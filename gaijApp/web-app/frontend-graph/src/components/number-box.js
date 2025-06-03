@@ -10,23 +10,38 @@ export class NumberBox extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {};
-    this.state.value = this.props.value;
+    // Ensure initial value is valid
+    const initialValue = isNaN(this.props.value) ? '' : this.props.value;
+    this.state = {
+      value: initialValue
+    };
   }
 
   // when component updates
   componentDidUpdate(prevProps) {
-    if (this.props.value !== prevProps.value)
+    // Only update state if the value has changed, is different from current state, and is valid
+    if (this.props.value !== prevProps.value && 
+        this.props.value !== this.state.value && 
+        !isNaN(this.props.value)) {
       this.setState({ value: this.props.value });
+    }
   }
 
   // when user changes field
   onChange = (event) => {
-    this.setState({ value: event.target.value });
-    if (event.nativeEvent.data === undefined)
-      this.onArrows(event.target.value);
-    else
-      this.onType(event.target.value);
+    const newValue = event.target.value;
+    
+    // Always update the input field for UX, even if empty
+    this.setState({ value: newValue });
+    
+    // Only trigger callbacks if we have a valid number
+    if (newValue !== '' && !isNaN(newValue)) {
+      if (event.nativeEvent.data === undefined) {
+        this.onArrows(newValue);
+      } else {
+        this.onType(newValue);
+      }
+    }
   };
 
   // when user presses key in box
@@ -54,6 +69,14 @@ export class NumberBox extends Component {
 
   // when box change submitted
   onSubmit = (value) => {
+    // Ensure we're not submitting invalid values
+    if (value === '' || isNaN(value)) {
+      // Reset to last valid value or default
+      const resetValue = !isNaN(this.props.value) ? this.props.value : '';
+      this.setState({ value: resetValue });
+      return;
+    }
+    
     if (this.props.onSubmit)
       this.props.onSubmit(value);
   };
