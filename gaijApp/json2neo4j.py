@@ -142,8 +142,8 @@ def extract_red_flag_data(red_flags_dict):
     if "flagged_words" in red_flags_dict:
         flagged_words_data = red_flags_dict.get("flagged_words", {})
         extracted_data["flagged_words.flag"] = "true" 
-        extracted_data["flagged_words.word"] = parse_flag(flagged_words_data.get("word")) 
-        extracted_data["flagged_words.details"] = flagged_words_data.get("sentence")
+        extracted_data["flagged_words.word"] = list(red_flags["flagged_words"].keys()) 
+        extracted_data["flagged_words.details"] = [red_flags["flagged_words"][word]["sentence"] for word in  list(red_flags["flagged_words"].keys())]
     else:
         extracted_data["flagged_words.flag"] = "false"
 
@@ -153,8 +153,8 @@ def extract_red_flag_data(red_flags_dict):
         try:
             parts = delivery_date_str.split('.') 
             if len(parts) == 3:
-                extracted_data["delivery_date.day"] = parts[1] 
-                extracted_data["delivery_date.month"] = parts[0]
+                extracted_data["delivery_date.day"] = parts[0] 
+                extracted_data["delivery_date.month"] = parts[1]
                 extracted_data["delivery_date.year"] = parts[2]
             else:
                 print(f"Warning: delivery_date '{delivery_date_str}' has unexpected format. Skipping date parsing.")
