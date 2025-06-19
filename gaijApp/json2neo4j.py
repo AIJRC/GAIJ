@@ -34,11 +34,12 @@ class Neo4jConnector:
         # print(query, props)
         return tx.run(query, **props)
 
-    def create_relationship(self, tx, from_id, to_name, to_type, rel_type):
+    def create_relationship(self, tx, from_id, to_name, to_type, rel_type,rel_kind):
         query = f"""
         MATCH (a:Company {{id: $from_id}})
         MERGE (b:{to_type} {{name: $to_name}})
-        MERGE (a)-[:{rel_type}]->(b)
+        MERGE (a)-[r:{rel_type}]->(b)
+        set r.kind = {rel_kind}
         """
         return tx.run(query, from_id=from_id, to_name=to_name)
 
@@ -97,7 +98,7 @@ def flatten_keys(d):
         k.replace('.', '_'): transform_property(v) for k, v in d.items()
     }
 
-def prepare_create_company_links(session, neo4j_connector, source_company_id, to_type, entity_names, relationship_label=""):
+def prepare_create_company_links(session, neo4j_connector, source_company_id, to_type, entity_names, relationship_label="",relationship_kind=""):
     entity_names = entity_names or []
     if isinstance(entity_names, str):
         entity_names = [entity_names]
@@ -108,7 +109,8 @@ def prepare_create_company_links(session, neo4j_connector, source_company_id, to
                 source_company_id,
                 entity_name,
                 to_type,
-                relationship_label
+                relationship_label,
+                relationship_kind
             )
 
 def extract_red_flag_data(red_flags_dict):
@@ -233,21 +235,21 @@ def populate_graph_from_directory(directory_path, neo4j):
 
             session.execute_write(neo4j.create_company, base_data)
 
-            prepare_create_company_links(session, neo4j, base_data["id"], "Address", base_data.get("ext_company_address", []), "LOCATED_AT_ext")
-            prepare_create_company_links(session, neo4j, base_data["id"], "Address", base_data.get("company_address", []), "LOCATED_AT_llm")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Address", base_data.get("ext_company_address", []), "LOCATED_AT_ext","located_at")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Address", base_data.get("company_address", []), "LOCATED_AT_llm","located_at")
             
-            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("subsidiaries", []), "PARENT_OF_llm")
-            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("parent_company", []), "CHILD_OF_llm")
-            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("mentioned_companies", []), "mentioned")
-            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("ext_subsidiaries", []), "PARENT_OF_ext")
-            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("ext_parent_company", []), "CHILD_OF_ext")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("subsidiaries", []), "PARENT_OF_llm","parent_of")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("parent_company", []), "CHILD_OF_llm","child_of")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("mentioned_companies", []), "mentioned","mentioned")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("ext_subsidiaries", []), "PARENT_OF_ext","parent_of")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Company", base_data.get("ext_parent_company", []), "CHILD_OF_ext","child_of")
 
-            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"leadership", []), "LED_BY_llm")
-            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"ext_leadership", []), "LED_BY_ext")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"leadership", []), "LED_BY_llm","led_by")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get(f"ext_leadership", []), "LED_BY_ext","led_by")
 
-            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get("mentioned_people", []), "mentioned_llm")
-            prepare_create_company_links(session, neo4j, base_data["id"], "Auditor", base_data.get("auditor_name_redflag", []), "auditor_llm")
-            prepare_create_company_links(session, neo4j, base_data["id"], "Auditor", base_data.get("ext_auditor_name", []), "auditor_ext")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Person", base_data.get("mentioned_people", []), "mentioned_llm","mentioned")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Auditor", base_data.get("auditor_name_redflag", []), "auditor_llm","auditor")
+            prepare_create_company_links(session, neo4j, base_data["id"], "Auditor", base_data.get("ext_auditor_name", []), "auditor_ext","auditor")
 
 
 def main():
