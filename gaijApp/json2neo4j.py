@@ -113,6 +113,15 @@ def prepare_create_company_links(session, neo4j_connector, source_company_id, to
                 relationship_kind
             )
 
+def split_and_assign(parts):
+        if len(parts) == 3:
+            return {
+                "delivery_date.day": parts[0],
+                "delivery_date.month": parts[1],
+                "delivery_date.year": parts[2]
+            }
+        return None
+
 def extract_red_flag_data(red_flags_dict):
     """Helper function to extract structured data from the red_flags dictionary."""
     extracted_data = {}
@@ -142,16 +151,48 @@ def extract_red_flag_data(red_flags_dict):
 
     # handle flagged_words
     if "flagged_words" in red_flags_dict:
-        flagged_words_data = red_flags_dict.get("flagged_words", {})
-        extracted_data["flagged_words.flag"] = "true" 
-        extracted_data["flagged_words.word"] = list(red_flags_dict["flagged_words"].keys()) 
-        extracted_data["flagged_words.details"] = [red_flags_dict["flagged_words"][word]["sentence"] for word in  list(red_flags_dict["flagged_words"].keys())]
+        try:
+            flagged_words_data = red_flags_dict.get("flagged_words", {})
+            extracted_data["flagged_words.flag"] = "true" 
+            extracted_data["flagged_words.word"] = list(red_flags_dict["flagged_words"].keys()) 
+            extracted_data["flagged_words.details"] = [red_flags_dict["flagged_words"][word]["sentence"] for word in  list(red_flags_dict["flagged_words"].keys())]
+        except Exception as e: 
+             print(f"Error parsing red flags '{flagged_words_data}': {e}. Skipping date parsing.")
+             extracted_data["flagged_words.flag"] = "false"
     else:
         extracted_data["flagged_words.flag"] = "false"
 
     # Handle delivery_date
     delivery_date_str = red_flags_dict.get("delivery_date")
+    # Case 1: string input with dots or dashes
     if delivery_date_str and isinstance(delivery_date_str, str):
+        parsed = None
+        for sep, order in [('.', 'DMY'), ('-', 'YMD')]:
+            parts = delivery_date_str.split(sep)
+            if len(parts) == 3:
+                if order == 'YMD':
+                    parts = [parts[2], parts[1], parts[0]]  # reorder
+                    parsed = split_and_assign(parts)
+                if parsed:
+                    extracted_data["delivery_date"] = parsed
+                    break # Exit the loop once successfully parsed
+        if not parsed:
+            print(f"Warning: delivery_date '{delivery_date_str}' has an unexpected string format.")
+    # Case 2: dict with 'details'    
+    elif isinstance(delivery_date_str, dict) and 'details' in delivery_date_str:
+        try: 
+            parts = delivery_date_str['details'].split('.')
+            parsed = split_and_assign(parts)
+            if parsed:
+                extracted_data["delivery_date"] = parsed
+            else:
+                print(f"Warning: delivery_date['details'] has unexpected format.")
+                
+        except Exception as e: 
+            print(f"Error parsing delivery_date '{delivery_date_str}': {e}. Skipping date parsing.")
+       
+        
+        """
         try:
             parts = delivery_date_str.split('.') 
             if len(parts) == 3:
@@ -159,12 +200,30 @@ def extract_red_flag_data(red_flags_dict):
                 extracted_data["delivery_date.month"] = parts[1]
                 extracted_data["delivery_date.year"] = parts[2]
             else:
-                print(f"Warning: delivery_date '{delivery_date_str}' has unexpected format. Skipping date parsing.")
+                try: 
+                    parts = delivery_date_str.split('-') 
+                    if len(parts) == 3:
+                        extracted_data["delivery_date.day"] = parts[2] 
+                        extracted_data["delivery_date.month"] = parts[1]
+                        extracted_data["delivery_date.year"] = parts[0]
+                    else:
+                        try: 
+                            parts = delivery_date_str['details'].split('.') 
+                            if len(parts) == 3:
+                                extracted_data["delivery_date.day"] = parts[0] 
+                                extracted_data["delivery_date.month"] = parts[1]
+                                extracted_data["delivery_date.year"] = parts[2]
+                            else:
+                                print(f"Warning: delivery_date '{delivery_date_str}' has unexpected format. Skipping date parsing.")
+                        except Exception as e: #
+                            print(f"Error parsing delivery_date '{delivery_date_str}': {e}. Skipping date parsing.")
+                except Exception as e: #
+                    print(f"Error parsing delivery_date '{delivery_date_str}': {e}. Skipping date parsing.")
         except Exception as e: #
             print(f"Error parsing delivery_date '{delivery_date_str}': {e}. Skipping date parsing.")
     elif delivery_date_str: # If it exists but isn't a string, or if parsing failed earlier
         print(f"Warning: delivery_date '{delivery_date_str}' is not a string or has an issue. Skipping date parsing.")
-
+"""
     return extracted_data
 
 
