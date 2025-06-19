@@ -145,7 +145,7 @@ def extract_red_flag_data(red_flags_dict):
         flagged_words_data = red_flags_dict.get("flagged_words", {})
         extracted_data["flagged_words.flag"] = "true" 
         extracted_data["flagged_words.word"] = list(red_flags_dict["flagged_words"].keys()) 
-        extracted_data["flagged_words.details"] = [red_flags_dict["flagged_words"][word]["sentence"] for word in  list(red_flags["flagged_words"].keys())]
+        extracted_data["flagged_words.details"] = [red_flags_dict["flagged_words"][word]["sentence"] for word in  list(red_flags_dict["flagged_words"].keys())]
     else:
         extracted_data["flagged_words.flag"] = "false"
 
