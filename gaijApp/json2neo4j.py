@@ -116,9 +116,9 @@ def prepare_create_company_links(session, neo4j_connector, source_company_id, to
 def split_and_assign(parts):
         if len(parts) == 3:
             return {
-                "delivery_date.day": parts[0],
-                "delivery_date.month": parts[1],
-                "delivery_date.year": parts[2]
+                "day": parts[0],
+                "month": parts[1],
+                "year": parts[2]
             }
         return None
 
@@ -173,7 +173,10 @@ def extract_red_flag_data(red_flags_dict):
                 if order == 'YMD':
                     parts = [parts[2], parts[1], parts[0]]  # reorder
                     parsed = split_and_assign(parts)
+                    extracted_data["delivery_date"] = parsed
+                    break # Exit the loop once successfully parsed
                 if order == 'DMY':
+                    parsed = split_and_assign(parts)
                     extracted_data["delivery_date"] = parsed
                     break # Exit the loop once successfully parsed
         if not parsed:
