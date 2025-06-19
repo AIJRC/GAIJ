@@ -171,7 +171,7 @@ def extract_red_flag_data(red_flags_dict):
 def populate_graph_from_directory(directory_path, neo4j):
     companies_data = load_company_jsons(directory_path)
 
-    with neo4j.driver.session(database="test_v2") as session:
+    with neo4j.driver.session() as session:
         for company_id, data_sources in tqdm(companies_data.items(), desc="Processing companies"):
 
             external = data_sources.get("external", {})
