@@ -39,9 +39,9 @@ class Neo4jConnector:
         MATCH (a:Company {{id: $from_id}})
         MERGE (b:{to_type} {{name: $to_name}})
         MERGE (a)-[r:{rel_type}]->(b)
-        set r.kind = {rel_kind}
+        set r.kind = $rel_kind
         """
-        return tx.run(query, from_id=from_id, to_name=to_name)
+        return tx.run(query, from_id=from_id, to_name=to_name, rel_kind=rel_kind)
 
 def load_company_jsons(base_path):
     folders = ['external', 'llama', 'red_flags']
@@ -144,8 +144,8 @@ def extract_red_flag_data(red_flags_dict):
     if "flagged_words" in red_flags_dict:
         flagged_words_data = red_flags_dict.get("flagged_words", {})
         extracted_data["flagged_words.flag"] = "true" 
-        extracted_data["flagged_words.word"] = list(red_flags["flagged_words"].keys()) 
-        extracted_data["flagged_words.details"] = [red_flags["flagged_words"][word]["sentence"] for word in  list(red_flags["flagged_words"].keys())]
+        extracted_data["flagged_words.word"] = list(red_flags_dict["flagged_words"].keys()) 
+        extracted_data["flagged_words.details"] = [red_flags_dict["flagged_words"][word]["sentence"] for word in  list(red_flags["flagged_words"].keys())]
     else:
         extracted_data["flagged_words.flag"] = "false"
 
