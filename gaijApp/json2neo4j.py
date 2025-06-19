@@ -173,7 +173,7 @@ def extract_red_flag_data(red_flags_dict):
                 if order == 'YMD':
                     parts = [parts[2], parts[1], parts[0]]  # reorder
                     parsed = split_and_assign(parts)
-                if parsed:
+                if order == 'DMY':
                     extracted_data["delivery_date"] = parsed
                     break # Exit the loop once successfully parsed
         if not parsed:
