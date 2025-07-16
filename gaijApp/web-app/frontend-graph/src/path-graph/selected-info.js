@@ -50,6 +50,49 @@ export class SelectedInfo extends Component {
           secondCol: String(props[k])
         }));
 
+      const formatPropsRF = keys => {
+        const used = new Set();
+        const rows = [];
+
+        keys.forEach(k => {
+          if (used.has(k)) return;
+          used.add(k);
+
+          const value = String(props[k]);
+
+          // Handle flag + details combo
+          if (k.endsWith('_flag')) {
+            const base = k.slice(0, -5); // remove "_flag"
+            const detailKey = `${base}_details`;
+
+            let label = toTitleCase(base);
+            let detail = props[detailKey];
+
+            if (detailKey in props) used.add(detailKey);
+
+            rows.push({
+              firstCol: `${label} Flag`,
+              secondCol: value
+            });
+
+            if (detail) {
+              rows.push({
+                firstCol: `${label} Details`,
+                secondCol: String(detail)
+              });
+            }
+          } else if (!k.endsWith('_details')) {
+            rows.push({
+              firstCol: toTitleCase(k),
+              secondCol: value
+            });
+          }
+        });
+
+        return rows;
+      };
+
+            
       if (taxKeys.some(k => k in props))
         fields.push({ section: 'Company Info from tax record', fields: formatProps(taxKeys) });
 
@@ -57,7 +100,7 @@ export class SelectedInfo extends Component {
         fields.push({ section: 'External Info', fields: formatProps(externalKeys) });
 
       if (redFlagKeys.length)
-        fields.push({ section: 'Red Flags', fields: formatProps(redFlagKeys) });
+        fields.push({ section: 'Red Flags', fields: formatPropsRF(redFlagKeys) });
     }
 
     return fields;
