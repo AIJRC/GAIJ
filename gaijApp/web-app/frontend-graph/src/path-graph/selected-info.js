@@ -50,6 +50,57 @@ export class SelectedInfo extends Component {
           secondCol: String(props[k])
         }));
 
+      const formatPropsRF = keys => {
+        const used = new Set();
+        const trueRows = [];
+        const neutralRows = [];
+        const falseRows = [];
+
+        keys.forEach(k => {
+          if (used.has(k) || k === 'version_control') return;
+          used.add(k);
+
+          const value = props[k];
+          const strVal = String(value);
+
+          if (k.endsWith('_flag')) {
+            const base = k.slice(0, -5);
+            const detailKey = `${base}_details`;
+            const label = toTitleCase(base);
+
+            const flagRow = {
+              firstCol: `${label} Flag`,
+              secondCol: strVal
+            };
+
+            const detailRow = props[detailKey]
+              ? { firstCol: `${label} Details`, secondCol: String(props[detailKey]) }
+              : null;
+
+            used.add(detailKey);
+
+            if (strVal === 'true') {
+              trueRows.push(flagRow);
+              if (detailRow) trueRows.push(detailRow);
+            } else {
+              falseRows.push(flagRow);
+              if (detailRow) falseRows.push(detailRow);
+            }
+
+          } else if (!k.endsWith('_details')) {
+            neutralRows.push({
+              firstCol: toTitleCase(k),
+              secondCol: strVal
+            });
+          }
+        });
+
+        return [...trueRows, ...neutralRows, ...falseRows];
+      };
+
+
+
+            
       if (taxKeys.some(k => k in props))
         fields.push({ section: 'Company Info from tax record', fields: formatProps(taxKeys) });
 
@@ -57,7 +108,7 @@ export class SelectedInfo extends Component {
         fields.push({ section: 'External Info', fields: formatProps(externalKeys) });
 
       if (redFlagKeys.length)
-        fields.push({ section: 'Red Flags', fields: formatProps(redFlagKeys) });
+        fields.push({ section: 'Red Flags', fields: formatPropsRF(redFlagKeys) });
     }
 
     return fields;
