@@ -53,32 +53,33 @@ export class SelectedInfo extends Component {
       const formatPropsRF = keys => {
         const used = new Set();
         const trueRows = [];
+        const neutralRows = [];
         const falseRows = [];
 
         keys.forEach(k => {
           if (used.has(k) || k === 'version_control') return;
           used.add(k);
 
-          const value = String(props[k]);
+          const value = props[k];
+          const strVal = String(value);
 
           if (k.endsWith('_flag')) {
             const base = k.slice(0, -5);
             const detailKey = `${base}_details`;
             const label = toTitleCase(base);
 
-            if (detailKey in props) used.add(detailKey);
-            const detail = props[detailKey];
-
             const flagRow = {
               firstCol: `${label} Flag`,
-              secondCol: value
+              secondCol: strVal
             };
 
-            const detailRow = detail
-              ? { firstCol: `${label} Details`, secondCol: String(detail) }
+            const detailRow = props[detailKey]
+              ? { firstCol: `${label} Details`, secondCol: String(props[detailKey]) }
               : null;
 
-            if (value === 'true') {
+            used.add(detailKey);
+
+            if (strVal === 'true') {
               trueRows.push(flagRow);
               if (detailRow) trueRows.push(detailRow);
             } else {
@@ -87,14 +88,16 @@ export class SelectedInfo extends Component {
             }
 
           } else if (!k.endsWith('_details')) {
-            const row = { firstCol: toTitleCase(k), secondCol: value };
-            if (value === 'true') trueRows.push(row);
-            else falseRows.push(row);
+            neutralRows.push({
+              firstCol: toTitleCase(k),
+              secondCol: strVal
+            });
           }
         });
 
-        return [...trueRows, ...falseRows];
+        return [...trueRows, ...neutralRows, ...falseRows];
       };
+
 
 
             
