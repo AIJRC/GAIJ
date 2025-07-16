@@ -52,45 +52,50 @@ export class SelectedInfo extends Component {
 
       const formatPropsRF = keys => {
         const used = new Set();
-        const rows = [];
+        const trueRows = [];
+        const falseRows = [];
 
         keys.forEach(k => {
-          if (used.has(k)) return;
+          if (used.has(k) || k === 'version_control') return;
           used.add(k);
 
           const value = String(props[k]);
 
-          // Handle flag + details combo
           if (k.endsWith('_flag')) {
-            const base = k.slice(0, -5); // remove "_flag"
+            const base = k.slice(0, -5);
             const detailKey = `${base}_details`;
-
-            let label = toTitleCase(base);
-            let detail = props[detailKey];
+            const label = toTitleCase(base);
 
             if (detailKey in props) used.add(detailKey);
+            const detail = props[detailKey];
 
-            rows.push({
+            const flagRow = {
               firstCol: `${label} Flag`,
               secondCol: value
-            });
+            };
 
-            if (detail) {
-              rows.push({
-                firstCol: `${label} Details`,
-                secondCol: String(detail)
-              });
+            const detailRow = detail
+              ? { firstCol: `${label} Details`, secondCol: String(detail) }
+              : null;
+
+            if (value === 'true') {
+              trueRows.push(flagRow);
+              if (detailRow) trueRows.push(detailRow);
+            } else {
+              falseRows.push(flagRow);
+              if (detailRow) falseRows.push(detailRow);
             }
+
           } else if (!k.endsWith('_details')) {
-            rows.push({
-              firstCol: toTitleCase(k),
-              secondCol: value
-            });
+            const row = { firstCol: toTitleCase(k), secondCol: value };
+            if (value === 'true') trueRows.push(row);
+            else falseRows.push(row);
           }
         });
 
-        return rows;
+        return [...trueRows, ...falseRows];
       };
+
 
             
       if (taxKeys.some(k => k in props))
