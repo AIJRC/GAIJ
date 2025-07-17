@@ -60,18 +60,17 @@ def load_markdown_notes(markdown_root):
 
         notes = {}
         for match in re.finditer(
-            r'(Note\s+(\d+)\s*[-–]?\s*(.*?))\n(.+?)(?=(?:\nNote\s+\d+\s*[-–]?|\Z))',
+            r'(Note\s+(\d+)\s*[-–]?\s*(.*?))\n(.{1,1000})',
             content,
             re.DOTALL
         ):
             _, note_num, title, body = match.groups()
-            body = body.strip()
-            clipped = body.split('\n\n')[0].replace('\n', ' ').strip()
-            clipped = clipped[:300].rstrip() + ('...' if len(clipped) >= 300 else '')
-            notes[note_num] = f"{title.strip()}: {clipped}" if title else clipped
+            body = body[:1000].strip() + ('...' if len(body) > 1000 else '')
+            notes[note_num] = f"{title.strip()}: {body}" if title else body
 
         notes_by_id[org_id] = notes
     return notes_by_id
+
 
 
 def load_company_jsons(base_path):
