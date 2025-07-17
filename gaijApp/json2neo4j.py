@@ -51,7 +51,7 @@ def load_markdown_notes(markdown_root):
         if len(file.relative_to(markdown_root).parts) > 2:
             continue  # Limit to 2 levels deep
 
-        org_match = re.match(r'^(\d{9})\b', file.stem)
+        org_match = re.match(r'^(\d{9})', file.stem)
         if not org_match:
             continue
         org_id = org_match.group(1)
