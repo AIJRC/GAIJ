@@ -137,6 +137,8 @@ web-app/.venv-web-app
 .vscode
 **/node_modules/
 **/.DS_STORE
+**/.DS_Store
+gaijApp/.DS_Store
 
 gaijApp/web-app/frontend-graph/node_modules
 gaijApp/web-app/frontend-graph/package-lock.json

@@ -2,6 +2,7 @@ from neo4j import GraphDatabase
 import json
 import os
 import argparse
+import re
 from pathlib import Path
 from tqdm import tqdm
 from collections import defaultdict
@@ -42,6 +43,37 @@ class Neo4jConnector:
         set r.kind = $rel_kind
         """
         return tx.run(query, from_id=from_id, to_name=to_name, rel_kind=rel_kind)
+
+
+def load_markdown_notes(markdown_root):
+    notes_by_id = {}
+    for file in Path(markdown_root).rglob("*.md"):
+        if len(file.relative_to(markdown_root).parts) > 2:
+            continue  # Limit to 2 levels deep
+
+        org_match = re.match(r'^(\d{9})', file.stem)
+        if not org_match:
+            continue
+        org_id = org_match.group(1)
+        with open(file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        notes = {}
+        for match in re.finditer(
+            r'(Note\s+(\d+)\s*[-–]?\s*(.*?))\n(.{1,1000})(?=(?:\nNote\s+\d+\s*[-–]?|\Z))',
+            content,
+            re.DOTALL
+        ):
+            _, note_num, title, body = match.groups()
+            body = body.strip()
+            if len(body) > 1000:
+                body = body[:1000].strip() + '...'  # Ensure 1000 characters and add ellipsis if needed
+            notes[note_num] = f"{title.strip()}: {body}" if title else body
+
+        notes_by_id[org_id] = notes
+    return notes_by_id
+
+
 
 def load_company_jsons(base_path):
     folders = ['external', 'llama', 'red_flags']
@@ -122,7 +154,7 @@ def split_and_assign(parts):
             }
         return None
 
-def extract_red_flag_data(red_flags_dict):
+def extract_red_flag_data(red_flags_dict, company_id=None, note_lookup=None):
     """Helper function to extract structured data from the red_flags dictionary."""
     extracted_data = {}
 
@@ -138,7 +170,17 @@ def extract_red_flag_data(red_flags_dict):
         for sub_item_key in sub_items:
             sub_item_data = category_data.get(sub_item_key, {})
             extracted_data[f"{category_key}.{sub_item_key}.flag"] = parse_flag(sub_item_data.get("flag"))
-            extracted_data[f"{category_key}.{sub_item_key}.details"] = sub_item_data.get("details")
+
+            details = sub_item_data.get("details")
+            if isinstance(details, str) and 'note' in details.lower():
+                note_num_match = re.search(r'note\s*(\d+)', details.lower())
+                if note_num_match and company_id and note_lookup:
+                    note_num = note_num_match.group(1)
+                    note_text = note_lookup.get(company_id, {}).get(note_num)
+                    if note_text:
+                        details += f" | {note_text}"
+
+            extracted_data[f"{category_key}.{sub_item_key}.details"] = details
 
     # Handle direct mappings
     direct_mappings = {
@@ -230,7 +272,7 @@ def extract_red_flag_data(red_flags_dict):
     return extracted_data
 
 
-def populate_graph_from_directory(directory_path, neo4j):
+def populate_graph_from_directory(directory_path, neo4j, note_lookup):
     companies_data = load_company_jsons(directory_path)
 
     with neo4j.driver.session() as session:
@@ -292,7 +334,7 @@ def populate_graph_from_directory(directory_path, neo4j):
                 }))
             
             if red_flags:
-                extracted_rf_data = extract_red_flag_data(red_flags)
+                extracted_rf_data = extract_red_flag_data(red_flags, company_id, note_lookup)
                 base_data.update(flatten_keys(extracted_rf_data))
 
             session.execute_write(neo4j.create_company, base_data)
@@ -318,7 +360,8 @@ def main():
     args = parse_args()
     neo4j = Neo4jConnector()
     try:
-        populate_graph_from_directory(args.data_dir, neo4j)
+        markdown_notes = load_markdown_notes(os.path.expanduser('~/data/markdowns'))
+        populate_graph_from_directory(args.data_dir, neo4j, markdown_notes)
         print("Knowledge graph populated successfully!")
     finally:
         neo4j.close()

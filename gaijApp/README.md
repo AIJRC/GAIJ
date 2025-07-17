@@ -79,14 +79,65 @@ Currently the GAIJ system extracts the following company properties:
 
 # Instructions
 
+## Accessing Neo4j Console
 
-on the server you can access the neo4j database console with
+On the server, you can access the Neo4j database console using:
 
-`sudo docker exec -it neo4j cypher-shell -u neo4j -p testtest`
+```bash
+sudo docker exec -it neo4j cypher-shell -u neo4j -p testtest
+```
 
-Now you can look for the file `cypher_commands_query_db.md` for some examples
+Once connected, you can manually query the database. See the file `cypher_commands_query_db.md` for query examples.
 
-## json2neo4j.py
+---
 
-run this command to import all jsons available into the neo4j database. This assumes there is a docker container running called neo4j
+## Importing JSON Files into Neo4j
 
+The script `json2neo4j.py` will scan a directory of JSON files and populate the Neo4j database.
+
+### Step-by-Step
+
+1. **Ensure the Neo4j Docker container is running** and is named `neo4j`.
+
+2. **Prepare your data directory** so that it includes the following subfolders:
+    - `external/`
+    - `llama/`
+    - `red_flags/`
+
+3. **Run the import script**:
+
+```bash
+python3 json2neo4j.py --data-dir ~/data/jsons/
+```
+
+Replace `/path/to/your/data` with the full path to the folder containing the JSON subdirectories.
+
+---
+
+## (Optional) Wipe the Database Before Importing
+
+If you want to start with a clean database (e.g., for testing or to avoid stale data), you can wipe it before importing:
+
+1. **Access Neo4j shell**:
+
+```bash
+sudo docker exec -it neo4j cypher-shell -u neo4j -p testtest
+```
+
+2. **Run this command to delete all nodes and relationships**:
+
+```cypher
+MATCH (n)
+WITH n LIMIT 100000
+DETACH DELETE n;
+```
+repeat until no durther data is available
+
+**Warning:** This will completely erase all data in the graph.
+
+---
+
+## Notes
+
+- The script uses `MERGE` to avoid creating duplicate nodes and relationships.
+- Running the script multiple times **will update existing data** but **won’t remove properties** that have been removed from the source files. Use the wipe step above for a clean refresh.
