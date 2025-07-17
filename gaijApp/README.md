@@ -128,7 +128,7 @@ sudo docker exec -it neo4j cypher-shell -u neo4j -p testtest
 
 ```cypher
 MATCH (n)
-WITH n LIMIT 10000
+WITH n LIMIT 100000
 DETACH DELETE n;
 ```
 repeat until no durther data is available
