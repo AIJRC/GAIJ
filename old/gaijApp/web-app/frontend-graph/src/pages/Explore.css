@@ -1,0 +1,142 @@
+.explore-container {
+  max-width: 100%;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.explore-container h1 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.explore-container p {
+  text-align: justify;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* Main three-panel layout */
+.explore-layout {
+  display: flex;
+  height: calc(100vh - 100px); /* Account for container padding and margins */
+  width: 100%;
+  overflow: hidden;
+  position: relative; /* For absolute positioning of the toggle button */
+}
+
+/* Left Sidebar - Filtering Options */
+.explore-left-sidebar {
+  width: 350px;
+  min-width: 350px;
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding-left: 15px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+}
+
+/* Hidden sidebar state */
+.explore-left-sidebar.hidden {
+  transform: translateX(-100%);
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Sidebar toggle button */
+.sidebar-toggle-btn {
+  position: absolute;
+  z-index: 100;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 60px;
+}
+
+/* Left sidebar toggle button */
+.left-sidebar-toggle {
+  left: 365px; /* Position at the edge of the sidebar */
+  top: 5%;
+  transform: translateY(-50%);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Right sidebar toggle button */
+.right-sidebar-toggle {
+  right: 380px; /* Position at the edge of the sidebar */
+  top: 5%;
+  transform: translateY(-50%);
+  border-radius: 4px 0 0 4px;
+}
+
+/* Toggle button position when left sidebar is hidden */
+.explore-left-sidebar.hidden + .left-sidebar-toggle {
+  left: 0;
+}
+
+/* Toggle button position when right sidebar is hidden */
+.explore-right-sidebar.hidden ~ .right-sidebar-toggle {
+  right: 0;
+}
+
+/* Central Pane - Graph and Search */
+.explore-central-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Search Section */
+.explore-search-section {
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #ffffff;
+  z-index: 1;
+}
+
+/* Graph Section */
+.explore-graph-section {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Right Sidebar - Node Information */
+.explore-right-sidebar {
+  width: 350px;
+  min-width: 350px;
+  height: 100%;
+  overflow-y: auto;
+  border-left: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding: 15px;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+}
+
+/* Hidden right sidebar state */
+.explore-right-sidebar.hidden {
+  transform: translateX(100%);
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}

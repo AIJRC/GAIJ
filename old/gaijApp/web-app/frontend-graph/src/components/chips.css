@@ -1,0 +1,62 @@
+.metanode_chip {
+  display: inline-flex;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  max-width: 20px;
+  max-height: 20px;
+  margin-right: 5px;
+  border-radius: 15px;
+  justify-content: center;
+  align-items: center;
+}
+.metanode_chip > svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 20px;
+}
+.metaedge_chip {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 20px;
+  min-height: 20px;
+  max-height: 20px;
+  vertical-align: top;
+  position: relative;
+  color: #808080;
+}
+.metaedge_chip:after {
+  content: attr(data-abbreviation);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  left: 0;
+  top: -4px;
+  right: 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+.metaedge_chip > svg {
+  width: 15px;
+  height: 15px;
+  margin: 0 2px;
+}
+.node_chip {
+  display: inline-block;
+  width: 50px;
+  padding: 2px;
+  font-weight: 500;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.node_chip[data-expanded='true'] {
+  width: unset;
+}

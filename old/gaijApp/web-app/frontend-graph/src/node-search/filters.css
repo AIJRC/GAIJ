@@ -1,0 +1,6 @@
+.node_search_filters {
+  margin-bottom: 30px;
+}
+.node_search_filters > div:nth-child(2) {
+  margin: 10px 0 5px 0;
+}

@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+neo4j
+httpx
+jinja2
+python-multipart
+aiofiles

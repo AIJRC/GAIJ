@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path
+    fill="none"
+    stroke="currentColor"
+    stroke-width="10"
+    d="
+      M 10 50
+      L 80 50
+    "
+  ></path>
+  <path
+    fill="currentColor"
+    d="
+      M 60 30
+      L 90 50
+      L 60 70
+    "
+  ></path>
+</svg>
