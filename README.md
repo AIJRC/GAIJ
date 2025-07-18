@@ -1,31 +1,60 @@
-Modular pipeline to extract structured graphs from unstructured text and explore them via a web-based interface.
+# GAIJ Applied to Norwegian Company Networks
 
-# GAIJ - Norwegian Company Network Analyzer
+**GAIJ** is a modular pipeline that extracts structured graph data from unstructured data and visualizes it in an interactive web interface using a Neo4j graph database. It uses a combination of OCR, LLMs, and knowledge graph tools to process documents and populate the database.
 
-## Project Overview
-GAIJ is a web-based application that visualizes company relationships and properties using Neo4j graph database. The system extracts data from Norwegian tax records and presents interconnected company information in an interactive graph format.
+In this repo we showcase it with Norwegian tax records. GAIJ enables users to explore company relationships such as ownership, board membership, and subsidiaries. 
 
 ## Features
-### Data Properties
-Currently the GAIJ system extracts the following company properties:
-- Company Name (Firmanavn)
-- Tax Number (Organisasjonsnummer)
-- Parent Company (Morselskap)
-- Subsidiary Companies (Datterselskaper)
-- Address (Adresse)
-- Board Members and Shareholders (Styremedlemmer og Aksjeeiere)
-- Company Type (Organisasjonsform)
+
+- Extracts:
+  - Company name (Firmanavn)
+  - Tax ID (Organisasjonsnummer)
+  - Parent and subsidiary links
+  - Board members and shareholders
+  - Company address
+  - Company type
+- Modular components: OCR → LLM → Neo4j → Web App
+- Web-based interactive graph viewer
+- Configurable via environment variables
 
 
-## Technical Requirements
+## Architecture
+
+The system is built as a pipeline:
+
+```
+DATA → OCR → LLM → JSON → Neo4j → WebApp
+```
+
+Each stage is modular and can be run independently. See [`docs/architecture.md`](docs/architecture.md) for full details.
+
+
+## Installation
+
+1. **Configure environment**  
+   See [`docs/config_setup.md`](docs/config_setup.md) to set up your `.env` file.
+
+2. **Start services**  
+   Refer to [`docs/usage_guide.md`](docs/usage_guide.md) for running the pipeline and launching the app.
+
+
+## Requirements
+
+- Python 3.11+
 - Neo4j database
-- Web server
-- LLM integration
-- Graph visualization library
+- OCR tool (e.g., Tesseract)
+- LLM service or local model
+- Modern web browser (for frontend)
 
 
+## Documentation
 
-# Instructions
+- [`docs/architecture.md`](docs/architecture.md) – System overview
+- [`docs/usage_guide.md`](docs/usage_guide.md) – How to run the pipeline
+- [`docs/config_setup.md`](docs/config_setup.md) – Setting up environment variables
+
+
+# Miscellaneous Instructions
 
 ## Accessing Neo4j Console
 
@@ -58,7 +87,6 @@ The script `json2neo4j.py` will scan a directory of JSON files and populate the 
 python3 json2neo4j.py --data-dir ~/data/jsons/
 ```
 
-Replace `/path/to/your/data` with the full path to the folder containing the JSON subdirectories.
 
 ---
 
