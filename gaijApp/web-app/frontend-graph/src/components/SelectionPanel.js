@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styles from './SelectionPanel.module.css';
-import { processUserSelection } from '../backend-queries.js';
+import { processUserSelection,get_userFilters } from '../backend-queries.js';
 import { setPaths } from '../path-graph/actions.js';
 
 const SelectionPanel = ({ onSubmit }) => {
@@ -116,7 +116,8 @@ const SelectionPanel = ({ onSubmit }) => {
         console.log('Submitted selections:', userSelections);
 
         try {
-            const graphData = await processUserSelection(userSelections);
+            const allowedRelationships = await get_userFilters(userSelections);
+            const graphData = await processUserSelection(userSelections,allowedRelationships);
             console.log('Graph Data:', graphData);
             
             if (graphData && graphData.nodes.length > 0) {
@@ -307,13 +308,13 @@ const SelectionPanel = ({ onSubmit }) => {
                             }}
                         >
                             {[
-                                'kompensasjon', 'sluttavtale', 'oppsigelsesdato',
+                                'any','kompensasjon', 'sluttavtale', 'oppsigelsesdato',
                                 'oppsigelse', 'sluttdato', 'opphør', 'trukket', 'etterlønn',
-                                'bonus', 'variabel_lønn', 'resultatbasert', 'milepæl',
-                                'etterbetaling', 'etterbetalt', 'privatlån', 'private_lån',
+                                'bonus', 'variabel lønn', 'resultatbasert', 'milepæl',
+                                'etterbetaling', 'etterbetalt', 'privatlån', 'private lån',
                                 'selgerkreditt', 'interntransaksjon', 'diskresjonær',
-                                'låneforfall', 'forfalt', 'ubetalt', 'solgt_aksjer',
-                                'covid', 'covid-19', 'Kjell_Inge_Røkke'
+                                'låneforfall', 'forfalt', 'ubetalt', 'solgt aksjer',
+                                'covid', 'covid-19', 'Kjell Inge Røkke'
                             ].map(word => (
                                 <option key={word} value={word}>
                                     {word.replace('_', ' ')}
