@@ -17,6 +17,7 @@
   text-align: justify;
   font-size: 18px;
   line-height: 1.6;
+  overflow: auto;
 }
 
 /* Main three-panel layout */
@@ -24,7 +25,7 @@
   display: flex;
   height: calc(100vh - 100px); /* Account for container padding and margins */
   width: 100%;
-  overflow: hidden;
+  overflow: auto;
   position: relative; /* For absolute positioning of the toggle button */
 }
 
@@ -70,6 +71,23 @@
   height: 60px;
 }
 
+/* Top Bar - Filters Section */
+.explore-top-bar {
+  overflow: hidden;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+  max-height: 500px; /* Adjust depending on actual height */
+  padding: 15px;
+}
+
+/* Collapsed state */
+.explore-top-bar.hidden {
+  max-height: 0;
+  padding: 0;
+  border-bottom: none;
+}
+
 /* Left sidebar toggle button */
 .left-sidebar-toggle {
   left: 365px; /* Position at the edge of the sidebar */
@@ -97,7 +115,7 @@
 }
 
 /* Central Pane - Graph and Search */
-.explore-central-pane {
+.explore-central-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -118,6 +136,7 @@
   flex: 1;
   position: relative;
   overflow: hidden;
+  height: 600px;
 }
 
 /* Right Sidebar - Node Information */

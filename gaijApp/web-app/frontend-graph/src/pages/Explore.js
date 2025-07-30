@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
 import SelectionPanel from '../components/SelectionPanel';
+import FilterPanel from '../node-search/filters';
 import "./Explore.css"; // Import CSS
 
 import { NodeSearch } from "../node-search";
@@ -10,20 +11,21 @@ import { SelectedInfo } from "../path-graph/selected-info.js"; // Import Selecte
 
 const Explore = ({ sourceNode, isPathsLoading }) => {
   const shouldRenderResults = sourceNode?.id && !isPathsLoading;
-  
+
   // State to track selected and hovered elements from the graph
   const [selectedElement, setSelectedElement] = useState(null);
   const [hoveredElement, setHoveredElement] = useState(null);
   // State to track sidebar visibility
   const [leftSidebarVisible, setLeftSidebarVisible] = useState(true);
   const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
+  const [topBarVisible, setTopBarVisible] = useState(true);
 
   const handleSelectionsSubmit = (selections) => {
     console.log('User selections:', selections);
-    // Here you can:
-    // 1. Dispatch Redux actions with the selections
-    // 2. Pass selections to your graph components
-    // 3. Filter/process your data based on selections
+  };
+
+  const handleFiltersSubmit = (select_filters) => {
+    console.log('User filters:', select_filters);
   };
 
   // Toggle left sidebar visibility
@@ -36,6 +38,11 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
     setRightSidebarVisible(!rightSidebarVisible);
   };
 
+  // Toggle top bar visibility
+  const toggletopBar = () => {
+    setTopBarVisible(!topBarVisible);
+  };
+
   return (
     <div className="explore-container">
       {/* Main three-panel layout */}
@@ -46,50 +53,59 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
         </div>
 
         {/* Toggle Button for Left Sidebar */}
-        <button 
-          className="sidebar-toggle-btn left-sidebar-toggle" 
-          onClick={toggleLeftSidebar} 
+        <button
+          className="sidebar-toggle-btn left-sidebar-toggle"
+          onClick={toggleLeftSidebar}
           title={leftSidebarVisible ? "Hide Filters" : "Show Filters"}
         >
           {leftSidebarVisible ? '◀' : '▶'}
         </button>
 
         {/* Central Pane - Graph and Search */}
-        <div className="explore-central-pane">
-          {/* Search Section */}
-          <div className="explore-search-section">
-            <NodeSearch />
+        <div className="explore-search-section">
+          <NodeSearch />
+          <div className={`explore-top-bar ${topBarVisible ? '' : 'hidden'}`}>
+            <FilterPanel onSubmit={handleFiltersSubmit} />
           </div>
-          
+          <button
+            className="topbar-toggle-btn"
+            onClick={toggletopBar}
+            title={topBarVisible ? "Hide Top Filters" : "Show Top Filters"}
+          >
+            {topBarVisible ? '▲' : '▼'}
+          </button>
+
+
+
           {/* Graph Section */}
           <div className="explore-graph-section">
-            <PathGraph 
+            <PathGraph
               onElementSelect={setSelectedElement}
               onElementHover={setHoveredElement}
             />
           </div>
         </div>
-
-        {/* Right Sidebar - Node Information */}
-        <div className={`explore-right-sidebar ${rightSidebarVisible ? '' : 'hidden'}`}>
-          {shouldRenderResults && <NodeResults />}
-          <div className="graph-info-wrapper">
-            <SelectedInfo 
-              selectedElement={selectedElement}
-              hoveredElement={hoveredElement}
-            />
-          </div>
-        </div>
-
-        {/* Toggle Button for Right Sidebar */}
-        <button 
-          className="sidebar-toggle-btn right-sidebar-toggle" 
-          onClick={toggleRightSidebar} 
-          title={rightSidebarVisible ? "Hide Info Panel" : "Show Info Panel"}
-        >
-          {rightSidebarVisible ? '▶' : '◀'}
-        </button>
       </div>
+
+      {/* Right Sidebar - Node Information */}
+      <div className={`explore-right-sidebar ${rightSidebarVisible ? '' : 'hidden'}`}>
+        {shouldRenderResults && <NodeResults />}
+        <div className="graph-info-wrapper">
+          <SelectedInfo
+            selectedElement={selectedElement}
+            hoveredElement={hoveredElement}
+          />
+        </div>
+      </div>
+
+      {/* Toggle Button for Right Sidebar */}
+      <button
+        className="sidebar-toggle-btn right-sidebar-toggle"
+        onClick={toggleRightSidebar}
+        title={rightSidebarVisible ? "Hide Info Panel" : "Show Info Panel"}
+      >
+        {rightSidebarVisible ? '▶' : '◀'}
+      </button>
     </div>
   );
 };
