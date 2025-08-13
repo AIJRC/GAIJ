@@ -57,40 +57,10 @@ function processGraphResults(records, getNodesAndRelationships) {
   return graph;
 }
 
-// Utility function to process Neo4j results into graph data Including only allowed relationships 
-function processGraphResults_v2(records, getNodesAndRelationships, allowedRelationships = null) {
-  const graph = {
-    nodes: [],
-    edges: []
-  };
-
-  const nodesMap = new Map();
-
-  records.forEach(record => {
-    const { nodes, relationships } = getNodesAndRelationships(record);
-
-    // Add nodes to map if not already present
-    nodes.forEach(node => {
-      if (!nodesMap.has(node.identity.toNumber())) {
-        nodesMap.set(node.identity.toNumber(), createNodeObject(node));
-      }
-    });
-
-    // Add edges (filter by allowed relationships if specified)
-    relationships.forEach(rel => {
-      if (!allowedRelationships || allowedRelationships.includes(rel.relationship.type)) {
-        graph.edges.push(createEdgeObject(rel.source, rel.target, rel.relationship));
-      }
-    });
-  });
-
-  graph.nodes = Array.from(nodesMap.values());
-  return graph;
-}
 
 // Utility function to transform the user selection into a query
 
-export async function processUserSelection(userSelections,allowedRelationships) {
+export async function processUserSelection(userSelections) {
 
   const session = driver.session();
   // information outlet for the graph ( relationship sufix)
@@ -128,7 +98,7 @@ export async function processUserSelection(userSelections,allowedRelationships) 
       filters += `
   WHERE c.delivery_date_month = '${monthIndex.toString().padStart(2, '0')}'`
     }
-    console.log(typeof(String(monthIndex.toString().padStart(2, '0'))))
+    console.log(typeof (String(monthIndex.toString().padStart(2, '0'))))
   }
   // Filter: Keyword 
   if (userSelections.keyword.enabled) {
@@ -138,21 +108,21 @@ export async function processUserSelection(userSelections,allowedRelationships) 
       if (keyword.toString() === 'any') {
         filters += `
   AND c.flagged_words_flag = 'true'`}
-        else {
+      else {
         filters += `
   AND '${keyword.toString()}' in c.flagged_words_word `
-  }
-}
+      }
+    }
     else {
       if (keyword.toString() === 'any') {
         filters += `
   WHERE c.flagged_words_flag = 'true'`}
-        else {
+      else {
         filters += `
   WHERE '${keyword.toString()}' in c.flagged_words_word`
+      }
     }
   }
-}
 
   // Filters ( True - False)
   const handles = ["finance_unclear_instruments_flag", "finance_hidden_leasing_flag", "finance_guarantee_flag", "finance_balance_values_flag", "finance_dependency_flag",
@@ -195,36 +165,11 @@ export async function processUserSelection(userSelections,allowedRelationships) 
 
   //console.log(filters)
 
- 
+
   // Sorting 
   if (userSelections.sortBy === 'TopCompaniesButton') {
-    /*
-    // loop through the info outlet 
-    let text_1 = "";
-    let text_2 = "";
-    let text_3 = `RETURN DISTINCT n, `;
-    for (let i in sufix) {
-      text_1 = ` 
-    MATCH (c:Company)-[:PARENT_OF${sufix[i]}]->(sub:Company)`
-      text_2 =  
-    `MATCH path${sufix[i]} = (c)-[:PARENT_OF${sufix[i]}]->(sub:Company)
-    UNWIND relationships(path${sufix[i]}) as rel${sufix[i]}
-    MATCH (n)-[rel${sufix[i]}]->(m)`
-      text_3 += ` rel${sufix[i]}, `
-    }
-    text_3+= `m`
-    var query = `
-      ${text_1}
-    WITH c, count(sub) as subsidiary_count
-    ORDER BY subsidiary_count DESC
-    LIMIT ${nodes}
-    WITH collect(c) as companies
-    UNWIND companies as c
-      ${text_2}
-      ${text_3}
-    `; */
     try {
-     var  query = `
+      var query = `
   MATCH (c:Company)-[:PARENT_OF${sufix}]->(sub:Company)
   ${filters}
   WITH c, count(sub) as subsidiary_count
@@ -239,14 +184,14 @@ export async function processUserSelection(userSelections,allowedRelationships) 
     `;
       console.log(query)
       const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => ({
+      return processGraphResults(result.records, record => ({
         nodes: [record.get('n'), record.get('m')],
         relationships: [{
           source: record.get('n'),
           target: record.get('m'),
           relationship: record.get('rel')
         }]
-      }),allowedRelationships);
+      }));
     } catch (error) {
       console.error('Error getting top companies:', error);
       return null;
@@ -265,9 +210,9 @@ export async function processUserSelection(userSelections,allowedRelationships) 
   MATCH path = (c:Company)-[:LED_BY${sufix}]->(p)
   WHERE c IN companies
   RETURN path`;
-      
+
       const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => {
+      return processGraphResults(result.records, record => {
         const path = record.get('path');
         const segments = path.segments;
         const nodes = [];
@@ -283,7 +228,7 @@ export async function processUserSelection(userSelections,allowedRelationships) 
         });
 
         return { nodes, relationships };
-      },allowedRelationships);
+      });
     } catch (error) {
       console.error('Error getting top board members:', error);
       return null;
@@ -291,9 +236,9 @@ export async function processUserSelection(userSelections,allowedRelationships) 
       await session.close();
     }
 
-} else if (userSelections.sortBy === 'TopCompaniesMentionButton') {
-  try {
-    query = `
+  } else if (userSelections.sortBy === 'TopCompaniesMentionButton') {
+    try {
+      query = `
   MATCH (c:Company)-[:mentioned]->(sub:Company)
   ${filters}
   WITH c, count(sub) as subsidiary_count
@@ -307,15 +252,15 @@ export async function processUserSelection(userSelections,allowedRelationships) 
   RETURN DISTINCT n, rel, m
     `;
 
-    const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => ({
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
         nodes: [record.get('n'), record.get('m')],
         relationships: [{
           source: record.get('n'),
           target: record.get('m'),
           relationship: record.get('rel')
         }]
-      }),allowedRelationships);
+      }));
     } catch (error) {
       console.error('Error getting top mentioned companies:', error);
       return null;
@@ -323,9 +268,9 @@ export async function processUserSelection(userSelections,allowedRelationships) 
       await session.close();
     }
 
-} else if (userSelections.sortBy === 'TopAddressesButton') {
-  try {
-    query = `
+  } else if (userSelections.sortBy === 'TopAddressesButton') {
+    try {
+      query = `
   MATCH (c:Company)-[:LOCATED_AT${sufix}]->(a:Address)
   ${filters}
   WITH a, count(c) as company_count, collect(c) as companies
@@ -336,44 +281,8 @@ export async function processUserSelection(userSelections,allowedRelationships) 
   WHERE c IN companies
   RETURN path
     `;
-    const result = await session.run(query);
-    return processGraphResults_v2(result.records, record => {
-      const path = record.get('path');
-      const segments = path.segments;
-      const nodes = [];
-      const relationships = [];
-
-      segments.forEach(segment => {
-        nodes.push(segment.start, segment.end);
-        relationships.push({
-          source: segment.start,
-          target: segment.end,
-          relationship: segment.relationship
-        });
-      });
-
-      return { nodes, relationships };
-    },allowedRelationships);
-  } catch (error) {
-    console.error('Error getting top shared addresses:', error);
-    return null;
-  } finally {
-    await session.close();
-  }
-
-} else if (userSelections.sortBy === 'TopAuditorButton') {
-  try {
-    query = `
-  MATCH (c:Company)-[:auditor${sufix}]->(d:Auditor)
-  ${filters}
-  WITH d, count(c) as company_count, collect(c) as companies
-  ORDER BY company_count DESC
-  LIMIT ${nodes}
-  MATCH path = (c:Company)-[:auditor${sufix}]->(d)
-  WHERE c IN companies
-  RETURN path`;
-  const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => {
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => {
         const path = record.get('path');
         const segments = path.segments;
         const nodes = [];
@@ -389,16 +298,52 @@ export async function processUserSelection(userSelections,allowedRelationships) 
         });
 
         return { nodes, relationships };
-      },allowedRelationships);
+      });
+    } catch (error) {
+      console.error('Error getting top shared addresses:', error);
+      return null;
+    } finally {
+      await session.close();
+    }
+
+  } else if (userSelections.sortBy === 'TopAuditorButton') {
+    try {
+      query = `
+  MATCH (c:Company)-[:auditor${sufix}]->(d:Auditor)
+  ${filters}
+  WITH d, count(c) as company_count, collect(c) as companies
+  ORDER BY company_count DESC
+  LIMIT ${nodes}
+  MATCH path = (c:Company)-[:auditor${sufix}]->(d)
+  WHERE c IN companies
+  RETURN path`;
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => {
+        const path = record.get('path');
+        const segments = path.segments;
+        const nodes = [];
+        const relationships = [];
+
+        segments.forEach(segment => {
+          nodes.push(segment.start, segment.end);
+          relationships.push({
+            source: segment.start,
+            target: segment.end,
+            relationship: segment.relationship
+          });
+        });
+
+        return { nodes, relationships };
+      });
     } catch (error) {
       console.error('Error getting top auditor:', error);
       return null;
     } finally {
       await session.close();
     }
-} else if (userSelections.sortBy === 'SharedLeadershipButton') {
-  try {
-    query = `
+  } else if (userSelections.sortBy === 'SharedLeadershipButton') {
+    try {
+      query = `
   MATCH (c1:Company)-[:LED_BY${sufix}]->(p)
   MATCH (c2:Company)-[:LED_BY${sufix}]->(p)
   WHERE c1 <> c2
@@ -406,25 +351,25 @@ export async function processUserSelection(userSelections,allowedRelationships) 
   RETURN DISTINCT p, c1, c2
   LIMIT ${nodes}
     `;
-    
-    const result = await session.run(query);
-    return processGraphResults_v2(result.records, record => ({
-      nodes: [record.get('p'), record.get('c1'), record.get('c2')],
-      relationships: [
-        { source: record.get('p'), target: record.get('c1'), relationship: { type: 'LED_BY' } },
-        { source: record.get('p'), target: record.get('c2'), relationship: { type: 'LED_BY' } }
-      ]
-    }),allowedRelationships);
-  } catch (error) {
-    console.error('Error getting shared leadership:', error);
-    throw error;
-  } finally {
-    await session.close();
-  }
 
-} else if (userSelections.sortBy === 'TopPeopleMentionButton') {
-  try {
-    query = `
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
+        nodes: [record.get('p'), record.get('c1'), record.get('c2')],
+        relationships: [
+          { source: record.get('p'), target: record.get('c1'), relationship: { type: 'LED_BY' } },
+          { source: record.get('p'), target: record.get('c2'), relationship: { type: 'LED_BY' } }
+        ]
+      }));
+    } catch (error) {
+      console.error('Error getting shared leadership:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+
+  } else if (userSelections.sortBy === 'TopPeopleMentionButton') {
+    try {
+      query = `
   MATCH (c:Company)-[:mentioned${sufix}]->(p:Person)
   ${filters}
   WITH c, count(p) as mentioned
@@ -438,15 +383,15 @@ export async function processUserSelection(userSelections,allowedRelationships) 
   RETURN DISTINCT n, rel, m
     `;
 
-    const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => ({
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
         nodes: [record.get('n'), record.get('m')],
         relationships: [{
           source: record.get('n'),
           target: record.get('m'),
           relationship: record.get('rel')
         }]
-      }),allowedRelationships);
+      }));
     } catch (error) {
       console.error('Error getting top mentioned people:', error);
       return null;
@@ -454,42 +399,42 @@ export async function processUserSelection(userSelections,allowedRelationships) 
       await session.close();
     }
 
-} else if (userSelections.sortBy === 'ParentSubsidiaryLeadershipButton') {
-  try {
-    /*
-    query = `
-  MATCH (person:Person)-[:LED_BY${sufix}]->(companyA:Company)-[:PARENT_OF${sufix}]->(companyB:Company),
-          (person)-[:LED_BY${sufix}]->(companyB)
-  WITH person, companyA, companyB
-  RETURN DISTINCT person, companyA, companyB
-  LIMIT ${nodes}
-    `; */
-    query = `
+  } else if (userSelections.sortBy === 'ParentSubsidiaryLeadershipButton') {
+    try {
+      /*
+      query = `
+    MATCH (person:Person)-[:LED_BY${sufix}]->(companyA:Company)-[:PARENT_OF${sufix}]->(companyB:Company),
+            (person)-[:LED_BY${sufix}]->(companyB)
+    WITH person, companyA, companyB
+    RETURN DISTINCT person, companyA, companyB
+    LIMIT ${nodes}
+      `; */
+      query = `
   MATCH (companyA:Company)-[:LED_BY${sufix}]->(person:Person),
           (companyB)-[:LED_BY${sufix}]->(person)
   WITH person, companyA, companyB
   RETURN DISTINCT person, companyA, companyB
   LIMIT ${nodes}
     `;
-    
-     const result = await session.run(query);
-    return processGraphResults_v2(result.records, record => ({
-      nodes: [record.get('person'), record.get('companyA'), record.get('companyB')],
-      relationships: [
-        { source: record.get('person'), target: record.get('companyA'), relationship: { type: 'LED_BY' } },
-        { source: record.get('person'), target: record.get('companyB'), relationship: { type: 'LED_BY' } },
-        { source: record.get('companyA'), target: record.get('companyB'), relationship: { type: 'PARENT_OF' } }
-      ]
-    }),allowedRelationships);
-  } catch (error) {
-    console.error('Error getting parent-subsidiary leadership:', error);
-    throw error;
-  } finally {
-    await session.close();
-  }
-} else if (userSelections.sortBy === 'CompaniesWithTwoSubsidiariesButton') {
-  try {
-    query = `
+
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
+        nodes: [record.get('person'), record.get('companyA'), record.get('companyB')],
+        relationships: [
+          { source: record.get('person'), target: record.get('companyA'), relationship: { type: 'LED_BY' } },
+          { source: record.get('person'), target: record.get('companyB'), relationship: { type: 'LED_BY' } },
+          { source: record.get('companyA'), target: record.get('companyB'), relationship: { type: 'PARENT_OF' } }
+        ]
+      }));
+    } catch (error) {
+      console.error('Error getting parent-subsidiary leadership:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  } else if (userSelections.sortBy === 'CompaniesWithTwoSubsidiariesButton') {
+    try {
+      query = `
   MATCH (parent:Company)-[:PARENT_OF${sufix}]->(sub1:Company)
   MATCH (parent)-[:PARENT_OF${sufix}]->(sub2:Company)
   WHERE sub1 <> sub2 OR sub1 = parent OR sub2 = parent
@@ -497,21 +442,21 @@ export async function processUserSelection(userSelections,allowedRelationships) 
   RETURN parent, sub1, sub2
   LIMIT ${nodes}
     `;
-    const result = await session.run(query);
-    return processGraphResults_v2(result.records, record => ({
-      nodes: [record.get('parent'), record.get('sub1'), record.get('sub2')],
-      relationships: [
-        { source: record.get('parent'), target: record.get('sub1'), relationship: { type: 'PARENT_OF' } },
-        { source: record.get('parent'), target: record.get('sub2'), relationship: { type: 'PARENT_OF' } }
-      ]
-    }),allowedRelationships);
-  } catch (error) {
-    console.error('Error getting companies with two subsidiaries:', error);
-    throw error;
-  } finally {
-    await session.close();
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
+        nodes: [record.get('parent'), record.get('sub1'), record.get('sub2')],
+        relationships: [
+          { source: record.get('parent'), target: record.get('sub1'), relationship: { type: 'PARENT_OF' } },
+          { source: record.get('parent'), target: record.get('sub2'), relationship: { type: 'PARENT_OF' } }
+        ]
+      }));
+    } catch (error) {
+      console.error('Error getting companies with two subsidiaries:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
   }
-}
 }
 
 
@@ -831,9 +776,15 @@ export async function getCompaniesWithTwoSubsidiaries() {
   }
 }
 
-export async function fetchNodeConnections(nodeId, nodeType) {
+export async function fetchNodeConnections(nodeId, userSelections) {
   const session = driver.session();
+
+  const relationships = userSelections.show_rels || [];// modify this 
+  const relFilter = relationships.length > 0
+    ? `WHERE type(r) IN ${JSON.stringify(relationships)}`
+    : "";
   try {
+    /*
     const query = `
       MATCH (n)-[r]->(m)
       WHERE id(n) = $nodeId
@@ -843,6 +794,13 @@ export async function fetchNodeConnections(nodeId, nodeType) {
       WHERE id(n) = $nodeId
       RETURN n, r, m, false as outgoing
     `;
+    */
+    const query = `
+    MATCH (n)-[r]-(m)
+    WHERE ID(n) = $nodeId
+    ${relFilter}
+    RETURN n, r, m
+  `;
 
     const result = await session.run(query, { nodeId: nodeId });
     return processGraphResults(result.records, record => {
@@ -900,27 +858,45 @@ export async function testConnection() {
   }
 }
 
-export async function get_userFilters(userFilters) {
-  console.log(userFilters.trueFalseAnswers)
-  // map user selection
-  const trueRels = Object.values(userFilters.trueFalseAnswers)
-  .filter(item => item.answer)
-  .map(item => item.question);
-  console.log(trueRels)
-  // create a map of the relationships 
-  const keys = ['located at','parent of','child of','mentioned','auditor']
-  const values = ['located_at','parent_of','child_of','mentioned','auditor']
-  
-  const map = {};
-        keys.forEach((key, index) => {
-        map[key] = values[index];
-        });
-  //const map = new Map([['located at','located_at'],['parent of','parent_of'],['child of','child_of'],['mentioned','mentioned'],['auditor','auditor']])
 
-  const allowedRelationships = trueRels.map(key =>map[key])
+export async function buildRelationshipFilter(userSelections, suffixes = []) {
+  const keyToValueMap = {
+    'located at': 'located_at',
+    'parent of': 'parent_of',
+    'child of': 'child_of',
+    'mentioned': 'mentioned',
+    'auditor': 'auditor'
+  };
+
+  const relationshipMap = {
+    'located_at': 'LOCATED_AT_',
+    'parent_of': 'PARENT_OF_',
+    'child_of': 'CHILD_OF_',
+    'mentioned': 'mentioned_',
+    'auditor': 'auditor_',
+    'led_by': 'LED_BY_'
+  };
+
+  // Step 1: extract answered relationships
+  const trueRels = Object.values(userSelections.show_rels || {})
+    .filter(item => item.answer)
+    .map(item => item.question);
+
+  // Step 2: map to internal relationship keys
+  const allowedRelationships = trueRels
+    .map(key => keyToValueMap[key])
+    .filter(Boolean);
+
+  // Step 3: build all suffix combinations into one flat array
   return allowedRelationships
-  
+    .flatMap(rel =>
+      suffixes.map(suffix => relationshipMap[rel] && `${relationshipMap[rel]}${suffix}`)
+    )
+    .filter(Boolean);
+
 }
+
+
 
 
 export async function get_userOptions(userSelections) {
@@ -949,16 +925,19 @@ export async function get_userOptions(userSelections) {
 
   // 2) Get Relationships to show 
   // map user selection
-  const trueRels = Object.values(userSelections.show_rels  || {})
-  .filter(item => item.answer)
-  .map(item => item.question);
-  
+  const trueRels = Object.values(userSelections.show_rels || {})
+    .filter(item => item.answer)
+    .map(item => item.question);
+
   // create a map of the relationships 
-  const keys = ['located at','parent of','child of','mentioned','auditor'];
-  const values = ['located_at','parent_of','child_of','mentioned','auditor'];
+  const keys = ['located at', 'parent of', 'child of', 'mentioned', 'auditor'];
+  const values = ['located_at', 'parent_of', 'child_of', 'mentioned', 'auditor'];
   const map = Object.fromEntries(keys.map((k, i) => [k, values[i]]));
-  const allowedRelationships = trueRels.map(key =>map[key]);
-  
+  const allowedRelationships = trueRels.map(key => map[key]);
+  const relationshipTypes = buildRelationshipFilter(allowedRelationships, sufix);
+  console.log(allowedRelationships)
+  console.log(relationshipTypes)
+
 
   // 3) Filters
   var filters = `
@@ -967,66 +946,69 @@ export async function get_userOptions(userSelections) {
   // 3.1) Month
   const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
   if (userSelections.reportMonth.enabled) {
-        counter += 1
-        const month = userSelections.reportMonth.value;
-        const monthIndex = monthNames.indexOf(month) + 1;
-        if (counter > 1) {
-          filters += `
+    counter += 1
+    const month = userSelections.reportMonth.value;
+    const monthIndex = monthNames.indexOf(month) + 1;
+    if (counter > 1) {
+      filters += `
       AND c.delivery_date_month = '${monthIndex.toString().padStart(2, '0')}'`;
-        } 
-        else {
-          filters += `
+    }
+    else {
+      filters += `
       WHERE c.delivery_date_month = '${monthIndex.toString().padStart(2, '0')}'`;
-        }
-      }
-   // 3.2) Keywords
-   if (userSelections.keyword.enabled) {
+    }
+  }
+  // 3.2) Keywords
+  if (userSelections.keyword.enabled) {
     counter += 1
     const keyword = userSelections.keyword.value;
     console.log(keyword.toString());
     if (counter > 1) {
       if (keyword.toString() === 'any') {
         filters += `
-  AND c.flagged_words_flag = 'true'`;}
+  AND c.flagged_words_flag = 'true'`;
+      }
       else {
         filters += `
   AND '${keyword.toString()}' in c.flagged_words_word `;
-  }
-}
+      }
+    }
     else {
       if (keyword.toString() === 'any') {
         filters += `
-  WHERE c.flagged_words_flag = 'true'`;}
-        else {
+  WHERE c.flagged_words_flag = 'true'`;
+      }
+      else {
         filters += `
   WHERE '${keyword.toString()}' in c.flagged_words_word`;
+      }
     }
   }
-}
-  
+
   // 3.2) Red Flags 
   const handles = ["finance_unclear_instruments_flag", "finance_hidden_leasing_flag", "finance_guarantee_flag", "finance_balance_values_flag", "finance_dependency_flag",
     "transactions_one_off_expense_flag", "transactions_internal_transactions_flag", "transactions_outstanding_receivables_flag",
     "accounting_auditor_reservations_flag", "accounting_change_accounting_flag", "accounting_adjustments_flag", "accounting_tax_benefits_flag", "accounting_tax_payments_flag", "accounting_no_audit_flag", "accounting_conditional_outcomes_flag",
     "liquidity_negative_wProfit_flag", "liquidity_pensions_flag"];
-  
+
   if (userSelections.redFlag?.answer === true) {
     const redFlagConditions = handles.map(h => `c.${h} = true`).join(' OR ');
-    counter +=1 
-    if (counter >1) {
-          filters += `
+    counter += 1
+    if (counter > 1) {
+      filters += `
         OR ${redFlagConditions}`;
-      } else {
-          filters += `
+    } else {
+      filters += `
       WHERE ${redFlagConditions}`;
-        }
+    }
   }
-    
+
+
   //>> Send the query and make the graph: 
   // top companies 
   if (sortBy === 't_sub') {
     try {
-      var  query = `
+      var query = `
    MATCH (c:Company)-[:PARENT_OF${sufix}]->(sub:Company)
    ${filters}
    WITH c, count(sub) as subsidiary_count
@@ -1039,23 +1021,23 @@ export async function get_userOptions(userSelections) {
    MATCH (n)-[rel]->(m)
    RETURN DISTINCT n, rel, m
      `;
-       console.log(query)
-       const result = await session.run(query);
-       return processGraphResults_v2(result.records, record => ({
-         nodes: [record.get('n'), record.get('m')],
-         relationships: [{
-           source: record.get('n'),
-           target: record.get('m'),
-           relationship: record.get('rel')
-         }]
-       }),allowedRelationships);
-     } catch (error) {
-       console.error('Error getting top companies:', error);
-       return null;
-     } finally {
-       await session.close();
-     }
-  } 
+      console.log(query)
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
+        nodes: [record.get('n'), record.get('m')],
+        relationships: [{
+          source: record.get('n'),
+          target: record.get('m'),
+          relationship: record.get('rel')
+        }]
+      }));
+    } catch (error) {
+      console.error('Error getting top companies:', error);
+      return null;
+    } finally {
+      await session.close();
+    }
+  }
   // top board members 
   else if (sortBy === 't_bm') {
     try {
@@ -1068,9 +1050,9 @@ export async function get_userOptions(userSelections) {
   MATCH path = (c:Company)-[:LED_BY${sufix}]->(p)
   WHERE c IN companies
   RETURN path`;
-      
+
       const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => {
+      return processGraphResults(result.records, record => {
         const path = record.get('path');
         const segments = path.segments;
         const nodes = [];
@@ -1086,18 +1068,18 @@ export async function get_userOptions(userSelections) {
         });
 
         return { nodes, relationships };
-      },allowedRelationships);
+      });
     } catch (error) {
       console.error('Error getting top board members:', error);
       return null;
     } finally {
       await session.close();
     }
-}
-// top mentioned companies 
-else if (sortBy === 't_m') {
-  try {
-    query = `
+  }
+  // top mentioned companies 
+  else if (sortBy === 't_m') {
+    try {
+      query = `
   MATCH (c:Company)-[:mentioned]->(sub:Company)
   ${filters}
   WITH c, count(sub) as subsidiary_count
@@ -1111,26 +1093,26 @@ else if (sortBy === 't_m') {
   RETURN DISTINCT n, rel, m
     `;
 
-    const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => ({
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
         nodes: [record.get('n'), record.get('m')],
         relationships: [{
           source: record.get('n'),
           target: record.get('m'),
           relationship: record.get('rel')
         }]
-      }),allowedRelationships);
+      }), allowedRelationships);
     } catch (error) {
       console.error('Error getting top mentioned companies:', error);
       return null;
     } finally {
       await session.close();
     }
-}
-// top Address 
-else if (sortBy === 't_a') {
-  try {
-    query = `
+  }
+  // top Address 
+  else if (sortBy === 't_a') {
+    try {
+      query = `
   MATCH (c:Company)-[:LOCATED_AT${sufix}]->(a:Address)
   ${filters}
   WITH a, count(c) as company_count, collect(c) as companies
@@ -1141,45 +1123,8 @@ else if (sortBy === 't_a') {
   WHERE c IN companies
   RETURN path
     `;
-    const result = await session.run(query);
-    return processGraphResults_v2(result.records, record => {
-      const path = record.get('path');
-      const segments = path.segments;
-      const nodes = [];
-      const relationships = [];
-
-      segments.forEach(segment => {
-        nodes.push(segment.start, segment.end);
-        relationships.push({
-          source: segment.start,
-          target: segment.end,
-          relationship: segment.relationship
-        });
-      });
-
-      return { nodes, relationships };
-    },allowedRelationships);
-  } catch (error) {
-    console.error('Error getting top shared addresses:', error);
-    return null;
-  } finally {
-    await session.close();
-  }
-}
-// top Auditor 
-else if (sortBy === 't_au') {
-  try {
-    query = `
-  MATCH (c:Company)-[:auditor${sufix}]->(d:Auditor)
-  ${filters}
-  WITH d, count(c) as company_count, collect(c) as companies
-  ORDER BY company_count DESC
-  LIMIT ${nodes}
-  MATCH path = (c:Company)-[:auditor${sufix}]->(d)
-  WHERE c IN companies
-  RETURN path`;
-  const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => {
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => {
         const path = record.get('path');
         const segments = path.segments;
         const nodes = [];
@@ -1195,18 +1140,55 @@ else if (sortBy === 't_au') {
         });
 
         return { nodes, relationships };
-      },allowedRelationships);
+      });
+    } catch (error) {
+      console.error('Error getting top shared addresses:', error);
+      return null;
+    } finally {
+      await session.close();
+    }
+  }
+  // top Auditor 
+  else if (sortBy === 't_au') {
+    try {
+      query = `
+  MATCH (c:Company)-[:auditor${sufix}]->(d:Auditor)
+  ${filters}
+  WITH d, count(c) as company_count, collect(c) as companies
+  ORDER BY company_count DESC
+  LIMIT ${nodes}
+  MATCH path = (c:Company)-[:auditor${sufix}]->(d)
+  WHERE c IN companies
+  RETURN path`;
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => {
+        const path = record.get('path');
+        const segments = path.segments;
+        const nodes = [];
+        const relationships = [];
+
+        segments.forEach(segment => {
+          nodes.push(segment.start, segment.end);
+          relationships.push({
+            source: segment.start,
+            target: segment.end,
+            relationship: segment.relationship
+          });
+        });
+
+        return { nodes, relationships };
+      });
     } catch (error) {
       console.error('Error getting top auditor:', error);
       return null;
     } finally {
       await session.close();
     }
-} 
-// top leadership 
-else if (sortBy === 't_c') {
-  try {
-    query = `
+  }
+  // top leadership 
+  else if (sortBy === 't_c') {
+    try {
+      query = `
   MATCH (c1:Company)-[:LED_BY${sufix}]->(p)
   MATCH (c2:Company)-[:LED_BY${sufix}]->(p)
   WHERE c1 <> c2
@@ -1214,26 +1196,26 @@ else if (sortBy === 't_c') {
   RETURN DISTINCT p, c1, c2
   LIMIT ${nodes}
     `;
-    
-    const result = await session.run(query);
-    return processGraphResults_v2(result.records, record => ({
-      nodes: [record.get('p'), record.get('c1'), record.get('c2')],
-      relationships: [
-        { source: record.get('p'), target: record.get('c1'), relationship: { type: 'LED_BY' } },
-        { source: record.get('p'), target: record.get('c2'), relationship: { type: 'LED_BY' } }
-      ]
-    }),allowedRelationships);
-  } catch (error) {
-    console.error('Error getting shared leadership:', error);
-    throw error;
-  } finally {
-    await session.close();
+
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
+        nodes: [record.get('p'), record.get('c1'), record.get('c2')],
+        relationships: [
+          { source: record.get('p'), target: record.get('c1'), relationship: { type: 'LED_BY' } },
+          { source: record.get('p'), target: record.get('c2'), relationship: { type: 'LED_BY' } }
+        ]
+      }));
+    } catch (error) {
+      console.error('Error getting shared leadership:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
   }
-}
-// top mentioned people 
-else if (sortBy === 't_p') {
-  try {
-    query = `
+  // top mentioned people 
+  else if (sortBy === 't_p') {
+    try {
+      query = `
   MATCH (c:Company)-[:mentioned${sufix}]->(p:Person)
   ${filters}
   WITH c, count(p) as mentioned
@@ -1247,54 +1229,54 @@ else if (sortBy === 't_p') {
   RETURN DISTINCT n, rel, m
     `;
 
-    const result = await session.run(query);
-      return processGraphResults_v2(result.records, record => ({
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
         nodes: [record.get('n'), record.get('m')],
         relationships: [{
           source: record.get('n'),
           target: record.get('m'),
           relationship: record.get('rel')
         }]
-      }),allowedRelationships);
+      }));
     } catch (error) {
       console.error('Error getting top mentioned people:', error);
       return null;
     } finally {
       await session.close();
     }
-}
-// Parent Subsidiary 
-else if (sortBy === 'sl') {
-  try {
+  }
+  // Parent Subsidiary 
+  else if (sortBy === 'sl') {
+    try {
 
-    query = `
+      query = `
   MATCH (companyA:Company)-[:LED_BY${sufix}]->(person:Person),
           (companyB)-[:LED_BY${sufix}]->(person)
   WITH person, companyA, companyB
   RETURN DISTINCT person, companyA, companyB
   LIMIT ${nodes}
     `;
-    
-     const result = await session.run(query);
-    return processGraphResults_v2(result.records, record => ({
-      nodes: [record.get('person'), record.get('companyA'), record.get('companyB')],
-      relationships: [
-        { source: record.get('person'), target: record.get('companyA'), relationship: { type: 'LED_BY' } },
-        { source: record.get('person'), target: record.get('companyB'), relationship: { type: 'LED_BY' } },
-        { source: record.get('companyA'), target: record.get('companyB'), relationship: { type: 'PARENT_OF' } }
-      ]
-    }),allowedRelationships);
-  } catch (error) {
-    console.error('Error getting parent-subsidiary leadership:', error);
-    throw error;
-  } finally {
-    await session.close();
+
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
+        nodes: [record.get('person'), record.get('companyA'), record.get('companyB')],
+        relationships: [
+          { source: record.get('person'), target: record.get('companyA'), relationship: { type: 'LED_BY' } },
+          { source: record.get('person'), target: record.get('companyB'), relationship: { type: 'LED_BY' } },
+          { source: record.get('companyA'), target: record.get('companyB'), relationship: { type: 'PARENT_OF' } }
+        ]
+      }));
+    } catch (error) {
+      console.error('Error getting parent-subsidiary leadership:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
   }
-} 
-// Companies with two subsidiaries 
-else if (sortBy === 's2') {
-  try {
-    query = `
+  // Companies with two subsidiaries 
+  else if (sortBy === 's2') {
+    try {
+      query = `
   MATCH (parent:Company)-[:PARENT_OF${sufix}]->(sub1:Company)
   MATCH (parent)-[:PARENT_OF${sufix}]->(sub2:Company)
   WHERE sub1 <> sub2 OR sub1 = parent OR sub2 = parent
@@ -1302,19 +1284,19 @@ else if (sortBy === 's2') {
   RETURN parent, sub1, sub2
   LIMIT ${nodes}
     `;
-    const result = await session.run(query);
-    return processGraphResults_v2(result.records, record => ({
-      nodes: [record.get('parent'), record.get('sub1'), record.get('sub2')],
-      relationships: [
-        { source: record.get('parent'), target: record.get('sub1'), relationship: { type: 'PARENT_OF' } },
-        { source: record.get('parent'), target: record.get('sub2'), relationship: { type: 'PARENT_OF' } }
-      ]
-    }),allowedRelationships);
-  } catch (error) {
-    console.error('Error getting companies with two subsidiaries:', error);
-    throw error;
-  } finally {
-    await session.close();
+      const result = await session.run(query);
+      return processGraphResults(result.records, record => ({
+        nodes: [record.get('parent'), record.get('sub1'), record.get('sub2')],
+        relationships: [
+          { source: record.get('parent'), target: record.get('sub1'), relationship: { type: 'PARENT_OF' } },
+          { source: record.get('parent'), target: record.get('sub2'), relationship: { type: 'PARENT_OF' } }
+        ]
+      }));
+    } catch (error) {
+      console.error('Error getting companies with two subsidiaries:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
   }
-}
 }

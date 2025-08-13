@@ -353,6 +353,7 @@ export class SourceNode extends Component {
             <React.Fragment key={index}>
               <div className="condition-group">
                 <div className="source_node_section">
+                  <h3>Search for nodes</h3>
                   <div className="condition-header">
                     <div className='small left'>Source Type {index + 1}</div>
                     {index > 0 && (

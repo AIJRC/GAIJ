@@ -5,6 +5,7 @@ import FilterPanel from '../node-search/filters';
 import "./Explore.css"; // Import CSS
 
 import { NodeSearch } from "../node-search";
+import Statistics from "../node-search/statistics";
 import { NodeResults } from "../node-results";
 import { PathGraph } from "../path-graph";
 import { SelectedInfo } from "../path-graph/selected-info.js"; // Import SelectedInfo component
@@ -47,9 +48,11 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
     <div className="explore-container">
       {/* Main three-panel layout */}
       <div className="explore-layout">
+        
         {/* Left Sidebar - Filtering Options */}
         <div className={`explore-left-sidebar ${leftSidebarVisible ? '' : 'hidden'}`}>
-          <SelectionPanel onSubmit={handleSelectionsSubmit} />
+          {/*<SelectionPanel onSubmit={handleSelectionsSubmit} /> */}
+          <NodeSearch onSubmit={handleSelectionsSubmit} />
         </div>
 
         {/* Toggle Button for Left Sidebar */}
@@ -63,7 +66,8 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
 
         {/* Central Pane - Graph and Search */}
         <div className="explore-search-section">
-          <NodeSearch />
+          {/*<NodeSearch />*/}
+          <Statistics/>
           <div className={`explore-top-bar ${topBarVisible ? '' : 'hidden'}`}>
             <FilterPanel onSubmit={handleFiltersSubmit} />
           </div>

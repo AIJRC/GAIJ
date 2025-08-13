@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import styles from './SelectionPanel.module.css';
-import { processUserSelection,get_userFilters } from '../backend-queries.js';
+import { processUserSelection } from '../backend-queries.js';
 import { setPaths } from '../path-graph/actions.js';
 
 const SelectionPanel = ({ onSubmit }) => {
@@ -116,8 +116,8 @@ const SelectionPanel = ({ onSubmit }) => {
         console.log('Submitted selections:', userSelections);
 
         try {
-            const allowedRelationships = await get_userFilters(userSelections);
-            const graphData = await processUserSelection(userSelections,allowedRelationships);
+            
+            const graphData = await processUserSelection(userSelections);
             console.log('Graph Data:', graphData);
             
             if (graphData && graphData.nodes.length > 0) {

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { get_userOptions,processUserSelection, get_userFilters } from '../backend-queries.js';
+import { get_userOptions,processUserSelection } from '../backend-queries.js';
 import { setPaths } from '../path-graph/actions.js';
 import styles from './filters.module.css';
 
@@ -13,7 +13,6 @@ const FilterPanel = () => {
   const [selectedNodeTypeId, setSelectedNodeTypeId] = useState('');
   const [userSelections, setUserSelections] = useState({
     rel: 'all',
-    show_rels: {},
     info: [], // allow multiple values for checkboxes
     nodeCount: 50,
     reportMonth: { enabled: false, value: 'jan' },
@@ -79,45 +78,10 @@ const FilterPanel = () => {
   };
 
 
-  // Relationships available
-  const relationships = [
-    { id: 0, question: 'located at' },
-    { id: 1, question: 'parent of' },
-    { id: 2, question: 'child of' },
-    { id: 3, question: 'mentioned' },
-    { id: 4, question: 'auditor' }
-  ];
-
-  const handleSelectAllCheckboxes = (checked) => {
-    const newAnswers = {};
-    relationships.forEach(item => {
-      newAnswers[item.id] = {
-        question: item.question,
-        answer: checked
-      };
-    });
-    setUserSelections(prev => ({
-      ...prev,
-      show_rels: newAnswers
-    }));
-  };
-
-  const handleCheckboxChange = (itemId, questionText, checked) => {
-    setUserSelections(prev => ({
-      ...prev,
-      show_rels: {
-        ...prev.show_rels,
-        [itemId]: {
-          question: questionText,
-          answer: checked
-        }
-      }
-    }));
-  };
-
   const handleSubmit = async () => {
     console.log(userSelections)
     const graphData = await get_userOptions(userSelections);
+    console.log(graphData)
     if (graphData && graphData.nodes.length > 0) {
       const paths = graphData.edges.map((edge, index) => ({
         node_ids: [edge.source_neo4j_id, edge.target_neo4j_id],
@@ -201,39 +165,6 @@ const FilterPanel = () => {
                 </option>
               ))}
             </select>
-          </div>
-
-
-
-          <div className={styles.column}>
-            <h3>Shown relationships</h3>
-            <div className={styles.buttonPair}>
-              <input
-                type="checkbox"
-                id="selectAll"
-                onChange={(e) => handleSelectAllCheckboxes(e.target.checked)}
-                checked={
-                  Object.values(userSelections.show_rels).length === relationships.length &&
-                  Object.values(userSelections.show_rels).every(item => item.answer)
-                }
-              />
-              <label htmlFor="selectAll"><b>All relationships</b></label>
-            </div>
-
-            {relationships.map(item => (
-              <div key={item.id} className={styles.checkboxRow}>
-                <input
-                  type="checkbox"
-                  id={`question_${item.id}`}
-                  name={`question_${item.id}`}
-                  checked={!!userSelections.show_rels[item.id]?.answer}
-                  onChange={(e) =>
-                    handleCheckboxChange(item.id, item.question, e.target.checked)
-                  }
-                />
-                <label htmlFor={`question_${item.id}`}>{item.question}</label>
-              </div>
-            ))}
           </div>
 
           <div className={styles.column}>
