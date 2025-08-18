@@ -1,7 +1,7 @@
 import React, { useState,useEffect  } from 'react';
 import { useDispatch,useSelector } from 'react-redux';
 import { buildRelationshipFilter } from '../backend-queries.js';
-import { setPaths } from '../path-graph/actions.js';
+import { setPaths, setRelationshipFilters } from '../path-graph/actions.js';
 import styles from './showRelationships_panel.module.css';
 
 const Relationships = () => {
@@ -48,7 +48,7 @@ const Relationships = () => {
     setUserSelections(newSelections);
     
     // Immediately dispatch to Redux store so SourceNode can use it
-    dispatch(buildRelationshipFilter(newSelections));
+    dispatch(setRelationshipFilters(newSelections));
   };
 
    const handleSelectAllCheckboxes = (checked) => {
@@ -66,7 +66,7 @@ const Relationships = () => {
     setUserSelections(newSelections);
     
     // Immediately dispatch to Redux store
-    dispatch(buildRelationshipFilter(newSelections));
+    dispatch(setRelationshipFilters(newSelections));
   };
 
 
@@ -74,7 +74,7 @@ const Relationships = () => {
     console.log('Current relationship filters:', userSelections);
     
     // Dispatch the current selections to Redux
-    dispatch(buildRelationshipFilter(userSelections));
+    dispatch(setRelationshipFilters(userSelections));
     
     // trigger a refresh of the graph here
     // dispatch an action to tell SourceNode to refresh
@@ -86,7 +86,7 @@ const Relationships = () => {
   return (
     <div className={styles.Filters}>
       <div className={styles.body}>
-        <h3>Select relatonships to show</h3>
+        <h3>Select relationships to show</h3>
         <div className={styles.buttonPair}>
           <input
             type="checkbox"

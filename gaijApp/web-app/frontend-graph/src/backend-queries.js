@@ -776,15 +776,9 @@ export async function getCompaniesWithTwoSubsidiaries() {
   }
 }
 
-export async function fetchNodeConnections(nodeId, userSelections) {
+export async function fetchNodeConnections(nodeId, nodeType) {
   const session = driver.session();
-
-  const relationships = userSelections.show_rels || [];// modify this 
-  const relFilter = relationships.length > 0
-    ? `WHERE type(r) IN ${JSON.stringify(relationships)}`
-    : "";
   try {
-    /*
     const query = `
       MATCH (n)-[r]->(m)
       WHERE id(n) = $nodeId
@@ -794,13 +788,6 @@ export async function fetchNodeConnections(nodeId, userSelections) {
       WHERE id(n) = $nodeId
       RETURN n, r, m, false as outgoing
     `;
-    */
-    const query = `
-    MATCH (n)-[r]-(m)
-    WHERE ID(n) = $nodeId
-    ${relFilter}
-    RETURN n, r, m
-  `;
 
     const result = await session.run(query, { nodeId: nodeId });
     return processGraphResults(result.records, record => {

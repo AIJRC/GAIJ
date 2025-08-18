@@ -17,6 +17,24 @@ import { relationships } from './path-results/reducers.js';
 import { graph } from './path-graph/reducers.js';
 import { showGrid } from './path-graph/reducers.js';
 
+
+//relationshipFilters reducer function
+function relationshipFilters(state = {
+  show_rels: {
+    0: { question: 'located at', answer: true },
+    1: { question: 'parent of', answer: true },
+    2: { question: 'mentioned', answer: true },
+    3: { question: 'auditor', answer: true }
+  }
+}, action) {
+  switch (action.type) {
+    case 'SET_RELATIONSHIP_FILTERS':
+      return action.payload;
+    default:
+      return state;
+  }
+}
+
 // master combined reducer
 export function Reducer(state = {}, action) {
   // make deep copy of old state into new state
@@ -42,6 +60,7 @@ export function Reducer(state = {}, action) {
     paths: paths(newState, action),
     nodes: nodes(newState.nodes, action),
     relationships: relationships(newState.relationships, action),
+    relationshipFilters: relationshipFilters(newState.relationshipFilters, action), 
     graph: graph(newState, action),
     showGrid: showGrid(newState.showGrid, action)
   };

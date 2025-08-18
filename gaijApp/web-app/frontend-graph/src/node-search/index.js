@@ -38,7 +38,7 @@ export class NodeSearch extends Component {
         */}
 
         <div className='node_search_content'>
-          <SourceNode />
+          <SourceNode relationshipFilters={this.props.relationshipFilters}/>
         </div>
 
         <div className='relationships'>
@@ -53,5 +53,6 @@ export class NodeSearch extends Component {
 }
 
 NodeSearch = connect((state) => ({
-  metagraph: state.metagraph
+  metagraph: state.metagraph,
+  relationshipFilters: state.relationshipFilters
 }))(NodeSearch);

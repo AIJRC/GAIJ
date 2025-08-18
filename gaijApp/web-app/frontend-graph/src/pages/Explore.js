@@ -44,14 +44,13 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
     setTopBarVisible(!topBarVisible);
   };
 
-  return (
+   return (
     <div className="explore-container">
       {/* Main three-panel layout */}
       <div className="explore-layout">
         
         {/* Left Sidebar - Filtering Options */}
         <div className={`explore-left-sidebar ${leftSidebarVisible ? '' : 'hidden'}`}>
-          {/*<SelectionPanel onSubmit={handleSelectionsSubmit} /> */}
           <NodeSearch onSubmit={handleSelectionsSubmit} />
         </div>
 
@@ -65,21 +64,21 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
         </button>
 
         {/* Central Pane - Graph and Search */}
-        <div className="explore-search-section">
-          {/*<NodeSearch />*/}
-          <Statistics/>
-          <div className={`explore-top-bar ${topBarVisible ? '' : 'hidden'}`}>
-            <FilterPanel onSubmit={handleFiltersSubmit} />
+        <div className="explore-central-panel">
+          {/* Search Section with Statistics and Top Bar */}
+          <div className="explore-search-section">
+            <Statistics/>
+            <div className={`explore-top-bar ${topBarVisible ? '' : 'hidden'}`}>
+              <FilterPanel onSubmit={handleFiltersSubmit} />
+            </div>
+            <button
+              className="topbar-toggle-btn"
+              onClick={toggletopBar}
+              title={topBarVisible ? "Hide Top Filters" : "Show Top Filters"}
+            >
+              {topBarVisible ? '▲' : '▼'}
+            </button>
           </div>
-          <button
-            className="topbar-toggle-btn"
-            onClick={toggletopBar}
-            title={topBarVisible ? "Hide Top Filters" : "Show Top Filters"}
-          >
-            {topBarVisible ? '▲' : '▼'}
-          </button>
-
-
 
           {/* Graph Section */}
           <div className="explore-graph-section">
@@ -89,27 +88,27 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
             />
           </div>
         </div>
-      </div>
 
-      {/* Right Sidebar - Node Information */}
-      <div className={`explore-right-sidebar ${rightSidebarVisible ? '' : 'hidden'}`}>
-        {shouldRenderResults && <NodeResults />}
-        <div className="graph-info-wrapper">
-          <SelectedInfo
-            selectedElement={selectedElement}
-            hoveredElement={hoveredElement}
-          />
+        {/* Right Sidebar - Node Information */}
+        <div className={`explore-right-sidebar ${rightSidebarVisible ? '' : 'hidden'}`}>
+          {shouldRenderResults && <NodeResults />}
+          <div className="graph-info-wrapper">
+            <SelectedInfo
+              selectedElement={selectedElement}
+              hoveredElement={hoveredElement}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Toggle Button for Right Sidebar */}
-      <button
-        className="sidebar-toggle-btn right-sidebar-toggle"
-        onClick={toggleRightSidebar}
-        title={rightSidebarVisible ? "Hide Info Panel" : "Show Info Panel"}
-      >
-        {rightSidebarVisible ? '▶' : '◀'}
-      </button>
+        {/* Toggle Button for Right Sidebar */}
+        <button
+          className="sidebar-toggle-btn right-sidebar-toggle"
+          onClick={toggleRightSidebar}
+          title={rightSidebarVisible ? "Hide Info Panel" : "Show Info Panel"}
+        >
+          {rightSidebarVisible ? '▶' : '◀'}
+        </button>
+      </div>
     </div>
   );
 };

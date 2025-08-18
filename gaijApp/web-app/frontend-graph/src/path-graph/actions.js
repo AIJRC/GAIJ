@@ -13,3 +13,10 @@ export function setPaths(payload) {
     payload: payload
   };
 }
+
+
+// Relationship filters action 
+export const setRelationshipFilters = (filters) => ({
+  type: 'SET_RELATIONSHIP_FILTERS',
+  payload: filters
+});
