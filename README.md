@@ -1,4 +1,5 @@
-# GAIJ Applied to Norwegian Company Networks
+# Graph-bound AI Journalism in Financial Fraud [GAIJ](https://www.nmbu.no/en/research/projects/gaij)
+### Applied to Norwegian Company Networks
 
 **GAIJ** is a modular pipeline that extracts structured graph data from unstructured data and visualizes it in an interactive web interface using a Neo4j graph database. It uses a combination of OCR, LLMs, and knowledge graph tools to process documents and populate the database.
 
