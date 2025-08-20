@@ -1,9 +1,11 @@
-# Graph-bound AI Journalism in Financial Fraud [GAIJ](https://www.nmbu.no/en/research/projects/gaij)
+# Graph-bound AI Journalism in Financial Fraud ([GAIJ](https://www.nmbu.no/en/research/projects/gaij))
 ### Applied to Norwegian Company Networks
 
 **GAIJ** is a modular pipeline that extracts structured graph data from unstructured data and visualizes it in an interactive web interface using a Neo4j graph database. It uses a combination of OCR, LLMs, and knowledge graph tools to process documents and populate the database.
 
 In this repo we showcase it with Norwegian tax records. GAIJ enables users to explore company relationships such as ownership, board membership, and subsidiaries. 
+
+For a live demo with the data visit [here](https://158.37.66.6:8765)
 
 ## Features
 
