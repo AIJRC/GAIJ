@@ -1,0 +1,106 @@
+.selectionPanel {
+  max-width: 400px;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 12px;
+  text-align: left;
+  margin-top: 15px;
+  font-size: 0.85rem;
+}
+
+.body {
+  font-family: Arial, sans-serif;
+  padding: 1rem;
+  background: #f0f2f5;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.radioGroup {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.radioGroup label {
+  display: block;
+  margin: 0.5rem 0;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.dateChoice,
+.wordChoice {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.dateChoice label,
+.wordChoice label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.dateChoice select,
+.wordChoice select {
+  margin-left: 0.5rem;
+  padding: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 0.85rem;
+}
+
+.trueFalse {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+}
+
+.question {
+  flex: 1;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.buttonPair {
+  display: flex;
+  gap: 10px;
+}
+
+.submit {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.submit button {
+  padding: 0.5rem 1rem;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.submit button:hover {
+  background: #3498db;
+}

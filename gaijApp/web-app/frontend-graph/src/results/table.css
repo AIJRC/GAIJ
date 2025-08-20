@@ -1,0 +1,27 @@
+.metapath_results_table .metanode_chip {
+  margin: 0;
+}
+.metapath_results_compute {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 25px;
+  margin: 0;
+  opacity: 0.15;
+  transition: opacity 0.25s ease;
+  cursor: pointer;
+}
+.metapath_results_table tr:hover .metapath_results_compute {
+  opacity: 1;
+}
+.neo4j_button {
+  width: 50%;
+  height: 100%;
+  margin: 0;
+}
+.external_link_icon {
+  position: relative;
+  top: -1px;
+  margin-left: 5px;
+}

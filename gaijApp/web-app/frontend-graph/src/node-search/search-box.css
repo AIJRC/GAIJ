@@ -1,0 +1,53 @@
+.node_search_form {
+  display: flex;
+  flex-direction: column;
+  width: 50%;  /* Reduced width when only Source Type is showing */
+  margin: 0 auto;
+  text-align: left;
+  position: relative;
+}
+
+.node_search_form_label {
+  text-align: left;
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 16px;
+}
+
+.search-box-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.clear-button {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+}
+
+.clear-button:hover {
+  color: #333;
+}
+.node_search_icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  transition: color 0.2s;
+}
+
+.node_search_icon:hover {
+  color: #333;
+}
