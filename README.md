@@ -5,7 +5,7 @@
 
 In this repo we showcase it with Norwegian tax records. GAIJ enables users to explore company relationships such as ownership, board membership, and subsidiaries. 
 
-For a live demo with the data visit [here](https://158.37.66.6:8765)
+For a live demo with the data visit [here](http://158.37.66.6:8765)
 
 ## Features
 
