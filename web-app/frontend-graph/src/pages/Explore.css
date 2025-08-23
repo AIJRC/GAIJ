@@ -17,17 +17,21 @@
   text-align: justify;
   font-size: 18px;
   line-height: 1.6;
+  overflow: auto;
 }
 
 /* Main three-panel layout */
 .explore-layout {
   display: flex;
-  height: calc(100vh - 100px); /* Account for container padding and margins */
+  /* height: calc(100vh - 100px); /* Account for container padding and margins 2 */
+  min-height: calc(100vh - 100px); /* Use min-height instead of height, this was changed 2 */
   width: 100%;
-  overflow: hidden;
+  /*overflow: hidden; /* this was changed  2 */ 
   position: relative; /* For absolute positioning of the toggle button */
 }
 
+ 
+/* == Left Side Panel */
 /* Left Sidebar - Filtering Options */
 .explore-left-sidebar {
   width: 350px;
@@ -40,16 +44,73 @@
   padding-top: 15px;
   padding-bottom: 15px;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+  flex-shrink: 0; /* Prevent shrinking, this was changed */
 }
 
-/* Hidden sidebar state */
-.explore-left-sidebar.hidden {
-  transform: translateX(-100%);
-  width: 0;
-  min-width: 0;
-  padding: 0;
-  overflow: hidden;
+/* Search Section */
+.explore-search-section {
+  flex-shrink: 0; /* Don't shrink, this was changed */
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #ffffff;
+  z-index: 1;
 }
+
+
+/* == Central Panel */
+/* Top Bar - Filters Section */
+.explore-top-bar {
+  overflow: hidden;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+  max-height: 500px; /* Adjust depending on actual height */
+  padding: 15px;
+  margin-top: 10px; /* This was changed */
+}
+
+/* Central Panel - Graph and Search */
+.explore-central-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0; /* Allow shrinking, this was changed */
+}
+
+/* Graph Section */
+.explore-graph-section {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  height: auto; /* 600px;   this was changed 2*/
+  min-height: 400px; /* Ensure minimum height, this was changed */
+  overflow: visible; /* Allow content to extend beyond, this was changed 2 */
+}
+
+
+
+/* == Right Side Panel */
+/* Right Sidebar - Node Information */
+.explore-right-sidebar {
+  width: 350px;
+  min-width: 350px;
+  height: 100%;
+  overflow-y: visible; /* auto; this was changed 2*/
+  border-left: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding: 15px;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+  flex-shrink: 0; /* Prevent shrinking, this was changed */
+}
+
+
+
+
+
+
+/* ==== toggle buttons  */
 
 /* Sidebar toggle button */
 .sidebar-toggle-btn {
@@ -86,6 +147,20 @@
   border-radius: 4px 0 0 4px;
 }
 
+
+/* Top bar toggle button */
+.topbar-toggle-btn {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+
 /* Toggle button position when left sidebar is hidden */
 .explore-left-sidebar.hidden + .left-sidebar-toggle {
   left: 0;
@@ -96,40 +171,23 @@
   right: 0;
 }
 
-/* Central Pane - Graph and Search */
-.explore-central-pane {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+/* == Hidden state styles */
+
+/* Hidden sidebar state */
+.explore-left-sidebar.hidden {
+  transform: translateX(-100%);
+  width: 0;
+  min-width: 0;
+  padding: 0;
   overflow: hidden;
 }
 
-/* Search Section */
-.explore-search-section {
-  padding: 15px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #ffffff;
-  z-index: 1;
-}
 
-/* Graph Section */
-.explore-graph-section {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Right Sidebar - Node Information */
-.explore-right-sidebar {
-  width: 350px;
-  min-width: 350px;
-  height: 100%;
-  overflow-y: auto;
-  border-left: 1px solid #e0e0e0;
-  background: #f8f9fa;
-  padding: 15px;
-  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+/* Collapsed state */
+.explore-top-bar.hidden {
+  max-height: 0;
+  padding: 0;
+  border-bottom: none;
 }
 
 /* Hidden right sidebar state */
@@ -140,3 +198,10 @@
   padding: 0;
   overflow: hidden;
 }
+
+
+
+
+
+
+

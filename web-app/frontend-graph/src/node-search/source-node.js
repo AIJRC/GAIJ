@@ -7,7 +7,7 @@ import { SearchBox } from './search-box.js';
 import { NodeTypeSelector } from './node-type-selector.js';
 import { setSourceTargetNode } from './actions.js';
 import { setPaths } from '../path-graph/actions.js';
-import { fetchNodeConnections } from '../backend-queries.js';
+import { fetchNodeConnections,buildRelationshipFilter } from '../backend-queries.js';
 
 // source node search box component
 export class SourceNode extends Component {
@@ -22,6 +22,37 @@ export class SourceNode extends Component {
       mode: 'OR'  // Add mode state to track current operation
     };
   }
+
+
+  // Helper method to filter relationships based on user selection
+  filterRelationshipsByUserSelection = async (edges) => {
+    const { relationshipFilters } = this.props;
+    if (!relationshipFilters?.show_rels) return edges;
+
+     try {
+      // Use buildRelationshipFilter to get the proper Neo4j relationship types
+      const allowedRelationshipTypes = await buildRelationshipFilter(relationshipFilters, ['llm', 'ext']);
+      console.log(['allowed Relationships ',allowedRelationshipTypes])
+      console.log('Edge types in data:', edges.map(edge => edge.kind).filter((v, i, a) => a.indexOf(v) === i));
+      // If no relationships are selected, return empty array
+      if (allowedRelationshipTypes.length === 0) return [];
+
+      // Filter edges based on Neo4j relationship types
+      return edges.filter(edge => {
+        const edgeType = edge.kind || '';
+        
+        // Check if the edge type matches any of the allowed relationship types
+        return allowedRelationshipTypes.some(allowedType => {
+          return edgeType === allowedType || 
+                 edgeType.startsWith(allowedType) || 
+                 edgeType.includes(allowedType.replace(/_$/, ''));
+        });
+      });
+    } catch (error) {
+      console.error('Error filtering relationships:', error);
+      return edges; // Return all edges if filtering fails
+    }
+  };
 
   addCondition = () => {
     this.setState(prevState => ({
@@ -101,9 +132,27 @@ export class SourceNode extends Component {
         }
       }
 
+      // Filter edges based on user's relationship selection
+      const filteredEdges = await this.filterRelationshipsByUserSelection(allEdges);
+
+      // Only include nodes that are connected by filtered edges
+      const connectedNodeIds = new Set();
+      filteredEdges.forEach(edge => {
+        connectedNodeIds.add(edge.source_neo4j_id);
+        connectedNodeIds.add(edge.target_neo4j_id);
+      });
+
+      // Filter nodes to only include those connected by filtered edges
+      const filteredNodes = {};
+      Object.keys(allNodes).forEach(nodeId => {
+        if (connectedNodeIds.has(nodeId)) {
+          filteredNodes[nodeId] = allNodes[nodeId];
+        }
+      });
+
       // Format relationships similar to getTopCompanies
       const relationships = {};
-      allEdges.forEach((edge, index) => {
+      filteredEdges.forEach((edge, index) => {
         relationships[index] = {
           source_neo4j_id: edge.source_neo4j_id,
           target_neo4j_id: edge.target_neo4j_id,
@@ -113,8 +162,8 @@ export class SourceNode extends Component {
         };
       });
 
-      // Create paths array similar to top-companies-button
-      const paths = allEdges.map((edge, index) => ({
+      // Create paths array using FILTERED edges
+      const paths = filteredEdges.map((edge, index) => ({
         node_ids: [edge.source_neo4j_id, edge.target_neo4j_id],
         rel_ids: [index],
         checked: true,
@@ -130,6 +179,8 @@ export class SourceNode extends Component {
           updateUrl: true
         })
       );
+       console.log(`Filtered ${allEdges.length} edges to ${filteredEdges.length} based on relationship selection`);
+
     } catch (error) {
       console.error('Error processing conditions:', error);
       this.setState(prevState => ({
@@ -220,8 +271,11 @@ export class SourceNode extends Component {
         commonNodes.has(edge.target_neo4j_id)
       );
 
-      if (commonNodes.size > 0 && validEdges.length > 0) {
-        const relationships = validEdges.reduce((acc, edge, index) => {
+      // Apply relationship filtering
+      const filteredEdges = await this.filterRelationshipsByUserSelection(validEdges);
+
+      if (commonNodes.size > 0 && filteredEdges.length > 0) {
+        const relationships = filteredEdges.reduce((acc, edge, index) => {
           acc[index] = {
             ...edge,
             id: index,
@@ -232,7 +286,14 @@ export class SourceNode extends Component {
           return acc;
         }, {});
 
-        // Create filtered allNodes object with only common nodes
+        // Create filtered allNodes object with only common nodes that have filtered relationships
+        const connectedNodeIds = new Set();
+        filteredEdges.forEach(edge => {
+          connectedNodeIds.add(edge.source_neo4j_id);
+          connectedNodeIds.add(edge.target_neo4j_id);
+        });
+
+
         const filteredNodes = {};
         commonNodes.forEach(id => {
           if (allNodes[id]) {
@@ -251,6 +312,7 @@ export class SourceNode extends Component {
             relationships: relationships
           })
         );
+         console.log(`AND operation: Filtered to ${filteredEdges.length} relationships`);
       } else {
         // Clear the graph when no common elements are found
         await this.props.dispatch(
@@ -353,6 +415,7 @@ export class SourceNode extends Component {
             <React.Fragment key={index}>
               <div className="condition-group">
                 <div className="source_node_section">
+                  <h3>Search for nodes</h3>
                   <div className="condition-header">
                     <div className='small left'>Source Type {index + 1}</div>
                     {index > 0 && (
@@ -426,5 +489,6 @@ export class SourceNode extends Component {
 
 SourceNode = connect((state) => ({
   node: state.sourceNode,
-  otherNode: state.targetNode
+  otherNode: state.targetNode,
+  relationshipFilters: state.relationshipFilters  // access to relationship filters 
 }))(SourceNode);

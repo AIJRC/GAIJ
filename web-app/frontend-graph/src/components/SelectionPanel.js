@@ -116,6 +116,7 @@ const SelectionPanel = ({ onSubmit }) => {
         console.log('Submitted selections:', userSelections);
 
         try {
+            
             const graphData = await processUserSelection(userSelections);
             console.log('Graph Data:', graphData);
             
@@ -307,13 +308,13 @@ const SelectionPanel = ({ onSubmit }) => {
                             }}
                         >
                             {[
-                                'kompensasjon', 'sluttavtale', 'oppsigelsesdato',
+                                'any','kompensasjon', 'sluttavtale', 'oppsigelsesdato',
                                 'oppsigelse', 'sluttdato', 'opphør', 'trukket', 'etterlønn',
-                                'bonus', 'variabel_lønn', 'resultatbasert', 'milepæl',
-                                'etterbetaling', 'etterbetalt', 'privatlån', 'private_lån',
+                                'bonus', 'variabel lønn', 'resultatbasert', 'milepæl',
+                                'etterbetaling', 'etterbetalt', 'privatlån', 'private lån',
                                 'selgerkreditt', 'interntransaksjon', 'diskresjonær',
-                                'låneforfall', 'forfalt', 'ubetalt', 'solgt_aksjer',
-                                'covid', 'covid-19', 'Kjell_Inge_Røkke'
+                                'låneforfall', 'forfalt', 'ubetalt', 'solgt aksjer',
+                                'covid', 'covid-19', 'Kjell Inge Røkke'
                             ].map(word => (
                                 <option key={word} value={word}>
                                     {word.replace('_', ' ')}
