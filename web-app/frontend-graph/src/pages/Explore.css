@@ -23,16 +23,13 @@
 /* Main three-panel layout */
 .explore-layout {
   display: flex;
-  /* height: calc(100vh - 100px); /* Account for container padding and margins 2 */
-  min-height: calc(100vh - 100px); /* Use min-height instead of height, this was changed 2 */
+  min-height: calc(100vh - 100px);
   width: 100%;
-  /*overflow: hidden; /* this was changed  2 */ 
-  position: relative; /* For absolute positioning of the toggle button */
+  position: relative;
+  /* IMPORTANT: Don't use overflow: hidden here - it breaks sticky positioning */
 }
 
- 
 /* == Left Side Panel */
-/* Left Sidebar - Filtering Options */
 .explore-left-sidebar {
   width: 350px;
   min-width: 350px;
@@ -44,77 +41,71 @@
   padding-top: 15px;
   padding-bottom: 15px;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
-  flex-shrink: 0; /* Prevent shrinking, this was changed */
+  flex-shrink: 0;
 }
 
 /* Search Section */
 .explore-search-section {
-  flex-shrink: 0; /* Don't shrink, this was changed */
+  flex-shrink: 0;
   padding: 15px;
   border-bottom: 1px solid #e0e0e0;
   background: #ffffff;
   z-index: 1;
 }
 
-
 /* == Central Panel */
+.explore-central-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: visible; /* Changed from hidden to visible */
+  min-width: 0;
+}
+
 /* Top Bar - Filters Section */
 .explore-top-bar {
   overflow: hidden;
   background: #ffffff;
   border-bottom: 1px solid #e0e0e0;
   transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
-  max-height: 500px; /* Adjust depending on actual height */
+  max-height: 500px;
   padding: 15px;
-  margin-top: 10px; /* This was changed */
-}
-
-/* Central Panel - Graph and Search */
-.explore-central-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  min-width: 0; /* Allow shrinking, this was changed */
+  margin-top: 10px;
 }
 
 /* Graph Section */
 .explore-graph-section {
   flex: 1;
   position: relative;
-  overflow: hidden;
-  height: auto; /* 600px;   this was changed 2*/
-  min-height: 400px; /* Ensure minimum height, this was changed */
-  overflow: visible; /* Allow content to extend beyond, this was changed 2 */
+  overflow: visible; /* Changed to visible */
+  height: auto;
+  min-height: 400px;
 }
-
-
 
 /* == Right Side Panel */
 /* Right Sidebar - Node Information */
 .explore-right-sidebar {
   width: 350px;
   min-width: 350px;
-  height: 100%;
-  overflow-y: visible; /* auto; this was changed 2*/
+  /* CRITICAL CHANGES FOR STICKY BEHAVIOR */
+  height: fit-content; /* Changed from 100% to fit-content */
+  max-height: calc(100vh - 120px); /* Limit max height */
+  overflow-y: auto; /* Allow internal scrolling when content is too tall */
+  position: sticky; /* Keep sticky */
+  top: 20px; /* Distance from top when scrolling - adjust as needed */
+  align-self: flex-start; /* Important for sticky to work in flexbox */
   border-left: 1px solid #e0e0e0;
   background: #f8f9fa;
   padding: 15px;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
-  flex-shrink: 0; /* Prevent shrinking, this was changed */
+  flex-shrink: 0;
 }
 
-
-
-
-
-
-/* ==== toggle buttons  */
-
+/* ==== toggle buttons */
 /* Sidebar toggle button */
 .sidebar-toggle-btn {
-  position: absolute;
+  position: fixed; /* Changed from absolute to fixed */
   z-index: 100;
   background: #2c3e50;
   color: white;
@@ -133,20 +124,19 @@
 
 /* Left sidebar toggle button */
 .left-sidebar-toggle {
-  left: 365px; /* Position at the edge of the sidebar */
-  top: 5%;
+  left: 365px;
+  top: 10%;
   transform: translateY(-50%);
   border-radius: 0 4px 4px 0;
 }
 
 /* Right sidebar toggle button */
 .right-sidebar-toggle {
-  right: 380px; /* Position at the edge of the sidebar */
-  top: 5%;
+  right: 380px;
+  top: 10%;
   transform: translateY(-50%);
   border-radius: 4px 0 0 4px;
 }
-
 
 /* Top bar toggle button */
 .topbar-toggle-btn {
@@ -160,7 +150,6 @@
   margin-top: 5px;
 }
 
-
 /* Toggle button position when left sidebar is hidden */
 .explore-left-sidebar.hidden + .left-sidebar-toggle {
   left: 0;
@@ -172,7 +161,6 @@
 }
 
 /* == Hidden state styles */
-
 /* Hidden sidebar state */
 .explore-left-sidebar.hidden {
   transform: translateX(-100%);
@@ -181,7 +169,6 @@
   padding: 0;
   overflow: hidden;
 }
-
 
 /* Collapsed state */
 .explore-top-bar.hidden {
@@ -198,10 +185,3 @@
   padding: 0;
   overflow: hidden;
 }
-
-
-
-
-
-
-

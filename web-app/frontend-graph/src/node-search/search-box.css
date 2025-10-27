@@ -1,8 +1,8 @@
 .node_search_form {
   display: flex;
   flex-direction: column;
-  width: 50%;  /* Reduced width when only Source Type is showing */
-  margin: 0 auto;
+  width: 100%;  /* Changed from 50% to 100% for full width alignment */
+  margin: 0;    /* Remove auto margin */
   text-align: left;
   position: relative;
 }
@@ -26,6 +26,13 @@
   width: 100%;
 }
 
+/* Style for the actual input field */
+.search-input-wrapper input {
+  width: 100%;
+  padding: 8px 35px 8px 12px; /* Extra padding on right for clear button */
+  box-sizing: border-box;
+}
+
 .clear-button {
   position: absolute;
   right: 8px;
@@ -34,11 +41,13 @@
   cursor: pointer;
   color: #666;
   padding: 4px;
+  z-index: 2; /* Ensure it's above the input */
 }
 
 .clear-button:hover {
   color: #333;
 }
+
 .node_search_icon {
   position: absolute;
   right: 10px;
@@ -46,6 +55,7 @@
   transform: translateY(-50%);
   color: #666;
   transition: color 0.2s;
+  pointer-events: none; /* Prevent blocking clicks */
 }
 
 .node_search_icon:hover {

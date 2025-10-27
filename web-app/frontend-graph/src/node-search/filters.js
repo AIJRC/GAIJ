@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { get_userOptions,processUserSelection } from '../backend-queries.js';
 import { setPaths } from '../path-graph/actions.js';
 import styles from './filters.module.css';
+import Relationships from './showRelationships_panel.js';
 
 
 const FilterPanel = () => {
@@ -155,6 +156,7 @@ const FilterPanel = () => {
             <label htmlFor="nodeSelect"><b>Select a node type </b>:</label>
             <select
               id="nodeSelect"
+              className={styles.dropdownmenu}
               value={selectedNodeTypeId}
               onChange={handleChange}
             >
@@ -178,6 +180,7 @@ const FilterPanel = () => {
               Report delivery month
               <select
                 id="month"
+                className={styles.dropdownmenu}
                 disabled={!userSelections.reportMonth.enabled}
                 value={userSelections.reportMonth.value}
                 onChange={(e) => {
@@ -206,6 +209,7 @@ const FilterPanel = () => {
               Contains key word
               <select
                 id="words"
+                className={styles.dropdownmenu}
                 disabled={!userSelections.keyword.enabled}
                 value={userSelections.keyword.value}
                 onChange={(e) => {
@@ -250,6 +254,7 @@ const FilterPanel = () => {
             </div>
           </div>
         </div>
+        
 
         <div className={styles.submit}>
           <button type="button" onClick={handleSubmit}>
