@@ -1,0 +1,209 @@
+.explore-container {
+  max-width: 100%;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.explore-container h1 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.explore-container p {
+  text-align: justify;
+  font-size: 18px;
+  line-height: 1.6;
+  overflow: auto;
+}
+
+/* Main three-panel layout */
+.explore-layout {
+  display: flex;
+  /* height: calc(100vh - 100px); /* Account for container padding and margins 2 */
+  min-height: calc(100vh - 100px); /* Use min-height instead of height, this was changed 2 */
+  width: 100%;
+  /*overflow: hidden; /* this was changed  2 */ 
+  position: relative; /* For absolute positioning of the toggle button */
+}
+
+ 
+/* == Left Side Panel */
+/* Left Sidebar - Filtering Options */
+.explore-left-sidebar {
+  width: 350px;
+  min-width: 350px;
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding-left: 15px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+  flex-shrink: 0; /* Prevent shrinking, this was changed */
+}
+
+/* Search Section */
+.explore-search-section {
+  flex-shrink: 0; /* Don't shrink, this was changed */
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #ffffff;
+  z-index: 1;
+}
+
+
+/* == Central Panel */
+/* Top Bar - Filters Section */
+.explore-top-bar {
+  overflow: hidden;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+  max-height: 500px; /* Adjust depending on actual height */
+  padding: 15px;
+  margin-top: 10px; /* This was changed */
+}
+
+/* Central Panel - Graph and Search */
+.explore-central-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0; /* Allow shrinking, this was changed */
+}
+
+/* Graph Section */
+.explore-graph-section {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  height: auto; /* 600px;   this was changed 2*/
+  min-height: 400px; /* Ensure minimum height, this was changed */
+  overflow: visible; /* Allow content to extend beyond, this was changed 2 */
+}
+
+
+
+/* == Right Side Panel */
+/* Right Sidebar - Node Information */
+.explore-right-sidebar {
+  width: 350px;
+  min-width: 350px;
+  height: 100%;
+  overflow-y: auto; 
+  position: sticky;
+  top: 100px;
+  border-left: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding: 15px;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+  flex-shrink: 0; /* Prevent shrinking, this was changed */
+}
+
+
+
+
+
+
+/* ==== toggle buttons  */
+
+/* Sidebar toggle button */
+.sidebar-toggle-btn {
+  position: absolute;
+  z-index: 100;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 60px;
+}
+
+/* Left sidebar toggle button */
+.left-sidebar-toggle {
+  left: 365px; /* Position at the edge of the sidebar */
+  top: 5%;
+  transform: translateY(-50%);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Right sidebar toggle button */
+.right-sidebar-toggle {
+  right: 380px; /* Position at the edge of the sidebar */
+  top: 5%;
+  transform: translateY(-50%);
+  border-radius: 4px 0 0 4px;
+}
+
+
+/* Top bar toggle button */
+.topbar-toggle-btn {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+
+/* Toggle button position when left sidebar is hidden */
+.explore-left-sidebar.hidden + .left-sidebar-toggle {
+  left: 0;
+}
+
+/* Toggle button position when right sidebar is hidden */
+.explore-right-sidebar.hidden ~ .right-sidebar-toggle {
+  right: 0;
+}
+
+/* == Hidden state styles */
+
+/* Hidden sidebar state */
+.explore-left-sidebar.hidden {
+  transform: translateX(-100%);
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+
+/* Collapsed state */
+.explore-top-bar.hidden {
+  max-height: 0;
+  padding: 0;
+  border-bottom: none;
+}
+
+/* Hidden right sidebar state */
+.explore-right-sidebar.hidden {
+  transform: translateX(100%);
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+
+
+
+
+
+
