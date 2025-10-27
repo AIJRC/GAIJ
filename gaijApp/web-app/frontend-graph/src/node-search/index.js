@@ -39,6 +39,7 @@ export class NodeSearch extends Component {
 
         <div className='node_search_content'>
           <SourceNode relationshipFilters={this.props.relationshipFilters}/>
+          
         </div>
 
         <div className='relationships'>

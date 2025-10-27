@@ -8,7 +8,7 @@
 .condition-group {
   display: flex;
   gap: 20px;
-  align-items: flex-start;
+  align-items: flex-end ;/*center;/*flex-start;*/
   width: 100%;
   padding: 15px;
   background: #f5f5f5;
@@ -68,6 +68,7 @@
 .source_node_section {
   flex: 0 1 auto;
   width: 50%;
+  
 }
 
 .source_node_container.dual .node_search_form {

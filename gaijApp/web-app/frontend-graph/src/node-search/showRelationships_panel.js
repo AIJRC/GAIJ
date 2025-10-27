@@ -4,6 +4,10 @@ import { buildRelationshipFilter } from '../backend-queries.js';
 import { setPaths, setRelationshipFilters } from '../path-graph/actions.js';
 import styles from './showRelationships_panel.module.css';
 
+
+
+
+
 const Relationships = () => {
   const dispatch = useDispatch();
   // Get current filters from Redux store

@@ -63,7 +63,7 @@ const Explore = ({ sourceNode, isPathsLoading }) => {
           {leftSidebarVisible ? '◀' : '▶'}
         </button>
 
-        {/* Central Pane - Graph and Search */}
+        {/* Central Panel - Graph and Search */}
         <div className="explore-central-panel">
           {/* Search Section with Statistics and Top Bar */}
           <div className="explore-search-section">

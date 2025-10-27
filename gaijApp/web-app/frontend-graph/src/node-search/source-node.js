@@ -22,10 +22,13 @@ export class SourceNode extends Component {
       mode: 'OR'  // Add mode state to track current operation
     };
   }
+  
 
+  
 
   // Helper method to filter relationships based on user selection
   filterRelationshipsByUserSelection = async (edges) => {
+    console.log('Filtering relationships based on user selection...');
     const { relationshipFilters } = this.props;
     if (!relationshipFilters?.show_rels) return edges;
 
@@ -91,6 +94,7 @@ export class SourceNode extends Component {
   };
 
   processConditions = async () => {
+    console.log(this.props.relationshipFilters);
     const { conditions } = this.state;
     const validConditions = conditions.filter(c => c.selectedNode && c.selectedType);
     
@@ -174,7 +178,7 @@ export class SourceNode extends Component {
       await this.props.dispatch(
         setPaths({
           paths,
-          nodes: allNodes,
+          nodes: allNodes, // Fix this
           relationships,
           updateUrl: true
         })

@@ -860,8 +860,7 @@ export async function buildRelationshipFilter(userSelections, suffixes = []) {
     'parent_of': 'PARENT_OF_',
     'child_of': 'CHILD_OF_',
     'mentioned': 'mentioned_',
-    'auditor': 'auditor_',
-    'led_by': 'LED_BY_'
+    'auditor': 'auditor_'
   };
 
   // Step 1: extract answered relationships
@@ -877,7 +876,7 @@ export async function buildRelationshipFilter(userSelections, suffixes = []) {
   // Step 3: build all suffix combinations into one flat array
   return allowedRelationships
     .flatMap(rel =>
-      suffixes.map(suffix => relationshipMap[rel] && `${relationshipMap[rel]}${suffix}`)
+      suffixes.map(suffix => `${relationshipMap[rel]}${suffix}`)
     )
     .filter(Boolean);
 
